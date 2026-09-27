@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthBridge } from "@/components/dashboard/auth-bridge"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -33,9 +32,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={inter.className}>
-        {/* AuthBridge runs on every page — writes token to localStorage
-            so the Chrome extension can read it from any page */}
-        <AuthBridge />
         {children}
       </body>
     </html>

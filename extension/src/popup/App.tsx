@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useRef } from "react"
 import { useStore } from "../lib/store"
 import { fetchCurrentUser, getCachedUser } from "../lib/auth"
 import { getAllAccounts } from "../lib/storage"
@@ -12,6 +12,7 @@ import UpgradeView from "./pages/UpgradeView"
 
 export default function App() {
   const { view, setView, setUser, setAccounts } = useStore()
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const tryAuth = useCallback(async () => {
     // Show cached instantly — no flicker
@@ -39,7 +40,13 @@ export default function App() {
   }, [setUser, setView, setAccounts])
 
   useEffect(() => {
+    // Initial auth check
     tryAuth()
+
+    // Poll /api/auth/session every 2 seconds
+    pollIntervalRef.current = setInterval(() => {
+      tryAuth()
+    }, 2000)
 
     // Re-check when popup regains focus (user comes back from website)
     const handleVisibility = () => {
@@ -49,27 +56,13 @@ export default function App() {
     }
     document.addEventListener("visibilitychange", handleVisibility)
 
-    // Listen for chrome.storage changes — fires when website.js writes token
-    const storageListener = (
-      changes: { [key: string]: chrome.storage.StorageChange }
-    ) => {
-      if (changes.authToken?.newValue) {
-        // Token appeared — user just logged in on website
-        tryAuth()
-      }
-      if (changes.authToken?.oldValue && !changes.authToken?.newValue) {
-        // Token removed — user logged out
-        setUser(null)
-        setView("login_required")
-      }
-    }
-    chrome.storage.local.onChanged.addListener(storageListener)
-
     return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+      }
       document.removeEventListener("visibilitychange", handleVisibility)
-      chrome.storage.local.onChanged.removeListener(storageListener)
     }
-  }, [tryAuth, setUser, setView])
+  }, [tryAuth])
 
   switch (view) {
     case "loading":           return <LoadingView />

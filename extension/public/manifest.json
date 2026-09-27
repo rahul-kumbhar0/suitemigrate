@@ -37,15 +37,6 @@
       ],
       "js": ["content.js"],
       "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "http://localhost:3000/*",
-        "https://suitemigrate.vercel.app/*",
-        "https://suitemigrate.com/*"
-      ],
-      "js": ["website.js"],
-      "run_at": "document_idle"
     }
   ],
 

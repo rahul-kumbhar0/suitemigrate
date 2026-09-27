@@ -128,7 +128,7 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
   // Step 3: Call Gemini
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
+    model: process.env.GEMINI_MODEL || "gemini-2.0-flash-exp",
     systemInstruction: systemPrompt,
   })
 

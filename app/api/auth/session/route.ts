@@ -12,7 +12,8 @@ function corsHeaders(origin: string | null) {
     !origin ||
     origin.startsWith("chrome-extension://") ||
     origin.startsWith("http://localhost") ||
-    origin.startsWith("https://suitemigrate.com")
+    origin.startsWith("https://suitemigrate.com") ||
+    origin.startsWith("https://suitemigrate.vercel.app")
 
   return {
     "Access-Control-Allow-Origin": allowed ? (origin ?? "*") : "null",
