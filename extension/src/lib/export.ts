@@ -4,10 +4,39 @@
 
 import type { NSAccount, ConversionResult } from "./types"
 
-/** Download a single converted script as .js file */
-export function downloadScript(scriptName: string, code: string): void {
+/** Download a single converted script as .js file with conversion header */
+export function downloadScript(scriptName: string, code: string, changeLog?: string[]): void {
   const safeName = scriptName.replace(/[^a-z0-9_-]/gi, "_").toLowerCase()
-  const blob = new Blob([code], { type: "text/javascript" })
+  
+  // Add conversion header with change summary
+  const header = `/**
+ * ═══════════════════════════════════════════════════════════════
+ * 🎯 SuiteMigrate — Automated Conversion Report
+ * ═══════════════════════════════════════════════════════════════
+ * 
+ * Original Script: ${scriptName}
+ * Converted: ${new Date().toLocaleString()}
+ * Tool: SuiteMigrate (suitemigrate.com)
+ * 
+ * WHAT CHANGED:
+${changeLog && changeLog.length > 0 
+    ? changeLog.map(c => ` * ✓ ${c}`).join('\n')
+    : ' * • See inline comments for detailed changes'
+}
+ * 
+ * NEXT STEPS:
+ * 1. Review all lines with "// MIGRATED:" comments
+ * 2. Test in NetSuite sandbox environment
+ * 3. Check lines marked "// TODO: MANUAL REVIEW"
+ * 4. Deploy to production after validation
+ * 
+ * ═══════════════════════════════════════════════════════════════
+ */
+
+`
+  
+  const fullCode = header + code
+  const blob = new Blob([fullCode], { type: "text/javascript" })
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
   a.href = url

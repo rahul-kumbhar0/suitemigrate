@@ -1,4 +1,4 @@
-import { CheckCircle, AlertTriangle, Download, Copy, ArrowLeft, XCircle } from "lucide-react"
+import { CheckCircle, AlertTriangle, Download, Copy, ArrowLeft, XCircle, FileCode, ListChecks } from "lucide-react"
 import { useState } from "react"
 import Header from "../components/Header"
 import { useStore } from "../../lib/store"
@@ -7,7 +7,7 @@ import { downloadScript } from "../../lib/export"
 export default function ConversionResultView() {
   const { conversionResult, conversionError, setView, activeAccount } = useStore()
   const [copied, setCopied] = useState(false)
-  const [tab, setTab] = useState<"converted" | "changes">("converted")
+  const [tab, setTab] = useState<"converted" | "changes" | "comments">("converted")
 
   if (conversionError) {
     return (
@@ -108,7 +108,7 @@ export default function ConversionResultView() {
 
         {/* Tab switcher */}
         <div className="flex gap-1">
-          {(["converted", "changes"] as const).map((t) => (
+          {(["converted", "changes", "comments"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -118,7 +118,13 @@ export default function ConversionResultView() {
                   : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              {t === "converted" ? "Converted Code" : `Changes (${conversionResult.changeLog.length})`}
+              {t === "converted" ? (
+                <><FileCode className="h-3 w-3 inline mr-1" />Code</>
+              ) : t === "changes" ? (
+                <><ListChecks className="h-3 w-3 inline mr-1" />Changes ({conversionResult.changeLog.length})</>
+              ) : (
+                <><AlertTriangle className="h-3 w-3 inline mr-1" />Inline</>
+              )}
             </button>
           ))}
         </div>
@@ -145,10 +151,52 @@ export default function ConversionResultView() {
           </div>
         )}
 
+        {/* Inline comments view - Shows code with MIGRATED comments highlighted */}
+        {tab === "comments" && (
+          <div className="space-y-2">
+            <div className="card p-2.5">
+              <p className="text-[10px] text-amber-400 font-semibold mb-1.5">
+                💡 Inline Comments Show What Changed
+              </p>
+              <p className="text-[9px] text-slate-400 leading-relaxed">
+                Look for <code className="text-emerald-400">// MIGRATED:</code> comments in the converted code. 
+                These explain every change made during conversion.
+              </p>
+            </div>
+            
+            <div className="code-block text-[9px] max-h-[200px] overflow-y-auto">
+              {/* Extract and highlight lines with MIGRATED comments */}
+              {conversionResult.convertedCode.split('\n').map((line, i) => {
+                const hasMigratedComment = line.includes('// MIGRATED:') || line.includes('// CHANGED:') || line.includes('// TODO: MANUAL REVIEW')
+                if (!hasMigratedComment && i > 20) return null // Only show first 20 non-comment lines
+                
+                return (
+                  <div 
+                    key={i} 
+                    className={hasMigratedComment ? "bg-emerald-500/10 border-l-2 border-emerald-500 pl-2" : ""}
+                  >
+                    <span className="text-slate-600 mr-2">{i + 1}</span>
+                    <span className={hasMigratedComment ? "text-emerald-300" : "text-slate-400"}>
+                      {line || ' '}
+                    </span>
+                  </div>
+                )
+              }).filter(Boolean).slice(0, 30)}
+              <p className="text-slate-600 text-center py-2">
+                ... (Download full file to see all inline comments)
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => downloadScript(conversionResult.scriptName, conversionResult.convertedCode)}
+            onClick={() => downloadScript(
+              conversionResult.scriptName, 
+              conversionResult.convertedCode,
+              conversionResult.changeLog
+            )}
             className="btn-primary text-[11px] h-8 justify-center"
           >
             <Download className="h-3 w-3" />
