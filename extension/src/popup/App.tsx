@@ -15,16 +15,26 @@ export default function App() {
 
   useEffect(() => {
     async function init() {
-      // Show cached user instantly while we verify
+      // Step 1: Show cached user instantly (no flicker)
       const cached = await getCachedUser()
       if (cached) {
         setUser(cached)
         const accounts = await getAllAccounts()
         setAccounts(accounts)
         setView("dashboard")
+        // Background-refresh user data silently — don't logout on failure
+        fetchCurrentUser().then((fresh) => {
+          if (fresh) {
+            setUser(fresh)
+          }
+          // If fresh is null, keep showing cached — could be network issue
+          // Only clear if we're sure the token is invalid (handled in auth.ts)
+        })
+        return
       }
 
-      // Always verify with server (handles logout from website)
+      // Step 2: No cache — try to fetch fresh
+      setView("loading")
       const fresh = await fetchCurrentUser()
       if (fresh) {
         setUser(fresh)
@@ -32,11 +42,11 @@ export default function App() {
         setAccounts(accounts)
         setView("dashboard")
       } else {
-        // Not authenticated — clear any stale cache
         setUser(null)
         setView("login_required")
       }
     }
+
     init()
   }, [setUser, setView, setAccounts])
 

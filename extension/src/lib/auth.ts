@@ -78,7 +78,18 @@ async function verifyToken(token: string): Promise<AuthUser | null> {
     const res = await fetch(
       `${APP_URL}/api/auth/token?token=${encodeURIComponent(token)}`
     )
-    if (!res.ok) return null
+
+    // Only treat as invalid on explicit 401 — not on network errors or 500s
+    if (res.status === 401) {
+      chrome.storage.local.remove(["authToken", "authTokenExpiresAt"])
+      return null
+    }
+
+    if (!res.ok) {
+      // Network or server error — return null but keep token cached
+      return null
+    }
+
     const data = await res.json() as {
       authenticated: boolean
       id: string
@@ -89,7 +100,11 @@ async function verifyToken(token: string): Promise<AuthUser | null> {
       conversionsRemaining: number | null
       unlimited: boolean
     }
-    if (!data.authenticated) return null
+
+    if (!data.authenticated) {
+      chrome.storage.local.remove(["authToken", "authTokenExpiresAt"])
+      return null
+    }
 
     return {
       id: data.id,
@@ -101,6 +116,7 @@ async function verifyToken(token: string): Promise<AuthUser | null> {
       unlimited: data.unlimited,
     }
   } catch {
+    // Network error — don't clear token, might just be offline
     return null
   }
 }
@@ -121,10 +137,8 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
   if (user) {
     await setStorage("authUser", user)
     await setStorage("authToken", token)
-  } else {
-    // Token invalid — clear it
-    chrome.storage.local.remove(["authToken", "authTokenExpiresAt"])
   }
+  // Don't clear on null — could be network error, keep cached user
   return user
 }
 
