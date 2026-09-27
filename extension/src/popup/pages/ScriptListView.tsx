@@ -17,9 +17,16 @@ export default function ScriptListView() {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<"all" | "needs_update" | "done">("needs_update")
 
+  // Don't render if no account — return early without calling setView
   if (!activeAccount) {
-    setView("dashboard")
-    return null
+    return (
+      <div className="flex flex-col">
+        <Header showBack onBack={() => setView("dashboard")} title="Scripts" />
+        <div className="p-4 text-center text-slate-500 text-xs">
+          No account selected. Returning to dashboard...
+        </div>
+      </div>
+    )
   }
 
   const filtered = activeAccount.scripts.filter((s) => {
@@ -44,11 +51,21 @@ export default function ScriptListView() {
 
     try {
       // Get script code from NetSuite
-      const codeResult = await new Promise<{ code: string; error?: string }>((resolve) => {
-        chrome.runtime.sendMessage(
-          { type: "FETCH_SCRIPT_CODE", scriptId: script.id },
-          resolve
-        )
+      const codeResult = await new Promise<{ code: string; error?: string }>((resolve, reject) => {
+        try {
+          chrome.runtime.sendMessage(
+            { type: "FETCH_SCRIPT_CODE", scriptId: script.id },
+            (response) => {
+              if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError.message))
+              } else {
+                resolve(response)
+              }
+            }
+          )
+        } catch (err) {
+          reject(err)
+        }
       })
 
       const code = codeResult.code || `// Script: ${script.name}\n// Could not fetch source code automatically.\n// Paste your script code here and convert.`

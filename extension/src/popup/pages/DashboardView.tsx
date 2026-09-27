@@ -75,15 +75,27 @@ export default function DashboardView() {
   const [scanStatus, setScanStatus] = useState("")
 
   useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const url = tabs[0]?.url || ""
-      const tabId = tabs[0]?.id ?? null
-      setActiveTabId(tabId)
-      setIsNetSuitePage(
-        url.includes("netsuite.com") || url.includes("suitetapp.com")
-      )
+    // Wrap in try-catch to handle "Extension context invalidated" errors
+    try {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (chrome.runtime.lastError) {
+          console.warn("Chrome API error:", chrome.runtime.lastError)
+          return
+        }
+        const url = tabs[0]?.url || ""
+        const tabId = tabs[0]?.id ?? null
+        setActiveTabId(tabId)
+        setIsNetSuitePage(
+          url.includes("netsuite.com") || url.includes("suitetapp.com")
+        )
+      })
+    } catch (err) {
+      console.warn("Failed to query tabs:", err)
+    }
+
+    getAllAccounts().then((a) => setAccounts(a)).catch((err) => {
+      console.warn("Failed to load accounts:", err)
     })
-    getAllAccounts().then((a) => setAccounts(a))
   }, [setAccounts])
 
   const handleScan = useCallback(async () => {

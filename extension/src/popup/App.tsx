@@ -21,7 +21,10 @@ export default function App() {
       setUser(cached)
       const accounts = await getAllAccounts()
       setAccounts(accounts)
-      setView("dashboard")
+      // Only set view to dashboard if we're on loading or login_required
+      if (view === "loading" || view === "login_required") {
+        setView("dashboard")
+      }
     }
 
     // Verify fresh in background
@@ -30,14 +33,17 @@ export default function App() {
       setUser(fresh)
       const accounts = await getAllAccounts()
       setAccounts(accounts)
-      setView("dashboard")
+      // Only set view to dashboard if we're on loading or login_required
+      if (view === "loading" || view === "login_required") {
+        setView("dashboard")
+      }
     } else if (!cached) {
       // No cache and no fresh — show login
       setUser(null)
       setView("login_required")
     }
     // If fresh null but cached exists — keep showing dashboard (network issue)
-  }, [setUser, setView, setAccounts])
+  }, [setUser, setView, setAccounts, view])
 
   useEffect(() => {
     // Initial auth check
