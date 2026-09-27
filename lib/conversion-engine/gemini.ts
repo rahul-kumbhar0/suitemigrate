@@ -118,6 +118,18 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     throw new Error("GEMINI_API_KEY is not configured")
   }
 
+  // Validate input size (rough estimate: 1 char ≈ 1 token for code)
+  const estimatedTokens = input.code.length + 2000 // +2000 for system prompt
+  const MAX_TOKENS = 900000 // Leave buffer from 1M limit
+
+  if (estimatedTokens > MAX_TOKENS) {
+    throw new Error(
+      `Script too large: ~${Math.round(estimatedTokens / 1000)}K tokens ` +
+      `(max ${Math.round(MAX_TOKENS / 1000)}K). ` +
+      `Try breaking it into smaller modules.`
+    )
+  }
+
   // Step 1: Preprocess
   const preprocessResult = preprocess(input.code)
 
@@ -125,11 +137,17 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
   const systemPrompt = buildSystemPrompt(preprocessResult)
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
-  // Step 3: Call Gemini
+  // Step 3: Call Gemini with generation config
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
     model: process.env.GEMINI_MODEL || "gemini-2.0-flash-exp",
     systemInstruction: systemPrompt,
+    generationConfig: {
+      temperature: 0.2, // Lower temperature for more consistent code generation
+      topP: 0.8,
+      topK: 40,
+      maxOutputTokens: 64000, // Gemini 2.0 Flash max output
+    },
   })
 
   const result = await model.generateContent(userPrompt)

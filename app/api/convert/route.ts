@@ -48,8 +48,26 @@ export async function POST(request: Request) {
     if (!code || typeof code !== "string") {
       return NextResponse.json({ error: "code is required" }, { status: 400, headers })
     }
-    if (code.length > 500_000) {
-      return NextResponse.json({ error: "Script too large (max 500KB)" }, { status: 400, headers })
+    
+    // Size limits (Gemini 2.0 Flash: 1M token context, ~750k words, ~900k tokens safe limit)
+    const MAX_SIZE_BYTES = 500_000 // 500KB (~125k tokens)
+    const MAX_LINES = 10_000 // Reasonable limit for single script
+    
+    if (code.length > MAX_SIZE_BYTES) {
+      return NextResponse.json({ 
+        error: `Script too large: ${Math.round(code.length / 1024)}KB (max 500KB). Consider breaking into smaller modules.`,
+        size: code.length,
+        maxSize: MAX_SIZE_BYTES
+      }, { status: 400, headers })
+    }
+    
+    const lineCount = code.split('\n').length
+    if (lineCount > MAX_LINES) {
+      return NextResponse.json({ 
+        error: `Script too large: ${lineCount.toLocaleString()} lines (max ${MAX_LINES.toLocaleString()}). Consider breaking into modules.`,
+        lines: lineCount,
+        maxLines: MAX_LINES
+      }, { status: 400, headers })
     }
 
     // ── Get user plan & usage ───────────────────────────────────────
