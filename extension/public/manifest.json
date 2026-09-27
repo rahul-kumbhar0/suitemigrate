@@ -41,6 +41,7 @@
     {
       "matches": [
         "http://localhost:3000/*",
+        "https://suitemigrate.vercel.app/*",
         "https://suitemigrate.com/*"
       ],
       "js": ["website.js"],
@@ -60,6 +61,7 @@
     "https://*.netsuite.com/*",
     "https://*.suitetapp.com/*",
     "http://localhost:3000/*",
+    "https://suitemigrate.vercel.app/*",
     "https://suitemigrate.com/*"
   ],
 
