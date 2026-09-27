@@ -154,12 +154,42 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     console.error("[/api/convert]", err)
     const message = err instanceof Error ? err.message : "Conversion failed"
+    
+    // Handle specific error types with helpful messages
     if (message.includes("API key")) {
       return NextResponse.json(
-        { error: "AI service configuration error." },
+        { error: "AI service configuration error. Please contact support." },
         { status: 500, headers }
       )
     }
+    
+    if (message.includes("503") || message.includes("high demand")) {
+      return NextResponse.json(
+        { 
+          error: "AI service is temporarily overloaded. Please try again in 30 seconds.",
+          retryable: true 
+        },
+        { status: 503, headers }
+      )
+    }
+    
+    if (message.includes("quota") || message.includes("rate limit")) {
+      return NextResponse.json(
+        { 
+          error: "AI service rate limit reached. Please try again in a few minutes.",
+          retryable: true 
+        },
+        { status: 429, headers }
+      )
+    }
+    
+    if (message.includes("Script too large")) {
+      return NextResponse.json(
+        { error: message },
+        { status: 400, headers }
+      )
+    }
+    
     return NextResponse.json({ error: message }, { status: 500, headers })
   }
 }

@@ -26,6 +26,52 @@ export interface ConversionResult {
   detectedApiCalls: string[]
 }
 
+/**
+ * Sleep for specified milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Retry Gemini API call with exponential backoff
+ * Handles 503 "high demand" errors
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 2000
+): Promise<T> {
+  let lastError: Error | null = null
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error: unknown) {
+      lastError = error as Error
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      
+      // Only retry on 503 or rate limit errors
+      const shouldRetry = 
+        errorMsg.includes("503") ||
+        errorMsg.includes("high demand") ||
+        errorMsg.includes("rate limit") ||
+        errorMsg.includes("quota")
+      
+      if (!shouldRetry || attempt === maxRetries - 1) {
+        throw error
+      }
+      
+      // Exponential backoff: 2s, 4s, 8s
+      const delay = baseDelay * Math.pow(2, attempt)
+      console.warn(`[Gemini] Attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
+      await sleep(delay)
+    }
+  }
+  
+  throw lastError
+}
+
 function buildApiMappingReference(): string {
   return SS1_TO_21_MAPPINGS.slice(0, 20)
     .map((m) => `  ${m.old}() → ${m.newCall} [${m.newModule}]`)
@@ -137,20 +183,26 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
   const systemPrompt = buildSystemPrompt(preprocessResult)
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
-  // Step 3: Call Gemini with generation config
+  // Step 3: Call Gemini with generation config and retry logic
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-2.0-flash-exp",
+    model: process.env.GEMINI_MODEL || "gemini-3.5-flash", // Default to stable model
     systemInstruction: systemPrompt,
     generationConfig: {
       temperature: 0.2, // Lower temperature for more consistent code generation
       topP: 0.8,
       topK: 40,
-      maxOutputTokens: 64000, // Gemini 2.0 Flash max output
+      maxOutputTokens: 64000, // Gemini 2.0+ Flash max output
     },
   })
 
-  const result = await model.generateContent(userPrompt)
+  // Retry with exponential backoff to handle 503 errors
+  const result = await retryWithBackoff(
+    () => model.generateContent(userPrompt),
+    3, // Max 3 retries
+    2000 // Start with 2 second delay
+  )
+  
   const rawOutput = result.response.text()
 
   // Step 4: Postprocess
