@@ -1,72 +1,52 @@
 "use client"
 
 /**
- * AuthBridge — runs in the dashboard, broadcasts the Supabase
- * access token so the Chrome extension can pick it up.
- * The extension injects a content script that listens for this message.
+ * AuthBridge — writes Supabase token to localStorage
+ * The Chrome extension website.js content script reads it from there.
+ * localStorage persists across page loads — no race conditions.
  */
 
 import { useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 
+const STORAGE_KEY = "suitemigrate_auth"
+
+function writeToken(token: string, expiresAt: number | undefined) {
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ token, expiresAt: expiresAt ?? 0 })
+    )
+    // Also postMessage for content script if already loaded
+    window.postMessage(
+      { type: "SUITEMIGRATE_AUTH_TOKEN", token, expiresAt },
+      "*"
+    )
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function AuthBridge() {
   useEffect(() => {
     const supabase = createClient()
 
-    async function broadcastToken() {
+    async function init() {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) return
-
-      // Post message to page — extension content script picks this up
-      window.postMessage(
-        {
-          type: "SUITEMIGRATE_AUTH_TOKEN",
-          token: session.access_token,
-          expiresAt: session.expires_at,
-        },
-        "*"
-      )
-
-      // Also store in sessionStorage so extension can read it
-      // via chrome.scripting.executeScript
-      try {
-        sessionStorage.setItem(
-          "suitemigrate_token",
-          JSON.stringify({
-            token: session.access_token,
-            expiresAt: session.expires_at,
-          })
-        )
-      } catch {
-        // ignore
+      if (session?.access_token) {
+        writeToken(session.access_token, session.expires_at)
       }
     }
 
-    broadcastToken()
+    init()
 
-    // Re-broadcast on auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (session?.access_token) {
-          window.postMessage(
-            {
-              type: "SUITEMIGRATE_AUTH_TOKEN",
-              token: session.access_token,
-              expiresAt: session.expires_at,
-            },
-            "*"
-          )
-          try {
-            sessionStorage.setItem(
-              "suitemigrate_token",
-              JSON.stringify({
-                token: session.access_token,
-                expiresAt: session.expires_at,
-              })
-            )
-          } catch {
-            // ignore
-          }
+          writeToken(session.access_token, session.expires_at)
+        } else {
+          // Logged out — clear token
+          try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
         }
       }
     )
@@ -74,5 +54,5 @@ export function AuthBridge() {
     return () => subscription.unsubscribe()
   }, [])
 
-  return null // renders nothing
+  return null
 }
