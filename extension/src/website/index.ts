@@ -1,12 +1,12 @@
 /**
  * Website content script — runs on suitemigrate.vercel.app + localhost:3000
- * Reads Supabase token from localStorage (written by AuthBridge)
- * and saves it to chrome.storage so the popup can use it.
+ * Syncs auth token between website localStorage and chrome.storage.
+ * Handles both login and logout in both directions.
  */
 
 const STORAGE_KEY = "suitemigrate_auth"
 
-function syncTokenFromPage() {
+function syncTokenFromPage(): boolean {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return false
@@ -31,25 +31,48 @@ function syncTokenFromPage() {
   }
 }
 
+function clearExtensionAuth() {
+  chrome.storage.local.remove(["authToken", "authTokenExpiresAt", "authUser"])
+}
+
 // Run immediately on script load
 syncTokenFromPage()
 
-// Also listen for postMessage (fired by AuthBridge after hydration)
+// Listen for messages from AuthBridge
 window.addEventListener("message", (event) => {
   if (event.source !== window) return
-  if (event.data?.type !== "SUITEMIGRATE_AUTH_TOKEN") return
 
-  const { token, expiresAt } = event.data as { token: string; expiresAt: number }
-  if (!token) return
+  // Token received — save to chrome.storage
+  if (event.data?.type === "SUITEMIGRATE_AUTH_TOKEN") {
+    const { token, expiresAt } = event.data as { token: string; expiresAt: number }
+    if (!token) return
+    chrome.storage.local.set({
+      authToken: token,
+      authTokenExpiresAt: expiresAt,
+    })
+    return
+  }
 
-  chrome.storage.local.set({
-    authToken: token,
-    authTokenExpiresAt: expiresAt,
-  })
+  // Logout from website — clear chrome.storage
+  if (event.data?.type === "SUITEMIGRATE_AUTH_LOGOUT") {
+    clearExtensionAuth()
+    return
+  }
 })
 
-// Poll every 3 seconds for the first 15 seconds
-// handles cases where AuthBridge fires before content script loads
+// Listen for logout request FROM extension
+// Extension sends this message to tell the website tab to sign out
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "SUITEMIGRATE_SIGNOUT") {
+    // Clear localStorage
+    try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
+    // Tell the page to sign out via Supabase
+    window.postMessage({ type: "SUITEMIGRATE_DO_SIGNOUT" }, "*")
+    clearExtensionAuth()
+  }
+})
+
+// Poll for 15 seconds on load (handles slow page hydration)
 let attempts = 0
 const poll = setInterval(() => {
   attempts++

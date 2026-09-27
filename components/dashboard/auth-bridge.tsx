@@ -17,13 +17,21 @@ function writeToken(token: string, expiresAt: number | undefined) {
       STORAGE_KEY,
       JSON.stringify({ token, expiresAt: expiresAt ?? 0 })
     )
-    // Also postMessage for content script if already loaded
     window.postMessage(
       { type: "SUITEMIGRATE_AUTH_TOKEN", token, expiresAt },
       "*"
     )
   } catch {
     // ignore storage errors
+  }
+}
+
+function clearToken() {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
+    window.postMessage({ type: "SUITEMIGRATE_AUTH_LOGOUT" }, "*")
+  } catch {
+    // ignore
   }
 }
 
@@ -40,18 +48,30 @@ export function AuthBridge() {
 
     init()
 
+    // Listen for signout request from extension
+    const handleSignout = (event: MessageEvent) => {
+      if (event.source !== window) return
+      if (event.data?.type !== "SUITEMIGRATE_DO_SIGNOUT") return
+      supabase.auth.signOut()
+    }
+    window.addEventListener("message", handleSignout)
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (session?.access_token) {
           writeToken(session.access_token, session.expires_at)
         } else {
-          // Logged out — clear token
+          // Logged out from website — clear token so extension picks it up
+          clearToken()
           try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
         }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener("message", handleSignout)
+    }
   }, [])
 
   return null

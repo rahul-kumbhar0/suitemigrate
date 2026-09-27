@@ -147,8 +147,23 @@ export async function getCachedUser(): Promise<AuthUser | null> {
 }
 
 export async function signOut(): Promise<void> {
+  // Clear extension storage
   chrome.storage.local.remove(["authToken", "authTokenExpiresAt"])
   await clearAuth()
+
+  // Tell website tab to sign out too
+  try {
+    const tabs = await chrome.tabs.query({})
+    const websiteTab = tabs.find(t =>
+      t.url?.includes("suitemigrate.vercel.app") ||
+      t.url?.includes("localhost:3000")
+    )
+    if (websiteTab?.id) {
+      chrome.tabs.sendMessage(websiteTab.id, { type: "SUITEMIGRATE_SIGNOUT" })
+    }
+  } catch {
+    // Website tab might not be open — that's fine, token is cleared anyway
+  }
 }
 
 export function getLoginUrl(): string {
