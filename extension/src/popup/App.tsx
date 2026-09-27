@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 import { useStore } from "../lib/store"
 import { fetchCurrentUser, getCachedUser } from "../lib/auth"
 import { getAllAccounts } from "../lib/storage"
@@ -13,42 +13,63 @@ import UpgradeView from "./pages/UpgradeView"
 export default function App() {
   const { view, setView, setUser, setAccounts } = useStore()
 
-  useEffect(() => {
-    async function init() {
-      // Step 1: Show cached user instantly (no flicker)
-      const cached = await getCachedUser()
-      if (cached) {
-        setUser(cached)
-        const accounts = await getAllAccounts()
-        setAccounts(accounts)
-        setView("dashboard")
-        // Background-refresh user data silently — don't logout on failure
-        fetchCurrentUser().then((fresh) => {
-          if (fresh) {
-            setUser(fresh)
-          }
-          // If fresh is null, keep showing cached — could be network issue
-          // Only clear if we're sure the token is invalid (handled in auth.ts)
-        })
-        return
-      }
+  const tryAuth = useCallback(async () => {
+    // Show cached instantly — no flicker
+    const cached = await getCachedUser()
+    if (cached) {
+      setUser(cached)
+      const accounts = await getAllAccounts()
+      setAccounts(accounts)
+      setView("dashboard")
+    }
 
-      // Step 2: No cache — try to fetch fresh
-      setView("loading")
-      const fresh = await fetchCurrentUser()
-      if (fresh) {
-        setUser(fresh)
-        const accounts = await getAllAccounts()
-        setAccounts(accounts)
-        setView("dashboard")
-      } else {
+    // Verify fresh in background
+    const fresh = await fetchCurrentUser()
+    if (fresh) {
+      setUser(fresh)
+      const accounts = await getAllAccounts()
+      setAccounts(accounts)
+      setView("dashboard")
+    } else if (!cached) {
+      // No cache and no fresh — show login
+      setUser(null)
+      setView("login_required")
+    }
+    // If fresh null but cached exists — keep showing dashboard (network issue)
+  }, [setUser, setView, setAccounts])
+
+  useEffect(() => {
+    tryAuth()
+
+    // Re-check when popup regains focus (user comes back from website)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        tryAuth()
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+
+    // Listen for chrome.storage changes — fires when website.js writes token
+    const storageListener = (
+      changes: { [key: string]: chrome.storage.StorageChange }
+    ) => {
+      if (changes.authToken?.newValue) {
+        // Token appeared — user just logged in on website
+        tryAuth()
+      }
+      if (changes.authToken?.oldValue && !changes.authToken?.newValue) {
+        // Token removed — user logged out
         setUser(null)
         setView("login_required")
       }
     }
+    chrome.storage.local.onChanged.addListener(storageListener)
 
-    init()
-  }, [setUser, setView, setAccounts])
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+      chrome.storage.local.onChanged.removeListener(storageListener)
+    }
+  }, [tryAuth, setUser, setView])
 
   switch (view) {
     case "loading":           return <LoadingView />
