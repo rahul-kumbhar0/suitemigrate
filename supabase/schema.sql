@@ -79,6 +79,26 @@ CREATE TABLE IF NOT EXISTS team_members (
   PRIMARY KEY (team_id, user_id)
 );
 
+-- ── PROMO CODES ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS promo_codes (
+  code            TEXT PRIMARY KEY,
+  plan            TEXT NOT NULL CHECK (plan IN ('pro', 'lifetime')),
+  conversions     INT,                  -- NULL = unlimited
+  duration_days   INT,                  -- NULL = lifetime
+  expires_at      TIMESTAMPTZ,
+  active          BOOLEAN DEFAULT TRUE,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Insert test promo codes
+INSERT INTO promo_codes (code, plan, conversions, duration_days, expires_at, active)
+VALUES
+  ('TESTPRO', 'pro', NULL, NULL, NULL, TRUE),           -- Unlimited conversions, no expiry (for testing)
+  ('FOUNDER2026', 'lifetime', NULL, NULL, NULL, TRUE),  -- Lifetime plan
+  ('PRO30', 'pro', NULL, 30, NOW() + INTERVAL '30 days', TRUE),  -- Pro for 30 days
+  ('BETA100', 'pro', 100, NULL, NULL, TRUE)             -- 100 conversions
+ON CONFLICT (code) DO NOTHING;
+
 -- ─────────────────────────────────────────────────────────────
 --  ROW LEVEL SECURITY
 -- ─────────────────────────────────────────────────────────────
@@ -89,6 +109,7 @@ ALTER TABLE conversions   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE teams         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promo_codes   ENABLE ROW LEVEL SECURITY;
 
 -- Users: can only read/update their own row
 CREATE POLICY "users_select_own" ON users
@@ -116,6 +137,10 @@ CREATE POLICY "teams_owner" ON teams
 -- Team members: see own membership
 CREATE POLICY "team_members_own" ON team_members
   FOR SELECT USING (auth.uid() = user_id);
+
+-- Promo codes: anyone can read active codes
+CREATE POLICY "promo_codes_select" ON promo_codes
+  FOR SELECT USING (active = TRUE);
 
 -- ─────────────────────────────────────────────────────────────
 --  AUTO-CREATE USER PROFILE ON SIGNUP
