@@ -1,26 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
 import { Navbar } from "@/components/landing/navbar"
 import { Footer } from "@/components/landing/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   Zap,
-  Shield,
-  BarChart3,
   Download,
   GitCompare,
-  Clock,
   CheckCircle,
-  AlertTriangle,
   Chrome,
-  ArrowRight,
-  FileSearch,
   Sparkles,
-  Code2,
-  Terminal,
   LucideIcon,
 } from "lucide-react"
 
@@ -59,9 +50,30 @@ const stats = [
   { label: "Confidence score", value: "92%", sublabel: "average" },
 ]
 
+const faqs = [
+  {
+    q: "Does this store my NetSuite login or credentials?",
+    a: "Never. The extension runs on your existing browser session — the same session you use every day. We have no access to your NetSuite credentials, and nothing sensitive is sent to our servers.",
+  },
+  {
+    q: "How accurate is the AI conversion?",
+    a: "We use a hybrid approach: 50+ rule-based API mappings handle known patterns first, then Gemini AI handles context-aware logic. Each result shows a confidence score so you know exactly what to verify before deploying.",
+  },
+  {
+    q: "What script types are supported?",
+    a: "All of them — UserEvent, Suitelet, Scheduled, Map/Reduce, ClientScript, RESTlet, Portlet, MassUpdate. Both SS 1.0 → 2.1 and SS 2.0 → 2.1 conversions are supported.",
+  },
+  {
+    q: "Why do I need to migrate to SuiteScript 2.1?",
+    a: "Oracle NetSuite has set hard deadlines: SS 1.0 enters limited support in 2027.1, all scripts run as 2.1 by default from 2028.1, and 2028.2 is the cutoff where all custom scripts must be 2.1 or they stop working.",
+  },
+  {
+    q: "What does the free tier include?",
+    a: "The free plan includes unlimited account scanning, risk scoring for every script, and 5 complete AI conversions with all pro features. No credit card required.",
+  },
+]
+
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<"code" | "inline">("code")
-  
   return (
     <div className="min-h-screen bg-[#050d1a] text-slate-300">
       <Navbar />
