@@ -2,122 +2,169 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Google Fonts ─────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cal+Sans&family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* ─────────────────────────────────────────
+   PREMIUM DESIGN TOKENS
+   Palette: Midnight Navy · Soft White · Gold
+   ───────────────────────────────────────── */
 @layer base {
   :root {
-    /* ── Cream / Warm White palette ── */
-    --cream:          42 40% 96%;      /* #F7F3EE — page bg */
-    --cream-dark:     38 30% 90%;      /* #E8E0D5 — subtle bg */
-    --cream-border:   35 20% 82%;      /* #D5C9BB — borders */
+    /* Surface */
+    --bg:           220 25% 6%;     /* #0A0E1A — page background */
+    --surface-1:    220 22% 9%;     /* #0F1420 — cards */
+    --surface-2:    220 20% 12%;    /* #141926 — elevated cards */
+    --surface-3:    220 18% 16%;    /* #1C2333 — hover states */
 
-    /* ── Chocolate / Coffee palette ── */
-    --choco-900:      25 35% 10%;      /* #261710 — deepest text */
-    --choco-800:      25 32% 16%;      /* #362318 — headings */
-    --choco-700:      24 25% 28%;      /* #554136 — body */
-    --choco-500:      22 18% 48%;      /* #8A7468 — muted text */
-    --choco-300:      30 15% 72%;      /* #BEB4AB — placeholder */
+    /* Borders */
+    --border-sub:   220 20% 18%;    /* #1F2A3C — subtle border */
+    --border-mid:   220 18% 24%;    /* #2A3650 — mid border */
+    --border-hi:    220 16% 32%;    /* #394A66 — bright border */
 
-    /* ── Accent ── */
-    --amber:          36 100% 50%;     /* #FF9500 — warm amber */
-    --amber-light:    40 100% 95%;     /* #FFF5E0 — accent bg */
-    --amber-border:   36 80% 75%;      /* #F5C97A — accent border */
+    /* Text */
+    --text-primary:   0 0% 97%;     /* #F7F8FA — headings */
+    --text-secondary: 220 15% 70%;  /* #A8B4CC — body */
+    --text-muted:     220 12% 48%;  /* #6B7A99 — muted */
+    --text-faint:     220 10% 32%;  /* #434E66 — very faint */
 
-    /* ── shadcn tokens ── */
-    --background:     42 40% 96%;
-    --foreground:     25 35% 10%;
-    --card:           0 0% 100%;
-    --card-foreground: 25 35% 10%;
-    --popover:        0 0% 100%;
-    --popover-foreground: 25 35% 10%;
-    --primary:        25 35% 10%;
-    --primary-foreground: 42 40% 96%;
-    --secondary:      38 30% 90%;
-    --secondary-foreground: 25 35% 10%;
-    --muted:          38 20% 92%;
-    --muted-foreground: 22 18% 48%;
-    --accent:         40 100% 95%;
-    --accent-foreground: 25 35% 10%;
-    --destructive:    0 72% 51%;
-    --destructive-foreground: 42 40% 96%;
-    --border:         35 20% 82%;
-    --input:          35 20% 82%;
-    --ring:           25 35% 10%;
-    --radius:         0.625rem;
+    /* Gold accent — the premium touch */
+    --gold:         45 95% 58%;     /* #F6C430 */
+    --gold-dim:     45 80% 48%;     /* #D4A520 */
+    --gold-glow:    45 95% 58%;
+    --gold-bg:      45 60% 12%;     /* #221C07 */
+    --gold-border:  45 70% 28%;     /* #4A3C0A */
+
+    /* Violet accent — depth & energy */
+    --violet:       258 90% 66%;    /* #7C5CFC */
+    --violet-dim:   258 70% 55%;    /* #6247D4 */
+    --violet-bg:    258 60% 12%;    /* #120E2A */
+    --violet-border: 258 50% 28%;   /* #2E2466 */
+
+    /* Status */
+    --success:      142 70% 45%;
+    --warning:      38 95% 55%;
+    --danger:       0 78% 58%;
+
+    /* shadcn compat */
+    --background:   220 25% 6%;
+    --foreground:   0 0% 97%;
+    --card:         220 22% 9%;
+    --card-foreground: 0 0% 97%;
+    --popover:      220 22% 9%;
+    --popover-foreground: 0 0% 97%;
+    --primary:      45 95% 58%;
+    --primary-foreground: 220 25% 6%;
+    --secondary:    220 20% 12%;
+    --secondary-foreground: 0 0% 97%;
+    --muted:        220 18% 16%;
+    --muted-foreground: 220 12% 48%;
+    --accent:       258 60% 12%;
+    --accent-foreground: 0 0% 97%;
+    --destructive:  0 78% 58%;
+    --destructive-foreground: 0 0% 97%;
+    --border:       220 20% 18%;
+    --input:        220 20% 18%;
+    --ring:         45 95% 58%;
+    --radius:       0.75rem;
   }
 }
 
 @layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
+  * { border-color: hsl(var(--border-sub)); box-sizing: border-box; }
   html {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
   body {
-    background-color: hsl(var(--cream));
-    color: hsl(var(--choco-700));
-    font-family: 'DM Sans', system-ui, sans-serif;
+    background: hsl(var(--bg));
+    color: hsl(var(--text-secondary));
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
   }
-  h1, h2, h3 {
-    font-family: 'DM Serif Display', Georgia, serif;
-    color: hsl(var(--choco-800));
+  h1, h2, h3, h4 {
+    color: hsl(var(--text-primary));
+    letter-spacing: -0.02em;
+    line-height: 1.1;
   }
-  code, pre, .font-mono {
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  }
+  code, pre, kbd { font-family: 'JetBrains Mono', monospace; }
 }
 
 @layer utilities {
-  /* ── Typography ── */
-  .font-serif    { font-family: 'DM Serif Display', Georgia, serif; }
-  .font-sans-dm  { font-family: 'DM Sans', system-ui, sans-serif; }
-  .font-mono-jb  { font-family: 'JetBrains Mono', monospace; }
-
-  /* ── Gradient text (amber/warm) ── */
+  /* ── Gradient text (gold) ── */
   .gradient-text {
-    @apply bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent;
+    background: linear-gradient(135deg, #F6C430 0%, #FFE27A 50%, #D4A520 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  /* ── Card / border ── */
-  .card-cream {
-    background: #FFFDF9;
-    border: 1px solid hsl(var(--cream-border));
+  /* ── Gradient text (violet) ── */
+  .gradient-text-violet {
+    background: linear-gradient(135deg, #7C5CFC 0%, #A78BFA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Card styles ── */
+  .card-premium {
+    background: hsl(var(--surface-1));
+    border: 1px solid hsl(var(--border-sub));
+    border-radius: var(--radius);
+  }
+  .card-elevated {
+    background: hsl(var(--surface-2));
+    border: 1px solid hsl(var(--border-mid));
     border-radius: var(--radius);
   }
 
-  /* ── Hairline ── */
-  .hairline {
-    border-top: 1px solid hsl(var(--cream-border));
+  /* ── Gold border gradient ── */
+  .border-gold {
+    border: 1px solid hsl(var(--gold-border));
+    background: hsl(var(--gold-bg));
+  }
+  .border-violet {
+    border: 1px solid hsl(var(--violet-border));
+    background: hsl(var(--violet-bg));
   }
 
-  /* ── Warm glow ── */
-  .glow-amber {
-    box-shadow: 0 0 40px rgba(251, 146, 60, 0.12);
-  }
-  .glow-amber-sm {
-    box-shadow: 0 0 20px rgba(251, 146, 60, 0.08);
-  }
+  /* ── Glows ── */
+  .glow-gold    { box-shadow: 0 0 60px rgba(246,196,48,0.15), 0 0 20px rgba(246,196,48,0.08); }
+  .glow-gold-sm { box-shadow: 0 0 30px rgba(246,196,48,0.10); }
+  .glow-violet  { box-shadow: 0 0 60px rgba(124,92,252,0.20); }
+  .glow-emerald { box-shadow: 0 0 40px rgba(124,92,252,0.12); }
+  .glow-emerald-sm { box-shadow: 0 0 20px rgba(124,92,252,0.08); }
 
-  /* ── Legacy emerald glows (kept for compat) ── */
-  .glow-emerald    { box-shadow: 0 0 40px rgba(180, 140, 100, 0.12); }
-  .glow-emerald-sm { box-shadow: 0 0 20px rgba(180, 140, 100, 0.08); }
-
-  /* ── Gradient border (warm) ── */
+  /* ── Gradient border (gold) ── */
   .gradient-border {
-    background: linear-gradient(#FFFDF9, #FFFDF9) padding-box,
-      linear-gradient(135deg, #D97706, #EA580C) border-box;
+    background: linear-gradient(hsl(var(--surface-1)), hsl(var(--surface-1))) padding-box,
+      linear-gradient(135deg, #F6C430, #7C5CFC) border-box;
     border: 1px solid transparent;
   }
 
-  /* ── Subtle grid bg ── */
+  /* ── Subtle dot grid ── */
   .bg-grid {
-    background-image:
-      linear-gradient(rgba(180, 130, 80, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(180, 130, 80, 0.04) 1px, transparent 1px);
-    background-size: 48px 48px;
+    background-image: radial-gradient(circle, rgba(124,92,252,0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* ── Noise texture on hero ── */
+  .bg-hero {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,92,252,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(246,196,48,0.06) 0%, transparent 50%),
+      hsl(var(--bg));
+  }
+
+  /* ── Divider ── */
+  .hairline { border-top: 1px solid hsl(var(--border-sub)); }
+
+  /* ── Section tag ── */
+  .section-tag {
+    @apply text-[10px] font-semibold tracking-[0.15em] uppercase;
+    color: hsl(var(--text-faint));
   }
 
   .text-balance { text-wrap: balance; }
@@ -125,13 +172,19 @@
   /* ── Code block ── */
   .code-block {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    line-height: 1.65;
+    font-size: 12.5px;
+    line-height: 1.7;
   }
 }
 
-/* ── Scrollbar ─────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track  { background: hsl(var(--cream-dark)); }
-::-webkit-scrollbar-thumb  { background: hsl(var(--cream-border)); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--choco-500)); }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track  { background: hsl(var(--bg)); }
+::-webkit-scrollbar-thumb  { background: hsl(var(--border-mid)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--border-hi)); }
+
+/* ── Selection ── */
+::selection {
+  background: rgba(246,196,48,0.25);
+  color: hsl(var(--text-primary));
+}

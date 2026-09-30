@@ -1,25 +1,17 @@
 import type { Metadata } from "next"
-import { DM_Sans, DM_Serif_Display } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-inter",
   display: "swap",
-})
-
-const dmSerif = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
-  variable: "--font-dm-serif",
-  display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
 })
 
 export const metadata: Metadata = {
   title: "SuiteMigrate — SuiteScript 2.1 Migration Tool",
-  description:
-    "Scan your NetSuite account and automatically convert SuiteScript 1.0/2.0 scripts to SuiteScript 2.1 before the 2028 deadline.",
+  description: "Scan your NetSuite account, risk-score every script, and convert SuiteScript 1.0/2.0 to 2.1 automatically — with inline comments on every change.",
   keywords: ["NetSuite", "SuiteScript", "SuiteScript 2.1", "migration", "Chrome extension", "NetSuite developer"],
   openGraph: {
     title: "SuiteMigrate — SuiteScript 2.1 Migration Tool",
@@ -30,10 +22,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${dmSerif.variable}`}>
-      <body className={dmSans.className}>
-        {children}
-      </body>
+    <html lang="en" className={`${inter.variable} dark`}>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }
