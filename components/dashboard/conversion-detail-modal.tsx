@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { X, Download, Copy, CheckCircle, AlertTriangle, FileCode, ListChecks } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 interface Conversion {
   id: string
@@ -17,12 +16,7 @@ interface Conversion {
   created_at: string
 }
 
-interface ConversionDetailModalProps {
-  conversion: Conversion | null
-  onClose: () => void
-}
-
-export default function ConversionDetailModal({ conversion, onClose }: ConversionDetailModalProps) {
+export default function ConversionDetailModal({ conversion, onClose }: { conversion: Conversion | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false)
   const [tab, setTab] = useState<"converted" | "changes" | "inline">("converted")
 
@@ -36,206 +30,169 @@ export default function ConversionDetailModal({ conversion, onClose }: Conversio
 
   const handleDownload = () => {
     const header = `/**
- * ═══════════════════════════════════════════════════════════════
- * 🎯 SuiteMigrate — Automated Conversion Report
- * ═══════════════════════════════════════════════════════════════
- * 
- * Original Script: ${conversion.script_name}
+ * SUITESCRIPT 2.1 — CONVERTED BY SUITEMIGRATE
+ * ─────────────────────────────────────────────
+ * Original: ${conversion.script_name}
  * Converted: ${new Date(conversion.created_at).toLocaleString()}
- * Tool: SuiteMigrate (suitemigrate.com)
- * 
- * WHAT CHANGED:
-${conversion.changes_log.map(c => ` * ✓ ${c}`).join('\n')}
- * 
+ * Tool: SuiteMigrate (suitemigrate.vercel.app)
+ *
+ * CHANGES:
+${conversion.changes_log.map(c => ` * — ${c}`).join("\n")}
+ *
  * NEXT STEPS:
- * 1. Review all lines with "// MIGRATED:" comments
- * 2. Test in NetSuite sandbox environment
- * 3. Check lines marked "// TODO: MANUAL REVIEW"
- * 4. Deploy to production after validation
- * 
- * ═══════════════════════════════════════════════════════════════
- */
-
-`
-    const fullCode = header + conversion.converted_code
+ * 1. Review all // MIGRATED: comments
+ * 2. Test in NetSuite Sandbox
+ * 3. Check lines marked // TODO: MANUAL REVIEW
+ * 4. Deploy to Production after validation
+ *
+ * Confidence: ${conversion.confidence_score}/100
+ * ─────────────────────────────────────────────
+ */\n\n`
     const safeName = conversion.script_name.replace(/[^a-z0-9_-]/gi, "_").toLowerCase()
-    const blob = new Blob([fullCode], { type: "text/javascript" })
+    const blob = new Blob([header + conversion.converted_code], { type: "text/javascript" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
-    a.href = url
-    a.download = `${safeName}_2.1.js`
-    a.click()
+    a.href = url; a.download = `${safeName}_2.1.js`; a.click()
     URL.revokeObjectURL(url)
   }
 
-  const confidenceColor =
-    conversion.confidence_score >= 90 ? "text-emerald-400" :
-    conversion.confidence_score >= 70 ? "text-amber-400" : "text-red-400"
+  const confColor = conversion.confidence_score >= 90 ? "var(--clay)"
+    : conversion.confidence_score >= 70 ? "#b45309" : "#dc2626"
+
+  const Tab = ({ id, icon: Icon, label }: { id: typeof tab; icon: typeof FileCode; label: string }) => (
+    <button onClick={() => setTab(id)} style={{
+      display: "flex", alignItems: "center", gap: 7,
+      padding: "7px 14px", borderRadius: 3, fontSize: 13, fontFamily: "var(--f-sans)",
+      cursor: "pointer", border: "none", fontWeight: tab === id ? 500 : 400,
+      background: tab === id ? "rgba(15,23,42,.08)" : "transparent",
+      color: tab === id ? "var(--ink)" : "var(--ink-soft)",
+      borderBottom: tab === id ? "2px solid var(--clay)" : "2px solid transparent",
+      transition: "all .14s",
+    }}>
+      <Icon size={14} />
+      {label}
+    </button>
+  )
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#0a1628] border border-[#1e3a5f] rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.45)", backdropFilter: "blur(4px)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+      <div style={{ background: "var(--paper)", border: "1px solid var(--rule)", borderRadius: 8, width: "100%", maxWidth: 860, maxHeight: "90vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 32px 80px -12px rgba(15,23,42,.25)" }}>
+
         {/* Header */}
-        <div className="p-6 border-b border-[#1e3a5f] flex items-center justify-between">
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--rule)", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexShrink: 0 }}>
           <div>
-            <h2 className="text-xl font-bold text-white">{conversion.script_name}</h2>
-            <p className="text-sm text-slate-400 mt-1">
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 20, letterSpacing: "-0.015em", color: "var(--ink)", marginBottom: 4 }}>
+              {conversion.script_name}
+            </h2>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", textTransform: "uppercase", letterSpacing: ".12em" }}>
               SS {conversion.original_version} → 2.1 · {conversion.script_type}
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white">
-            <X className="h-5 w-5" />
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)", display: "flex", padding: 4, borderRadius: 4, flexShrink: 0 }}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = "var(--ink)")}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = "var(--ink-mute)")}>
+            <X size={18} />
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 p-6 border-b border-[#1e3a5f]">
-          <div className="text-center">
-            <div className={`text-3xl font-bold ${confidenceColor}`}>
-              {conversion.confidence_score}%
+        {/* Stats row */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--rule)", borderBottom: "1px solid var(--rule)", flexShrink: 0 }}>
+          {[
+            { label: "Confidence", value: `${conversion.confidence_score}%`, color: confColor },
+            { label: "Changes",    value: conversion.changes_log.length,      color: "var(--ink)" },
+            { label: "Review Lines", value: conversion.manual_review_lines.length, color: conversion.manual_review_lines.length > 0 ? "#b45309" : "#15803d" },
+          ].map(s => (
+            <div key={s.label} style={{ background: "var(--paper)", padding: "16px 20px", textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 32, letterSpacing: "-0.025em", lineHeight: 1, color: s.color, marginBottom: 4 }}>{s.value}</div>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)" }}>{s.label}</div>
             </div>
-            <div className="text-xs text-slate-500 mt-1">Confidence</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-white">
-              {conversion.changes_log.length}
-            </div>
-            <div className="text-xs text-slate-500 mt-1">Changes</div>
-          </div>
-          <div className="text-center">
-            <div className={`text-3xl font-bold ${conversion.manual_review_lines.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>
-              {conversion.manual_review_lines.length}
-            </div>
-            <div className="text-xs text-slate-500 mt-1">Review Lines</div>
-          </div>
+          ))}
         </div>
 
         {/* Manual review warning */}
         {conversion.manual_review_lines.length > 0 && (
-          <div className="mx-6 mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-amber-400">Lines needing manual review</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Lines: {conversion.manual_review_lines.join(", ")}
-                </p>
-              </div>
+          <div style={{ margin: "14px 24px 0", padding: "10px 14px", border: "1px solid rgba(180,83,9,.25)", borderRadius: 4, background: "rgba(180,83,9,.05)", display: "flex", alignItems: "flex-start", gap: 8, flexShrink: 0 }}>
+            <AlertTriangle size={14} style={{ color: "#b45309", flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 500, color: "#b45309", marginBottom: 2 }}>Lines needing manual review</p>
+              <p style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-soft)" }}>
+                Lines: {conversion.manual_review_lines.join(", ")}
+              </p>
             </div>
           </div>
         )}
 
-        {/* Tab navigation */}
-        <div className="flex gap-2 px-6 pt-4">
-          <button
-            onClick={() => setTab("converted")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === "converted"
-                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <FileCode className="h-4 w-4" />
-            Converted Code
-          </button>
-          <button
-            onClick={() => setTab("changes")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === "changes"
-                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <ListChecks className="h-4 w-4" />
-            Changes ({conversion.changes_log.length})
-          </button>
-          <button
-            onClick={() => setTab("inline")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === "inline"
-                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                : "text-slate-400 hover:text-white"
-            }`}
-          >
-            <CheckCircle className="h-4 w-4" />
-            Inline Comments
-          </button>
+        {/* Tab bar */}
+        <div style={{ display: "flex", gap: 0, padding: "12px 24px 0", borderBottom: "1px solid var(--rule)", flexShrink: 0 }}>
+          <Tab id="converted" icon={FileCode}    label="Converted Code" />
+          <Tab id="changes"   icon={ListChecks}  label={`Changes (${conversion.changes_log.length})`} />
+          <Tab id="inline"    icon={CheckCircle} label="Inline Comments" />
         </div>
 
-        {/* Content area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Converted code tab */}
+        {/* Content */}
+        <div style={{ flex: 1, overflow: "auto", padding: 24 }}>
+
+          {/* Converted code */}
           {tab === "converted" && (
-            <pre className="bg-black/40 border border-[#1e3a5f] rounded-lg p-4 text-xs text-slate-300 overflow-x-auto font-mono">
+            <pre style={{ background: "rgba(15,23,42,.04)", border: "1px solid var(--rule)", borderRadius: 4, padding: "14px 16px", fontFamily: "var(--f-mono)", fontSize: 12, lineHeight: 1.65, color: "var(--ink-soft)", overflow: "auto", whiteSpace: "pre", margin: 0 }}>
               {conversion.converted_code}
             </pre>
           )}
 
-          {/* Changes tab */}
+          {/* Changes log */}
           {tab === "changes" && (
-            <div className="space-y-2">
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {conversion.changes_log.length === 0 ? (
-                <p className="text-sm text-slate-500">No changes logged</p>
-              ) : (
-                conversion.changes_log.map((change, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 bg-black/40 border border-[#1e3a5f] rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span className="text-sm text-slate-300">{change}</span>
-                  </div>
-                ))
-              )}
+                <p style={{ fontSize: 13.5, color: "var(--ink-mute)" }}>No changes logged</p>
+              ) : conversion.changes_log.map((change, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 4, background: "var(--paper)" }}>
+                  <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)", fontSize: 11 }}>—</span>
+                  <span style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.6 }}>{change}</span>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Inline comments tab */}
+          {/* Inline comments */}
           {tab === "inline" && (
-            <div className="space-y-4">
-              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                <p className="text-sm font-semibold text-amber-400 mb-2">
-                  💡 Inline Comments Show What Changed
-                </p>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Look for <code className="text-emerald-400 bg-black/40 px-1 py-0.5 rounded">// MIGRATED:</code> comments 
-                  in the code below. These explain every change made during conversion.
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ padding: "10px 14px", border: "1px solid var(--rule)", borderRadius: 4, background: "rgba(15,23,42,.03)" }}>
+                <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.65 }}>
+                  Look for <code style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--clay)", background: "rgba(217,74,31,.08)", padding: "1px 5px", borderRadius: 3 }}>// MIGRATED:</code> comments — they explain every change made during conversion.
                 </p>
               </div>
-
-              <pre className="bg-black/40 border border-[#1e3a5f] rounded-lg p-4 text-xs font-mono overflow-x-auto">
-                {conversion.converted_code.split('\n').map((line, i) => {
-                  const hasMigratedComment = 
-                    line.includes('// MIGRATED:') || 
-                    line.includes('// CHANGED:') || 
-                    line.includes('// TODO: MANUAL REVIEW')
-                  
+              <div style={{ background: "rgba(15,23,42,.04)", border: "1px solid var(--rule)", borderRadius: 4, padding: "14px 16px", fontFamily: "var(--f-mono)", fontSize: 12, lineHeight: 1.65, overflow: "auto" }}>
+                {conversion.converted_code.split("\n").map((line, i) => {
+                  const isMigrated = line.includes("// MIGRATED:") || line.includes("// CHANGED:") || line.includes("// TODO: MANUAL REVIEW")
                   return (
-                    <div 
-                      key={i} 
-                      className={hasMigratedComment ? "bg-emerald-500/10 border-l-2 border-emerald-500 pl-2 -ml-4 pr-2" : ""}
-                    >
-                      <span className="text-slate-600 mr-4 select-none">{String(i + 1).padStart(4, ' ')}</span>
-                      <span className={hasMigratedComment ? "text-emerald-300" : "text-slate-400"}>
-                        {line || ' '}
-                      </span>
+                    <div key={i} style={{ display: "flex", gap: 10, background: isMigrated ? "rgba(217,74,31,.07)" : "transparent", borderLeft: isMigrated ? "2px solid var(--clay)" : "2px solid transparent", paddingLeft: isMigrated ? 6 : 0, marginLeft: isMigrated ? -2 : 0 }}>
+                      <span style={{ color: "var(--ink-mute)", width: 32, flexShrink: 0, textAlign: "right", userSelect: "none" }}>{i + 1}</span>
+                      <span style={{ color: isMigrated ? "var(--clay)" : "var(--ink-soft)", whiteSpace: "pre" }}>{line || " "}</span>
                     </div>
                   )
                 })}
-              </pre>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Footer actions */}
-        <div className="p-6 border-t border-[#1e3a5f] flex gap-3">
-          <Button onClick={handleDownload} variant="gradient" className="gap-2 flex-1">
-            <Download className="h-4 w-4" />
+        {/* Footer */}
+        <div style={{ padding: "16px 24px", borderTop: "1px solid var(--rule)", display: "flex", gap: 10, flexShrink: 0 }}>
+          <button onClick={handleDownload} className="btn-pill" style={{ flex: 1, justifyContent: "center", fontSize: 13.5 }}>
+            <Download size={15} />
             Download with Header
-          </Button>
-          <Button onClick={handleCopy} variant="outline" className="gap-2">
-            <Copy className="h-4 w-4" />
+          </button>
+          <button onClick={handleCopy} style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 20px", borderRadius: 999, border: "1px solid var(--rule)", background: "transparent", color: "var(--ink)", fontSize: 13.5, fontFamily: "var(--f-sans)", cursor: "pointer", fontWeight: 500, transition: "all .2s" }}
+            className="copy-btn">
+            <Copy size={14} />
             {copied ? "Copied!" : "Copy Code"}
-          </Button>
+          </button>
         </div>
       </div>
+
+      <style>{`
+        .copy-btn:hover { background: var(--paper-warm) !important; border-color: var(--ink) !important; }
+      `}</style>
     </div>
   )
 }
