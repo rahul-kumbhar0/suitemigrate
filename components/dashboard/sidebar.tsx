@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import {
   LayoutDashboard, History, CreditCard,
-  Users, Settings, Chrome, Menu, X,
+  Users, Settings, Chrome, Menu, X, Zap,
 } from "lucide-react"
 
 const navItems = [
@@ -16,14 +16,15 @@ const navItems = [
   { label: "Settings",    href: "/dashboard/settings",    icon: Settings },
 ]
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
   const isActive = (item: (typeof navItems)[0]) =>
     item.exact ? pathname === item.href : pathname.startsWith(item.href)
 
   return (
-    <>
-      <nav style={{ flex: 1, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Nav links */}
+      <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
         {navItems.map((item) => {
           const active = isActive(item)
           return (
@@ -32,32 +33,41 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
               href={item.href}
               onClick={onNavigate}
               style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 12px", borderRadius: 4,
-                fontSize: 14, fontFamily: "var(--f-sans)",
-                textDecoration: "none", transition: "background .14s, color .14s",
-                background: active ? "rgba(15,23,42,.07)" : "transparent",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "9px 12px",
+                borderRadius: 4,
+                fontSize: 14,
+                fontFamily: "var(--f-sans)",
+                textDecoration: "none",
                 color: active ? "var(--ink)" : "var(--ink-soft)",
                 fontWeight: active ? 500 : 400,
+                background: active ? "rgba(15,23,42,.07)" : "transparent",
                 borderLeft: active ? "2px solid var(--clay)" : "2px solid transparent",
+                transition: "background .14s, color .14s",
+              }}
+              onMouseEnter={e => {
+                if (!active) (e.currentTarget as HTMLElement).style.background = "var(--paper-warm)"
+              }}
+              onMouseLeave={e => {
+                if (!active) (e.currentTarget as HTMLElement).style.background = "transparent"
               }}
             >
-              <item.icon size={15} style={{ flexShrink: 0, color: active ? "var(--clay)" : "var(--ink-mute)" }} />
-              {item.label}
+              <item.icon
+                size={15}
+                style={{ flexShrink: 0, color: active ? "var(--clay)" : "var(--ink-mute)" }}
+              />
+              <span>{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
       {/* Extension CTA */}
-      <div style={{ padding: "0 16px 24px" }}>
-        <div style={{
-          border: "1px solid var(--rule)",
-          borderRadius: 6,
-          padding: "14px 16px",
-          background: "rgba(217,74,31,.04)",
-        }}>
-          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--ink-mute)", marginBottom: 6 }}>
+      <div style={{ padding: "0 12px 20px" }}>
+        <div style={{ border: "1px solid var(--rule)", borderRadius: 4, padding: "12px 14px", background: "rgba(217,74,31,.03)" }}>
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--ink-mute)", marginBottom: 5 }}>
             Chrome Extension
           </p>
           <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5, marginBottom: 10 }}>
@@ -67,7 +77,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href="#"
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              width: "100%", padding: "8px 12px", borderRadius: 999,
+              width: "100%", padding: "7px 12px", borderRadius: 999,
               background: "var(--ink)", color: "var(--paper)",
               fontSize: 12, fontFamily: "var(--f-sans)", fontWeight: 500,
               textDecoration: "none", transition: "background .2s",
@@ -75,15 +85,16 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--clay)")}
             onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "var(--ink)")}
           >
-            <Chrome size={13} />
+            <Chrome size={12} />
             Install free
           </a>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
+/* ── Mobile trigger + drawer ── */
 export function MobileSidebarTrigger() {
   const [open, setOpen] = useState(false)
 
@@ -91,20 +102,21 @@ export function MobileSidebarTrigger() {
     <>
       <button
         onClick={() => setOpen(true)}
-        style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", padding: 4 }}
-        className="mobile-trigger"
+        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", display: "flex", padding: 4, borderRadius: 4 }}
         aria-label="Open menu"
       >
         <Menu size={20} />
       </button>
 
+      {/* Backdrop */}
       {open && (
         <div
           onClick={() => setOpen(false)}
-          style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(15,23,42,.4)", backdropFilter: "blur(4px)" }}
+          style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(15,23,42,.35)", backdropFilter: "blur(3px)" }}
         />
       )}
 
+      {/* Drawer */}
       <div style={{
         position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50,
         width: 240, background: "var(--paper)",
@@ -113,25 +125,25 @@ export function MobileSidebarTrigger() {
         transform: open ? "translateX(0)" : "translateX(-100%)",
         transition: "transform .2s ease",
       }}>
-        <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--rule)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {/* Drawer header */}
+        <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--rule)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href="/" onClick={() => setOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
-            <span style={{ fontFamily: "var(--f-head)", fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+            <span style={{ fontFamily: "var(--f-head)", fontSize: 17, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.01em" }}>
               SuiteMigrate
             </span>
           </Link>
-          <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)" }}>
+          <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)", display: "flex", borderRadius: 4 }}>
             <X size={18} />
           </button>
         </div>
-        <NavLinks onNavigate={() => setOpen(false)} />
+        <SidebarContent onNavigate={() => setOpen(false)} />
       </div>
-
-      <style>{`.mobile-trigger { display: block !important; }`}</style>
     </>
   )
 }
 
+/* ── Desktop sidebar ── */
 export function DashboardSidebar() {
   return (
     <aside style={{
@@ -139,22 +151,17 @@ export function DashboardSidebar() {
       borderRight: "1px solid var(--rule)",
       background: "var(--paper)",
       display: "flex", flexDirection: "column",
-    }} className="dash-sidebar">
+    }}>
       {/* Logo */}
-      <div style={{ padding: "20px 20px 18px", borderBottom: "1px solid var(--rule)" }}>
+      <div style={{ padding: "18px 18px 16px", borderBottom: "1px solid var(--rule)" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
-          <span style={{ fontFamily: "var(--f-head)", fontSize: 18, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+          <span style={{ fontFamily: "var(--f-head)", fontSize: 18, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.01em" }}>
             SuiteMigrate
           </span>
         </Link>
       </div>
-
-      <NavLinks />
-
-      <style>{`
-        @media (max-width: 768px) { .dash-sidebar { display: none !important; } }
-      `}</style>
+      <SidebarContent />
     </aside>
   )
 }

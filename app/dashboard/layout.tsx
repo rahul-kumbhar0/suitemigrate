@@ -9,37 +9,31 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login")
 
   let plan = "free"
-  if (user) {
-    try {
-      const { data: profile } = await supabase
-        .from("users")
-        .select("plan")
-        .eq("id", user.id)
-        .maybeSingle()
-      if (profile) plan = profile.plan
+  try {
+    const { data: profile } = await supabase
+      .from("users").select("plan").eq("id", user.id).maybeSingle()
+    if (profile) plan = profile.plan
 
-      // Auto-create user row if it doesn't exist (trigger may have failed)
-      if (!profile) {
-        await supabase.from("users").upsert({
-          id: user.id,
-          email: user.email ?? "",
-          name: user.user_metadata?.name ?? null,
-          plan: "free",
-          conversions_used: 0,
-          conversions_limit: 5,
-        }, { onConflict: "id", ignoreDuplicates: true })
-      }
-    } catch {
-      // silently continue with plan = "free"
+    if (!profile) {
+      await supabase.from("users").upsert({
+        id: user.id,
+        email: user.email ?? "",
+        name: user.user_metadata?.name ?? null,
+        plan: "free",
+        conversions_used: 0,
+        conversions_limit: 5,
+      }, { onConflict: "id", ignoreDuplicates: true })
     }
-  }
+  } catch { /* use default free */ }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--paper)", display: "flex" }}>
+    <div className="dash-layout">
+      {/* Desktop sidebar — hidden on mobile via CSS */}
       <DashboardSidebar />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      {/* Main column */}
+      <div className="dash-main">
         <DashboardHeader user={user} plan={plan} />
-        <main style={{ flex: 1, padding: "40px 32px", overflowY: "auto" }}>
+        <main className="dash-content">
           {children}
         </main>
       </div>
