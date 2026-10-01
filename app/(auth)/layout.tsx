@@ -1,42 +1,44 @@
 import Link from "next/link"
-import { Zap } from "lucide-react"
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#050d1a] bg-grid flex flex-col">
-      {/* Top glow */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
+    <div style={{ minHeight: "100vh", background: "var(--paper)", display: "flex", flexDirection: "column" }}>
 
-      {/* Logo */}
-      <div className="relative z-10 p-6">
-        <Link href="/" className="inline-flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500">
-            <Zap className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-white">
-            Suite<span className="gradient-text">Migrate</span>
+      {/* Top nav */}
+      <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--rule)" }}>
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+          <span style={{ fontFamily: "var(--f-head)", fontSize: 19, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+            SuiteMigrate
           </span>
         </Link>
+        <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)" }}>
+          NetSuite SuiteScript 2.1 migration
+        </span>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
         {children}
       </div>
 
       {/* Footer */}
-      <div className="relative z-10 p-6 text-center">
-        <p className="text-xs text-slate-600">
-          © {new Date().getFullYear()} SuiteMigrate ·{" "}
-          <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
-          {" · "}
-          <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
-        </p>
+      <div style={{ padding: "18px 40px", borderTop: "1px solid var(--rule)", textAlign: "center", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+        <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)" }}>
+          © {new Date().getFullYear()} SuiteMigrate
+        </span>
+        <div style={{ display: "flex", gap: 20 }}>
+          {[
+            { label: "Privacy", href: "/privacy" },
+            { label: "Terms",   href: "/terms" },
+          ].map(l => (
+            <Link key={l.href} href={l.href} style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", textDecoration: "none", transition: "color .18s" }}
+              className="auth-footer-link">{l.label}</Link>
+          ))}
+        </div>
       </div>
+
+      <style>{`.auth-footer-link:hover { color: var(--clay) !important; }`}</style>
     </div>
   )
 }

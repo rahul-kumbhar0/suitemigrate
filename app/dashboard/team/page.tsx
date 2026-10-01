@@ -1,60 +1,62 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Users, Crown, Lock, ArrowRight } from "lucide-react"
+import { Users, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 export default function TeamPage() {
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Team</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Manage your team members and shared conversion history.
+    <div style={{ maxWidth: 700, margin: "0 auto" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: 40 }}>
+        <h1 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(24px,3.5vw,38px)", letterSpacing: "-0.025em", color: "var(--ink)", marginBottom: 6 }}>
+          Team
+        </h1>
+        <p style={{ fontFamily: "var(--f-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)" }}>
+          Manage team members and shared conversion history
         </p>
       </div>
 
-      {/* Locked state for non-team users */}
-      <Card className="border-slate-800">
-        <CardContent className="p-12 flex flex-col items-center text-center">
-          <div className="h-16 w-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-6">
-            <Users className="h-8 w-8 text-purple-400" />
-          </div>
-          <Badge variant="outline" className="mb-4 gap-1">
-            <Lock className="h-3 w-3" />
-            Team Plan Required
-          </Badge>
-          <h2 className="text-xl font-bold text-white mb-3">
-            Collaborate with your team
-          </h2>
-          <p className="text-slate-400 text-sm leading-relaxed max-w-md mb-8">
-            The Team plan gives you up to 5 seats so your whole team can
-            scan, convert, and share migration history across all client accounts.
-          </p>
+      {/* Locked state */}
+      <div style={{ border: "1px solid var(--rule)", borderRadius: 6, padding: "64px 40px", textAlign: "center", background: "var(--paper)" }}>
+        <div style={{ width: 52, height: 52, border: "1px solid var(--rule)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+          <Users size={24} style={{ color: "var(--ink-mute)" }} />
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-sm mb-8">
-            {[
-              "Up to 5 team members",
-              "Shared conversion history",
-              "Team management dashboard",
-              "Bulk export all accounts",
-            ].map((f) => (
-              <div key={f} className="flex items-center gap-2 text-sm text-slate-300">
-                <div className="h-1.5 w-1.5 rounded-full bg-purple-400 shrink-0" />
-                {f}
-              </div>
-            ))}
-          </div>
+        <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 16, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 10px", border: "1px solid var(--rule)", borderRadius: 3 }}>
+          Team Plan Required
+        </div>
 
-          <Link href="/dashboard/billing">
-            <Button variant="gradient" className="gap-2">
-              <Crown className="h-4 w-4" />
-              Upgrade to Team — $15/mo
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+        <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(24px,3vw,36px)", letterSpacing: "-0.02em", color: "var(--ink)", marginBottom: 12, lineHeight: 1.1 }}>
+          Collaborate with your{" "}
+          <span style={{ color: "var(--clay)", fontStyle: "italic" }}>whole team.</span>
+        </h2>
+
+        <p style={{ fontSize: 14, color: "var(--ink-soft)", maxWidth: 420, margin: "0 auto 32px", lineHeight: 1.7 }}>
+          The Team plan gives your entire team shared access to scan, convert, and export
+          migration history across all client NetSuite accounts.
+        </p>
+
+        {/* Features */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)", maxWidth: 420, margin: "0 auto 32px", textAlign: "left" }}>
+          {[
+            "Unlimited team seats",
+            "Shared conversion history",
+            "Team management dashboard",
+            "Bulk export all accounts",
+            "Client account management",
+            "Dedicated support",
+          ].map(f => (
+            <div key={f} style={{ background: "var(--paper)", padding: "12px 16px", fontSize: 13.5, color: "var(--ink-soft)", display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: "var(--clay)", fontFamily: "var(--f-mono)", fontSize: 11, flexShrink: 0 }}>✓</span>
+              {f}
+            </div>
+          ))}
+        </div>
+
+        <Link href="/dashboard/billing" className="btn-pill" style={{ display: "inline-flex", fontSize: 14 }}>
+          Upgrade to Team — $99/mo
+          <ArrowRight size={14} />
+        </Link>
+      </div>
     </div>
   )
 }

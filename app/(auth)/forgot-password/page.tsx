@@ -3,23 +3,24 @@
 import { useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2, ArrowLeft, CheckCircle, Zap } from "lucide-react"
+import { Loader2, ArrowLeft, CheckCircle } from "lucide-react"
+
+const inputStyle: React.CSSProperties = {
+  width: "100%", padding: "10px 12px", borderRadius: 4,
+  border: "1px solid var(--rule)", background: "var(--paper)",
+  fontSize: 14, color: "var(--ink)", outline: "none",
+  fontFamily: "var(--f-sans)", transition: "border-color .15s",
+}
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("")
+  const [email, setEmail]     = useState("")
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
-  const [error, setError] = useState("")
-
+  const [sent, setSent]       = useState(false)
+  const [error, setError]     = useState("")
   const supabase = createClient()
 
   const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
+    e.preventDefault(); setError(""); setLoading(true)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
@@ -28,90 +29,76 @@ export default function ForgotPasswordPage() {
       setSent(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.")
-    } finally {
-      setLoading(false)
-    }
+    } finally { setLoading(false) }
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-sm p-8 shadow-2xl">
+    <div style={{ width: "100%", maxWidth: 400 }}>
+      <div style={{ border: "1px solid var(--rule)", borderRadius: 6, background: "var(--paper)", padding: "36px 32px" }}>
+
         {sent ? (
-          <div className="text-center">
-            <div className="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-8 w-8 text-emerald-400" />
+          <div style={{ textAlign: "center" }}>
+            <div style={{ width: 52, height: 52, border: "1px solid var(--rule)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 18px" }}>
+              <CheckCircle size={24} style={{ color: "var(--clay)" }} />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Email sent</h2>
-            <p className="text-slate-400 text-sm leading-relaxed mb-6">
-              We sent a password reset link to{" "}
-              <span className="text-white font-medium">{email}</span>.
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 28, letterSpacing: "-0.02em", color: "var(--ink)", marginBottom: 10 }}>
+              Email sent.
+            </h2>
+            <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.65, marginBottom: 28 }}>
+              We sent a reset link to <strong style={{ color: "var(--ink)" }}>{email}</strong>.
               Check your inbox and click the link to reset your password.
             </p>
-            <Link href="/login">
-              <Button variant="outline" className="w-full gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Sign in
-              </Button>
+            <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 4, border: "1px solid var(--rule)", fontSize: 13.5, color: "var(--ink)", textDecoration: "none", transition: "background .14s" }} className="auth-back-btn">
+              <ArrowLeft size={14} /> Back to Sign in
             </Link>
           </div>
         ) : (
           <>
-            <div className="text-center mb-8">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-4">
-                <Zap className="h-6 w-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-white mb-1">Reset your password</h1>
-              <p className="text-sm text-slate-400">
+            <div style={{ marginBottom: 28 }}>
+              <h1 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 32, letterSpacing: "-0.025em", color: "var(--ink)", lineHeight: 1.1, marginBottom: 6 }}>
+                Reset your password.
+              </h1>
+              <p style={{ fontSize: 13.5, color: "var(--ink-soft)" }}>
                 Enter your email and we&apos;ll send you a reset link.
               </p>
             </div>
 
-            <form onSubmit={handleReset} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoFocus
-                />
+            <form onSubmit={handleReset} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12.5, fontWeight: 500, color: "var(--ink)", marginBottom: 5 }}>Email address</label>
+                <input type="email" required autoFocus placeholder="you@company.com"
+                  value={email} onChange={(e) => setEmail(e.target.value)}
+                  style={inputStyle}
+                  onFocus={e => (e.target.style.borderColor = "var(--ink)")}
+                  onBlur={e => (e.target.style.borderColor = "var(--rule)")} />
               </div>
 
               {error && (
-                <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+                <div style={{ padding: "10px 14px", borderRadius: 4, background: "rgba(220,38,38,.06)", border: "1px solid rgba(220,38,38,.2)", fontSize: 13, color: "#dc2626" }}>
                   {error}
                 </div>
               )}
 
-              <Button
-                type="submit"
-                variant="gradient"
-                className="w-full h-11"
-                disabled={loading}
-              >
-                {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
-                ) : (
-                  "Send Reset Link"
-                )}
-              </Button>
+              <button type="submit" disabled={loading} className="btn-pill"
+                style={{ justifyContent: "center", opacity: loading ? .6 : 1, cursor: loading ? "not-allowed" : "pointer" }}>
+                {loading ? <><Loader2 size={14} style={{ animation: "spin .7s linear infinite" }} /> Sending...</> : "Send Reset Link"}
+              </button>
             </form>
 
-            <div className="mt-6 text-center">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Back to Sign in
+            <div style={{ marginTop: 22, textAlign: "center" }}>
+              <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--ink-mute)", textDecoration: "none" }} className="auth-back-link">
+                <ArrowLeft size={13} /> Back to Sign in
               </Link>
             </div>
           </>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .auth-back-btn:hover  { background: var(--paper-warm) !important; }
+        .auth-back-link:hover { color: var(--ink) !important; }
+      `}</style>
     </div>
   )
 }

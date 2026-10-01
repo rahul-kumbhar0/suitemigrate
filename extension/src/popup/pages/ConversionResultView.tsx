@@ -5,215 +5,152 @@ import { useStore } from "../../lib/store"
 import { downloadScript } from "../../lib/export"
 
 export default function ConversionResultView() {
-  const { conversionResult, conversionError, setView, activeAccount } = useStore()
+  const { conversionResult, conversionError, setView } = useStore()
   const [copied, setCopied] = useState(false)
-  const [tab, setTab] = useState<"converted" | "changes" | "comments">("converted")
+  const [tab, setTab]       = useState<"converted" | "changes" | "comments">("converted")
 
-  if (conversionError) {
-    return (
-      <div className="flex flex-col">
-        <Header showBack onBack={() => setView("script_list")} title="Conversion Failed" />
-        <div className="p-4 flex flex-col items-center gap-4 text-center">
-          <div className="h-12 w-12 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-            <XCircle className="h-6 w-6 text-red-400" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-white mb-1">Conversion Error</p>
-            <p className="text-xs text-slate-400 leading-relaxed">{conversionError}</p>
-          </div>
-          <button onClick={() => setView("script_list")} className="btn-outline">
-            ← Back to Scripts
-          </button>
+  if (conversionError) return (
+    <div style={{ display: "flex", flexDirection: "column" }}>
+      <Header showBack onBack={() => setView("script_list")} title="Conversion Failed" />
+      <div style={{ padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, textAlign: "center" }}>
+        <div style={{ width: 44, height: 44, border: "1px solid rgba(217,74,31,.3)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <XCircle size={22} style={{ color: "var(--clay)" }} />
         </div>
+        <div>
+          <p style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 6 }}>Conversion Error</p>
+          <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>{conversionError}</p>
+        </div>
+        <button onClick={() => setView("script_list")} className="btn-outline">← Back to Scripts</button>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (!conversionResult) {
-    setView("script_list")
-    return null
-  }
+  if (!conversionResult) { setView("script_list"); return null }
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(conversionResult.convertedCode)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
-  const confidenceColor =
-    conversionResult.confidenceScore >= 90 ? "text-emerald-400" :
-    conversionResult.confidenceScore >= 70 ? "text-amber-400" : "text-red-400"
+  const confColor = conversionResult.confidenceScore >= 90 ? "var(--clay)" : conversionResult.confidenceScore >= 70 ? "#b45309" : "#dc2626"
 
   return (
-    <div className="flex flex-col">
+    <div style={{ display: "flex", flexDirection: "column" }}>
       <Header showBack onBack={() => setView("script_list")} title="Conversion Complete" />
 
-      <div className="p-3 space-y-3">
-        {/* Result summary */}
-        <div className="card p-3">
-          <div className="flex items-start gap-2 mb-2">
-            <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-white truncate">{conversionResult.scriptName}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">
+      <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+
+        {/* Summary card */}
+        <div className="card" style={{ padding: "12px 14px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 10 }}>
+            <CheckCircle size={14} style={{ color: "var(--clay)", flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 12.5, fontWeight: 500, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {conversionResult.scriptName}
+              </p>
+              <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", marginTop: 2 }}>
                 SS {conversionResult.originalVersion} → 2.1 · {conversionResult.scriptType}
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#1e3a5f]">
-            <div className="text-center">
-              <p className={`text-lg font-bold ${confidenceColor}`}>
-                {conversionResult.confidenceScore}%
-              </p>
-              <p className="text-[9px] text-slate-500">Confidence</p>
-            </div>
-            <div className="text-center">
-              <p className="text-lg font-bold text-white">{conversionResult.changeLog.length}</p>
-              <p className="text-[9px] text-slate-500">Changes</p>
-            </div>
-            <div className="text-center">
-              <p className={`text-lg font-bold ${conversionResult.manualReviewLines.length > 0 ? "text-amber-400" : "text-emerald-400"}`}>
-                {conversionResult.manualReviewLines.length}
-              </p>
-              <p className="text-[9px] text-slate-500">Review Lines</p>
-            </div>
+          {/* Stats row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)", borderRadius: 3, overflow: "hidden" }}>
+            {[
+              { label: "Confidence", value: `${conversionResult.confidenceScore}%`, color: confColor },
+              { label: "Changes",    value: conversionResult.changeLog.length,       color: "var(--ink)" },
+              { label: "Review",     value: conversionResult.manualReviewLines.length, color: conversionResult.manualReviewLines.length > 0 ? "#b45309" : "#15803d" },
+            ].map(s => (
+              <div key={s.label} style={{ background: "var(--paper)", padding: "8px 4px", textAlign: "center" }}>
+                <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 20, letterSpacing: "-0.02em", color: s.color, lineHeight: 1 }}>{s.value}</div>
+                <div className="eyebrow" style={{ marginTop: 3, fontSize: 8 }}>{s.label}</div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Validation errors */}
-        {conversionResult.validationErrors.length > 0 && (
-          <div className="card p-2.5 border-amber-500/30 bg-amber-500/5">
-            <div className="flex items-start gap-1.5">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[10px] font-semibold text-amber-400 mb-1">Needs Review</p>
-                {conversionResult.validationErrors.map((e, i) => (
-                  <p key={i} className="text-[10px] text-slate-400">• {e}</p>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Manual review lines */}
+        {/* Manual review warning */}
         {conversionResult.manualReviewLines.length > 0 && (
-          <div className="card p-2.5 border-amber-500/20">
-            <p className="text-[10px] text-amber-400 font-semibold mb-1">Lines needing manual review</p>
-            <p className="text-[10px] text-slate-400">
-              Lines: {conversionResult.manualReviewLines.join(", ")}
-            </p>
+          <div className="card" style={{ padding: "8px 12px", borderColor: "rgba(180,83,9,.25)", background: "rgba(180,83,9,.04)" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+              <AlertTriangle size={12} style={{ color: "#b45309", flexShrink: 0, marginTop: 1 }} />
+              <p style={{ fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.5 }}>
+                Lines {conversionResult.manualReviewLines.join(", ")} need manual review
+              </p>
+            </div>
           </div>
         )}
 
         {/* Tab switcher */}
-        <div className="flex gap-1">
-          {(["converted", "changes", "comments"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 py-1.5 rounded text-[10px] font-medium transition-colors ${
-                tab === t
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                  : "text-slate-500 hover:text-slate-300"
-              }`}
-            >
-              {t === "converted" ? (
-                <><FileCode className="h-3 w-3 inline mr-1" />Code</>
-              ) : t === "changes" ? (
-                <><ListChecks className="h-3 w-3 inline mr-1" />Changes ({conversionResult.changeLog.length})</>
-              ) : (
-                <><AlertTriangle className="h-3 w-3 inline mr-1" />Inline</>
-              )}
+        <div style={{ display: "flex", gap: 3 }}>
+          {(["converted", "changes", "comments"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={tab === t ? "tab-active" : "tab-inactive"}
+              style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 9.5, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer" }}>
+              {t === "converted" ? "Code" : t === "changes" ? `Changes (${conversionResult.changeLog.length})` : "Inline"}
             </button>
           ))}
         </div>
 
-        {/* Code view */}
+        {/* Code */}
         {tab === "converted" && (
-          <div className="code-block text-[10px]">
+          <div className="code-block">
             {conversionResult.convertedCode.slice(0, 1500)}
-            {conversionResult.convertedCode.length > 1500 && "\n\n... (truncated — download for full code)"}
+            {conversionResult.convertedCode.length > 1500 && "\n\n// ... (truncated — download for full code)"}
           </div>
         )}
 
-        {/* Changes log */}
+        {/* Changes */}
         {tab === "changes" && (
-          <div className="card p-3 space-y-1.5 max-h-[180px] overflow-y-auto">
+          <div style={{ border: "1px solid var(--rule)", borderRadius: 4, maxHeight: 180, overflowY: "auto" }}>
             {conversionResult.changeLog.length === 0 ? (
-              <p className="text-xs text-slate-500">No changes logged</p>
+              <p style={{ padding: "12px 14px", fontSize: 11.5, color: "var(--ink-mute)" }}>No changes logged</p>
             ) : conversionResult.changeLog.map((c, i) => (
-              <div key={i} className="flex items-start gap-2 text-[10px]">
-                <span className="text-emerald-500 shrink-0">•</span>
-                <span className="text-slate-300">{c}</span>
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 12px", borderBottom: "1px solid var(--rule)", fontSize: 11 }}>
+                <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>
+                <span style={{ color: "var(--ink-soft)", lineHeight: 1.5 }}>{c}</span>
               </div>
             ))}
           </div>
         )}
 
-        {/* Inline comments view - Shows code with MIGRATED comments highlighted */}
+        {/* Inline comments */}
         {tab === "comments" && (
-          <div className="space-y-2">
-            <div className="card p-2.5">
-              <p className="text-[10px] text-amber-400 font-semibold mb-1.5">
-                💡 Inline Comments Show What Changed
-              </p>
-              <p className="text-[9px] text-slate-400 leading-relaxed">
-                Look for <code className="text-emerald-400">// MIGRATED:</code> comments in the converted code. 
-                These explain every change made during conversion.
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className="card" style={{ padding: "8px 12px" }}>
+              <p style={{ fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.6 }}>
+                Look for <code style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--clay)" }}>// MIGRATED:</code> comments in the code — they explain every change made.
               </p>
             </div>
-            
-            <div className="code-block text-[9px] max-h-[200px] overflow-y-auto">
-              {/* Extract and highlight lines with MIGRATED comments */}
-              {conversionResult.convertedCode.split('\n').map((line, i) => {
-                const hasMigratedComment = line.includes('// MIGRATED:') || line.includes('// CHANGED:') || line.includes('// TODO: MANUAL REVIEW')
-                if (!hasMigratedComment && i > 20) return null // Only show first 20 non-comment lines
-                
+            <div className="code-block" style={{ maxHeight: 180, fontSize: 10, overflowY: "auto" }}>
+              {conversionResult.convertedCode.split("\n").slice(0, 40).map((line, i) => {
+                const isMigrated = line.includes("// MIGRATED:") || line.includes("// CHANGED:") || line.includes("// TODO: MANUAL REVIEW")
                 return (
-                  <div 
-                    key={i} 
-                    className={hasMigratedComment ? "bg-emerald-500/10 border-l-2 border-emerald-500 pl-2" : ""}
-                  >
-                    <span className="text-slate-600 mr-2">{i + 1}</span>
-                    <span className={hasMigratedComment ? "text-emerald-300" : "text-slate-400"}>
-                      {line || ' '}
-                    </span>
+                  <div key={i} style={{ display: "flex", gap: 6, background: isMigrated ? "rgba(217,74,31,.06)" : "transparent", borderLeft: isMigrated ? "2px solid var(--clay)" : "2px solid transparent", paddingLeft: isMigrated ? 4 : 2 }}>
+                    <span style={{ color: "var(--ink-mute)", width: 18, flexShrink: 0, textAlign: "right" }}>{i + 1}</span>
+                    <span style={{ color: isMigrated ? "var(--clay)" : "var(--ink-soft)" }}>{line || " "}</span>
                   </div>
                 )
-              }).filter(Boolean).slice(0, 30)}
-              <p className="text-slate-600 text-center py-2">
-                ... (Download full file to see all inline comments)
-              </p>
+              })}
+              <div style={{ textAlign: "center", padding: "8px 0", fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)" }}>
+                — download for full file —
+              </div>
             </div>
           </div>
         )}
 
         {/* Action buttons */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => downloadScript(
-              conversionResult.scriptName, 
-              conversionResult.convertedCode,
-              conversionResult.changeLog
-            )}
-            className="btn-primary text-[11px] h-8 justify-center"
-          >
-            <Download className="h-3 w-3" />
-            Download
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+          <button onClick={() => downloadScript(conversionResult.scriptName, conversionResult.convertedCode, conversionResult.changeLog)} className="btn-primary" style={{ justifyContent: "center", fontSize: 11 }}>
+            <Download size={12} /> Download
           </button>
-          <button onClick={handleCopy} className="btn-outline text-[11px] h-8 justify-center">
-            <Copy className="h-3 w-3" />
-            {copied ? "Copied!" : "Copy Code"}
+          <button onClick={handleCopy} className="btn-outline" style={{ justifyContent: "center", fontSize: 11 }}>
+            <Copy size={12} /> {copied ? "Copied!" : "Copy Code"}
           </button>
         </div>
 
-        <button
-          onClick={() => setView("script_list")}
-          className="btn-outline w-full text-[11px] h-7 justify-center"
-        >
-          <ArrowLeft className="h-3 w-3" />
-          Convert Another Script
+        <button onClick={() => setView("script_list")} className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+          <ArrowLeft size={11} /> Convert Another Script
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { Crown, Zap, Users, CheckCircle, X, ArrowLeft } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { useStore } from "../../lib/store"
 import { getUpgradeUrl } from "../../lib/api"
 import Header from "../components/Header"
@@ -6,115 +6,98 @@ import Header from "../components/Header"
 const plans = [
   {
     id: "lifetime",
-    name: "Lifetime Pro",
-    price: "$10",
+    name: "Lifetime",
+    price: "$299",
     period: "one time",
-    description: "Pay once, convert forever",
-    icon: Crown,
-    iconColor: "text-yellow-400",
-    iconBg: "bg-yellow-500/10 border-yellow-500/20",
-    features: ["Unlimited conversions", "All pro features", "All future updates", "Priority queue"],
-    highlight: true,
+    alt: "Pay once — use forever",
+    desc: "Every feature, no renewals.",
+    features: ["Unlimited conversions", "All pro features", "All future updates"],
+    dark: true,
   },
   {
     id: "pro",
     name: "Pro",
-    price: "$4",
+    price: "$29",
     period: "/month",
-    description: "For active migration projects",
-    icon: Zap,
-    iconColor: "text-emerald-400",
-    iconBg: "bg-emerald-500/10 border-emerald-500/20",
-    features: ["Unlimited conversions", "Diff view", "ZIP export", "History"],
-    highlight: false,
-  },
-  {
-    id: "team",
-    name: "Team",
-    price: "$15",
-    period: "/month",
-    description: "For consultants & agencies",
-    icon: Users,
-    iconColor: "text-purple-400",
-    iconBg: "bg-purple-500/10 border-purple-500/20",
-    features: ["Up to 5 team seats", "Shared history", "Bulk export", "All Pro features"],
-    highlight: false,
+    alt: "Cancel anytime",
+    desc: "For active migration projects.",
+    features: ["Unlimited conversions", "Diff view + history", "ZIP export"],
+    dark: false,
   },
 ]
 
 export default function UpgradeView() {
-  const { setView, conversions, user } = useStore()
+  const { setView } = useStore()
 
-  const handleUpgrade = (planId: string) => {
-    const url = getUpgradeUrl(planId)
-    chrome.tabs.create({ url })
-  }
+  const handleUpgrade = (planId: string) => chrome.tabs.create({ url: getUpgradeUrl(planId) })
 
   return (
-    <div className="flex flex-col">
+    <div style={{ display: "flex", flexDirection: "column" }}>
       <Header showBack onBack={() => setView("script_list")} title="Upgrade Plan" />
 
-      <div className="p-4 space-y-4">
-        {/* Limit reached message */}
-        <div className="card p-3 border-amber-500/30 bg-amber-500/5 text-center">
-          <p className="text-xs font-semibold text-amber-400 mb-1">
-            🔒 Free conversions used
-          </p>
-          <p className="text-[10px] text-slate-400 leading-relaxed">
-            You&apos;ve used your 2 free conversions. Upgrade to continue migrating — from just $10 lifetime.
+      <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* Limit notice */}
+        <div className="card" style={{ padding: "10px 12px", borderColor: "rgba(217,74,31,.25)", background: "rgba(217,74,31,.04)", textAlign: "center" }}>
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--clay)", marginBottom: 4 }}>Free conversions used</p>
+          <p style={{ fontSize: 11.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>
+            Upgrade to continue migrating your NetSuite scripts.
           </p>
         </div>
 
         {/* Plan cards */}
-        <div className="space-y-2">
-          {plans.map((plan) => (
-            <div
-              key={plan.id}
-              className={`card p-3 ${plan.highlight ? "border-emerald-500/40 bg-emerald-500/5" : ""}`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className={`h-7 w-7 rounded-lg border flex items-center justify-center ${plan.iconBg}`}>
-                    <plan.icon className={`h-3.5 w-3.5 ${plan.iconColor}`} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-white">{plan.name}</p>
-                    <p className="text-[10px] text-slate-500">{plan.description}</p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-lg font-black text-white">{plan.price}</span>
-                  <span className="text-[10px] text-slate-500 ml-0.5">{plan.period}</span>
-                </div>
+        {plans.map(plan => (
+          <div key={plan.id} style={{
+            border: `1px solid ${plan.dark ? "var(--ink)" : "var(--rule)"}`,
+            borderRadius: 4, padding: "14px 16px",
+            background: plan.dark ? "var(--ink)" : "var(--paper)",
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+              <div>
+                <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: plan.dark ? "rgba(250,250,249,.45)" : "var(--ink-mute)", marginBottom: 4 }}>
+                  {plan.name}
+                </p>
+                <p style={{ fontSize: 12, color: plan.dark ? "rgba(250,250,249,.6)" : "var(--ink-soft)" }}>{plan.desc}</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 mb-2.5">
-                {plan.features.map((f) => (
-                  <div key={f} className="flex items-center gap-1 text-[10px] text-slate-300">
-                    <CheckCircle className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
-                    {f}
-                  </div>
-                ))}
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <span style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 24, letterSpacing: "-0.02em", color: plan.dark ? "var(--paper)" : "var(--ink)" }}>{plan.price}</span>
+                <span style={{ fontSize: 10.5, color: plan.dark ? "rgba(250,250,249,.45)" : "var(--ink-mute)", marginLeft: 3 }}>{plan.period}</span>
               </div>
-
-              <button
-                onClick={() => handleUpgrade(plan.id)}
-                className={`w-full text-[11px] h-7 rounded-lg font-semibold transition-colors ${
-                  plan.highlight
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90"
-                    : "bg-[#1e3a5f] text-slate-300 hover:bg-[#2a4a6f] hover:text-white"
-                }`}
-              >
-                {plan.id === "lifetime" ? "Buy Lifetime — $10" : `Get ${plan.name}`}
-              </button>
             </div>
-          ))}
-        </div>
 
-        <p className="text-[9px] text-slate-600 text-center">
-          Secured by Razorpay · UPI, Cards, Net Banking accepted
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
+              {plan.features.map(f => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: plan.dark ? "rgba(250,250,249,.65)" : "var(--ink-soft)" }}>
+                  <span style={{ color: plan.dark ? "var(--clay)" : "var(--ink-mute)", fontFamily: "var(--f-mono)", fontSize: 10 }}>{plan.dark ? "✓" : "—"}</span>
+                  {f}
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => handleUpgrade(plan.id)}
+              style={{
+                width: "100%", padding: "8px 14px", borderRadius: 999,
+                background: plan.dark ? "var(--clay)" : "transparent",
+                color: plan.dark ? "var(--paper)" : "var(--ink)",
+                border: `1px solid ${plan.dark ? "var(--clay)" : "var(--rule)"}`,
+                fontSize: 12, fontWeight: 500, fontFamily: "var(--f-sans)",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                transition: "background .2s",
+              }}
+              className={plan.dark ? "upgrade-btn-dark" : "upgrade-btn-light"}>
+              {plan.id === "lifetime" ? "Buy Lifetime — $299" : "Get Pro"} <ArrowRight size={12} />
+            </button>
+          </div>
+        ))}
+
+        <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--ink-mute)", textAlign: "center" }}>
+          Secured by Razorpay · UPI · Cards · Net Banking
         </p>
       </div>
+
+      <style>{`
+        .upgrade-btn-dark:hover  { background: #c23d15 !important; }
+        .upgrade-btn-light:hover { background: var(--paper-warm) !important; }
+      `}</style>
     </div>
   )
 }
