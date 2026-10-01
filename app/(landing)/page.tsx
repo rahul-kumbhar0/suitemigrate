@@ -1,36 +1,31 @@
 import Link from "next/link"
 import { Navbar } from "@/components/landing/navbar"
 import { Footer } from "@/components/landing/footer"
-import {
-  Zap, Download, GitCompare, CheckCircle, Chrome,
-  Sparkles, ArrowRight, Clock, BarChart3, Shield,
-  Code2, FileCode2, Star, Users, Infinity,
-} from "lucide-react"
 
 const faqs = [
   {
     q: "Does SuiteMigrate store my NetSuite credentials?",
-    a: "Never. The Chrome extension operates entirely on your existing browser session — the same one you use daily. Zero credentials are captured, stored, or transmitted. Your NetSuite data never leaves your machine.",
+    a: "Never. The extension reads your existing browser session — the same one you use every day. Nothing is captured, stored or transmitted. Your NetSuite credentials never leave your machine.",
   },
   {
-    q: "How accurate is the AI conversion engine?",
-    a: "We run a two-pass system: 50+ deterministic rule-based API mappings handle known patterns first, then Gemini AI handles context-aware structural changes. Every result includes a confidence score and flags any lines needing manual review.",
+    q: "How accurate is the AI conversion?",
+    a: "We run a two-pass system: 50+ deterministic API mapping rules handle known patterns first, then Gemini AI handles context-aware structural changes. Every result gets a confidence score and flags lines needing manual review.",
   },
   {
     q: "Which script types are supported?",
-    a: "All of them — UserEvent, Suitelet, Scheduled, Map/Reduce, ClientScript, RESTlet, Portlet, and MassUpdate. Both SS 1.0 → 2.1 and SS 2.0 → 2.1 migration paths are fully supported.",
+    a: "All of them — UserEvent, Suitelet, Scheduled, Map/Reduce, ClientScript, RESTlet, Portlet, MassUpdate. Both SS 1.0 → 2.1 and SS 2.0 → 2.1 paths are fully supported.",
   },
   {
-    q: "Why is the 2028 deadline critical?",
-    a: "Oracle NetSuite has a firm, non-negotiable timeline: SS 1.0 enters limited support in 2027.1, all scripts default to 2.1 execution from 2028.1, and scripts that aren't 2.1-compliant stop running entirely in 2028.2.",
+    q: "Why is the 2028 deadline firm?",
+    a: "Oracle's timeline is non-negotiable: SS 1.0 enters limited support in 2027.1, all scripts default to 2.1 execution from 2028.1, and scripts that aren't 2.1-compliant stop running in 2028.2.",
   },
   {
-    q: "What's included in the free plan?",
-    a: "Unlimited account scanning, risk scoring for every script, a full PDF audit report, and 5 complete AI conversions — all with inline comments, diff view, and download. No credit card, no time limit.",
+    q: "What's in the free plan?",
+    a: "Unlimited account scanning, risk scoring for every script, a full audit report, and 5 complete AI conversions — with inline comments, diff view, and download. No credit card, no time limit.",
   },
   {
     q: "Can I use a promo code?",
-    a: "Yes — enter it in Settings after signup. Use TESTPRO for unlimited conversions during the beta.",
+    a: "Yes — enter it in Settings after signup. TESTPRO unlocks unlimited conversions during the beta.",
   },
 ]
 
@@ -38,404 +33,193 @@ export default function LandingPage() {
   const daysLeft = Math.ceil((new Date("2028-01-01").getTime() - Date.now()) / 86_400_000)
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A]">
+    <div style={{ background: "var(--paper)", color: "var(--ink)" }}>
       <Navbar />
 
-      {/* ═══════════════════════════════════════════
+      {/* ═══════════════════════════════════════
           HERO
-      ═══════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-hero pt-32 pb-24 px-4">
-        {/* Dot grid */}
-        <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
-        {/* Violet glow orb */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
+      ═══════════════════════════════════════ */}
+      <header style={{
+        padding: "176px 40px 120px",
+        maxWidth: 1240,
+        margin: "0 auto",
+        position: "relative",
+      }}>
+        {/* Eyebrow */}
+        <div className="fade-up delay-1" style={{ marginBottom: 30 }}>
+          <span className="eyebrow">
+            For NetSuite developers · Chrome extension · v1.0 · {daysLeft} days to the 2028 deadline
+          </span>
+        </div>
 
-        <div className="relative mx-auto max-w-5xl text-center">
+        {/* H1 */}
+        <h1 className="fade-up delay-2" style={{
+          fontFamily: "var(--f-head)",
+          fontWeight: 300,
+          fontSize: "clamp(50px, 8vw, 108px)",
+          lineHeight: .95,
+          letterSpacing: "-0.035em",
+          color: "var(--ink)",
+          maxWidth: 860,
+          marginBottom: 30,
+        }}>
+          Stop guessing.<br />
+          Start <span style={{ color: "var(--clay)", fontStyle: "italic" }}>migrating.</span>
+        </h1>
 
-          {/* Version pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#2A3650] bg-[#0F1420] text-xs text-[#A8B4CC] mb-8">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#F6C430] animate-pulse" />
-            v1.0 — AI conversion + Chrome extension · 2028 deadline is {daysLeft} days away
+        {/* Sub */}
+        <p className="fade-up delay-3" style={{
+          fontSize: 18,
+          color: "var(--ink-soft)",
+          maxWidth: 510,
+          lineHeight: 1.65,
+          marginBottom: 40,
+        }}>
+          SuiteMigrate scans your entire NetSuite account, risk-scores every script, and converts
+          SuiteScript 1.0/2.0 to 2.1 — with an inline comment on every single change. Right from your browser.
+        </p>
+
+        {/* CTAs */}
+        <div className="fade-up delay-4" style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center" }}>
+          <Link href="/signup" className="btn-pill">
+            Install free on Chrome
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 7h12m0 0L8 2m5 5L8 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </Link>
+          <Link href="/#how-it-works" style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            color: "var(--ink-soft)", fontSize: 14, fontFamily: "var(--f-sans)",
+          }}>
+            See how it works →
+          </Link>
+        </div>
+
+        <p className="fade-up delay-4" style={{
+          marginTop: 28,
+          fontFamily: "var(--f-mono)",
+          fontSize: 10.5,
+          color: "var(--ink-mute)",
+          letterSpacing: ".06em",
+        }}>
+          Read-only · Never writes to NetSuite · Your scripts stay in your browser · Not affiliated with Oracle
+        </p>
+
+        {/* Hero mock card — rotated */}
+        <div style={{
+          position: "absolute",
+          top: 200, right: 40,
+          width: 390,
+          background: "var(--ink)",
+          color: "var(--paper)",
+          padding: 30,
+          borderRadius: 10,
+          fontFamily: "var(--f-mono)",
+          boxShadow: "0 32px 64px -20px rgba(0,0,0,.32)",
+          transform: "rotate(1.5deg)",
+          pointerEvents: "none",
+        }} className="hero-card-hide">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".2em", color: "rgba(250,250,249,.45)", marginBottom: 18 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", animation: "blink 1.4s ease-in-out infinite", flexShrink: 0, display: "inline-block" }} />
+            Pre-migration scan · ACME Corp · 67 scripts
           </div>
-
-          {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl lg:text-[80px] font-extrabold text-white leading-[1.02] tracking-[-0.03em] mb-6 text-balance">
-            Stop dreading the{" "}
-            <span className="gradient-text">2028 deadline.</span>
-          </h1>
-
-          {/* Subhead */}
-          <p className="text-lg sm:text-xl text-[#A8B4CC] max-w-2xl mx-auto mb-3 leading-relaxed font-light">
-            SuiteMigrate scans your entire NetSuite account, risk-scores every script, and
-            converts SuiteScript 1.0/2.0 to 2.1 — with an inline comment on every single change.
-          </p>
-          <p className="text-sm text-[#6B7A99] mb-12">
-            5 free conversions · No credit card · Works on any NetSuite environment
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-16">
-            <Link href="/signup">
-              <button className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] font-semibold text-base transition-all shadow-lg hover:shadow-[0_0_30px_rgba(246,196,48,0.35)] active:scale-[0.98]">
-                <Chrome className="h-5 w-5" />
-                Start for free
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-            <Link href="/#how-it-works">
-              <button className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-[#2A3650] bg-transparent hover:bg-[#141926] text-[#A8B4CC] hover:text-white font-medium text-base transition-all">
-                See how it works
-              </button>
-            </Link>
+          <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 60, lineHeight: 1, letterSpacing: "-0.04em", marginBottom: 5 }}>
+            43<span style={{ fontSize: 28, opacity: .4 }}> to migrate</span>
           </div>
-
-          {/* Trust row */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-[#6B7A99]">
+          <div style={{ fontSize: 10.5, color: "rgba(250,250,249,.45)", letterSpacing: ".1em", marginBottom: 26 }}>
+            SuiteScript 1.0 scripts · action required
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 4, marginBottom: 14 }}>
             {[
-              "No credentials stored",
-              "Local-first, read-only by default",
-              "Works on sandbox & production",
-              "Built by a NetSuite developer",
-            ].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
-                <CheckCircle className="h-3.5 w-3.5 text-[#F6C430]" />
-                {t}
-              </span>
+              { label: "UserEvent", active: true },
+              { label: "Scheduled", active: true },
+              { label: "MapReduce", warn: true },
+              { label: "Suitelet", active: false },
+              { label: "RESTlet", active: true },
+              { label: "Client", active: false },
+              { label: "Portlet", active: true },
+              { label: "MassUpd", warn: true },
+            ].map((m) => (
+              <div key={m.label} style={{
+                height: 34, borderRadius: 2,
+                background: m.warn ? "rgba(217,74,31,.3)" : m.active ? "rgba(217,74,31,.15)" : "rgba(250,250,249,.08)",
+                display: "flex", alignItems: "flex-end", padding: 4,
+              }}>
+                <span style={{ fontSize: 7.5, letterSpacing: ".07em", textTransform: "uppercase", color: "rgba(250,250,249,.55)" }}>{m.label}</span>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Hero terminal mockup */}
-        <div className="relative mx-auto max-w-3xl mt-20">
-          <div className="rounded-2xl border border-[#2A3650] bg-[#0F1420] overflow-hidden shadow-2xl glow-violet">
-            {/* Terminal bar */}
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#1F2A3C] bg-[#141926]">
-              <div className="flex gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-[#FF5F57]" />
-                <div className="h-3 w-3 rounded-full bg-[#FFBD2E]" />
-                <div className="h-3 w-3 rounded-full bg-[#28C840]" />
-              </div>
-              <span className="text-[#6B7A99] text-xs ml-2 font-mono">suitemigrate — invoice_ue.js</span>
-            </div>
-            {/* Code */}
-            <div className="p-6 font-mono text-xs leading-relaxed">
-              <div className="text-[#6B7A99] mb-1">// Before — SuiteScript 1.0</div>
-              <div className="mb-4 space-y-0.5 opacity-50 line-through decoration-red-500/60">
-                <div><span className="text-red-400">function</span> <span className="text-white">beforeSubmit</span>(type) {'{'}</div>
-                <div className="pl-4"><span className="text-blue-400">var</span> rec = <span className="text-red-400">nlapiLoadRecord</span>(<span className="text-green-400">'customer'</span>, id);</div>
-                <div className="pl-4">rec.<span className="text-red-400">setFieldValue</span>(<span className="text-green-400">'email'</span>, newEmail);</div>
-                <div className="pl-4"><span className="text-red-400">nlapiSubmitRecord</span>(rec);</div>
-                <div>{'}'}</div>
-              </div>
-              <div className="text-[#6B7A99] mb-1">// After — SuiteScript 2.1</div>
-              <div className="space-y-0.5">
-                <div className="text-[#7C5CFC] bg-[#7C5CFC]/8 px-1 rounded text-[10px] mb-1 inline-block">// MIGRATED: converted to AMD module with N/record</div>
-                <div><span className="text-[#F6C430]">define</span>([<span className="text-green-400">'N/record'</span>], (<span className="text-[#A78BFA]">record</span>) =&gt; {'{'}</div>
-                <div className="pl-4"><span className="text-[#F6C430]">return</span> {'{'} <span className="text-[#A78BFA]">beforeSubmit</span>: (ctx) =&gt; {'{'}</div>
-                <div className="pl-8 text-[#7C5CFC] text-[10px]">// MIGRATED: nlapiLoadRecord → record.load()</div>
-                <div className="pl-8"><span className="text-[#F6C430]">const</span> rec = record.<span className="text-[#A78BFA]">load</span>({'{'}<span className="text-green-400">type</span>:<span className="text-green-400">'customer'</span>,<span className="text-green-400">id</span>{'}'});</div>
-                <div className="pl-8 text-[#7C5CFC] text-[10px]">// MIGRATED: setFieldValue → setValue()</div>
-                <div className="pl-8">rec.<span className="text-[#A78BFA]">setValue</span>({'{'}<span className="text-green-400">fieldId</span>:<span className="text-green-400">'email'</span>, <span className="text-green-400">value</span>:newEmail{'}'});</div>
-                <div className="pl-8 text-[#7C5CFC] text-[10px]">// MIGRATED: nlapiSubmitRecord → rec.save()</div>
-                <div className="pl-8">rec.<span className="text-[#A78BFA]">save</span>();</div>
-                <div className="pl-4">{'}'} {'}'}</div>
-                <div>{'}'});</div>
-              </div>
-              <div className="mt-4 flex items-center gap-3 pt-4 border-t border-[#1F2A3C]">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F6C430]/10 border border-[#F6C430]/20">
-                  <Sparkles className="h-3 w-3 text-[#F6C430]" />
-                  <span className="text-[#F6C430] text-[10px] font-semibold">94% confidence</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#7C5CFC]/10 border border-[#7C5CFC]/20">
-                  <Code2 className="h-3 w-3 text-[#A78BFA]" />
-                  <span className="text-[#A78BFA] text-[10px] font-semibold">8 changes documented</span>
-                </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 border border-green-500/20">
-                  <CheckCircle className="h-3 w-3 text-green-400" />
-                  <span className="text-green-400 text-[10px] font-semibold">Ready to deploy</span>
-                </div>
-              </div>
-            </div>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9.5, color: "rgba(250,250,249,.38)", letterSpacing: ".1em", borderTop: "1px solid rgba(250,250,249,.08)", paddingTop: 12 }}>
+            <span>12 HIGH · 18 MED · 13 LOW risk</span>
+            <span>scan complete →</span>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* ═══════════════════════════════════════════
-          DEADLINE TIMELINE
-      ═══════════════════════════════════════════ */}
-      <section className="hairline border-b py-12 px-4 bg-[#0F1420]">
-        <div className="mx-auto max-w-4xl">
-          <p className="section-tag text-center mb-8">Oracle NetSuite official migration timeline</p>
-          <div className="grid grid-cols-3 gap-4">
+      {/* ═══════════════════════════════════════
+          DEADLINE STRIP
+      ═══════════════════════════════════════ */}
+      <section style={{ borderTop: "1px solid var(--rule)", borderBottom: "1px solid var(--rule)", padding: "44px 0" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".2em", color: "var(--ink-mute)", textAlign: "center", marginBottom: 22 }}>
+            Oracle NetSuite — official migration deadlines
+          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
             {[
-              { date: "2027.1", label: "SS 1.0 enters limited support", border: "border-[#F6C430]/30", bg: "bg-[#F6C430]/5", text: "text-[#F6C430]" },
-              { date: "2028.1", label: "All scripts run as 2.1 by default", border: "border-orange-500/30", bg: "bg-orange-500/5", text: "text-orange-400" },
-              { date: "2028.2", label: "Hard cutoff — non-2.1 scripts stop running", border: "border-red-500/30", bg: "bg-red-500/5", text: "text-red-400" },
+              { date: "2027.1", label: "SS 1.0 enters limited support",      color: "#b45309" },
+              { date: "2028.1", label: "All scripts run as 2.1 by default",  color: "#c2410c" },
+              { date: "2028.2", label: "Hard cutoff — non-2.1 scripts stop", color: "var(--clay)" },
             ].map((d) => (
-              <div key={d.date} className={`rounded-xl border ${d.border} ${d.bg} p-5 text-center`}>
-                <div className={`text-2xl font-bold tracking-tight mb-1.5 ${d.text}`}>{d.date}</div>
-                <div className="text-xs text-[#6B7A99] leading-relaxed">{d.label}</div>
+              <div key={d.date} style={{ flex: 1, minWidth: 200, textAlign: "center" }}>
+                <div style={{ fontFamily: "var(--f-head)", fontWeight: 700, fontSize: 28, letterSpacing: "-0.02em", marginBottom: 6, color: d.color }}>{d.date}</div>
+                <div style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5 }}>{d.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          FEATURES — 01
-      ═══════════════════════════════════════════ */}
-      <section id="how-it-works" className="py-28 px-4">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-20 max-w-xl">
-            <p className="section-tag mb-4">01 — What it does</p>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-5">
-              Not a find-and-replace.<br />
-              <span className="gradient-text">A full migration engine.</span>
+      {/* ═══════════════════════════════════════
+          WHO IT'S FOR  — 00
+      ═══════════════════════════════════════ */}
+      <section style={{ padding: "120px 0", borderTop: "1px solid var(--rule)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          {/* Section header */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2.2fr", gap: 80, marginBottom: 80, alignItems: "flex-end" }}>
+            <div className="section-num">00 — Who it&apos;s for</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(34px,4.5vw,60px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              Built for the people who <span style={{ color: "var(--clay)", fontStyle: "italic" }}>own the migration.</span>
             </h2>
-            <p className="text-[#A8B4CC] leading-relaxed">
-              SuiteScript 2.1 isn&apos;t just a new API — it&apos;s a different module system,
-              different function signatures, different everything. SuiteMigrate converts the whole
-              script, not just the method names.
-            </p>
           </div>
 
-          <div className="space-y-20">
-
-            {/* Feature 1 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#F6C430]/20 bg-[#F6C430]/5 mb-5">
-                  <BarChart3 className="h-4 w-4 text-[#F6C430]" />
-                  <span className="text-[#F6C430] text-xs font-semibold">Instant account scan</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white tracking-tight mb-4">
-                  See your entire migration scope in 60 seconds
-                </h3>
-                <p className="text-[#A8B4CC] leading-relaxed mb-6">
-                  Open NetSuite, click the extension. SuiteMigrate uses SuiteQL to scan every
-                  script in your account — no API keys, no setup, no page refresh.
-                  Every script gets a <strong className="text-white">HIGH / MED / LOW</strong> risk score.
-                </p>
-                <ul className="space-y-2.5">
-                  {["Works on sandbox, dev, and production", "Multi-account support built-in", "No NetSuite credentials required"].map(i => (
-                    <li key={i} className="flex items-center gap-2.5 text-sm text-[#A8B4CC]">
-                      <CheckCircle className="h-4 w-4 text-[#F6C430] shrink-0" />
-                      {i}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-[#2A3650] bg-[#0F1420] overflow-hidden shadow-xl">
-                <div className="px-5 py-4 border-b border-[#1F2A3C] bg-[#141926] flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-md bg-[#F6C430] flex items-center justify-center">
-                      <Zap className="h-3 w-3 text-[#0A0E1A]" />
-                    </div>
-                    <span className="text-sm font-semibold text-white">ACME_CORP_12345</span>
-                  </div>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 font-medium">Scan complete</span>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="flex-1 h-1.5 bg-[#1F2A3C] rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#F6C430] to-[#7C5CFC] w-[64%]" />
-                    </div>
-                    <span className="text-sm font-bold text-white">67 scripts</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 mb-5">
-                    {[
-                      { n: "43", label: "SS 1.0", color: "text-red-400", border: "border-red-500/20", bg: "bg-red-500/5" },
-                      { n: "12", label: "SS 2.0", color: "text-[#F6C430]", border: "border-[#F6C430]/20", bg: "bg-[#F6C430]/5" },
-                      { n: "12", label: "SS 2.1 ✓", color: "text-green-400", border: "border-green-500/20", bg: "bg-green-500/5" },
-                    ].map(s => (
-                      <div key={s.label} className={`rounded-xl border ${s.border} ${s.bg} p-3 text-center`}>
-                        <div className={`text-xl font-bold ${s.color}`}>{s.n}</div>
-                        <div className="text-[10px] text-[#6B7A99] mt-0.5">{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  {[
-                    { name: "invoice_auto_email.js", type: "UserEvent", v: "1.0", risk: "HIGH", rc: "bg-red-500/10 text-red-400 border-red-500/20" },
-                    { name: "po_approval_flow.js",   type: "Scheduled", v: "2.0", risk: "MED",  rc: "bg-[#F6C430]/10 text-[#F6C430] border-[#F6C430]/20" },
-                    { name: "customer_sync_mr.js",   type: "MapReduce", v: "1.0", risk: "HIGH", rc: "bg-red-500/10 text-red-400 border-red-500/20" },
-                  ].map(s => (
-                    <div key={s.name} className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-[#1F2A3C] hover:border-[#2A3650] bg-[#141926] mb-2 transition-colors">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-mono font-medium text-white truncate">{s.name}</p>
-                        <p className="text-[10px] text-[#6B7A99]">{s.type} · SS {s.v}</p>
-                      </div>
-                      <div className="flex items-center gap-2 ml-3 shrink-0">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-md border font-semibold ${s.rc}`}>{s.risk}</span>
-                        <button className="text-[10px] px-2.5 py-1 rounded-md bg-[#F6C430] text-[#0A0E1A] font-bold hover:bg-[#FFD24D] transition-colors">
-                          Convert
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="order-2 lg:order-1 rounded-2xl border border-[#2A3650] bg-[#0F1420] overflow-hidden shadow-xl">
-                <div className="px-5 py-3 border-b border-[#1F2A3C] bg-[#141926]">
-                  <span className="text-xs text-[#6B7A99] font-mono">invoice_auto_email_2.1.js</span>
-                </div>
-                <div className="p-5 font-mono text-xs space-y-1.5">
-                  <div className="text-[#7C5CFC] bg-[#7C5CFC]/8 px-2 py-0.5 rounded text-[10px] border border-[#7C5CFC]/15">// MIGRATED: SS 1.0 function → AMD define() module</div>
-                  <div><span className="text-[#F6C430]">define</span>([<span className="text-green-400">'N/record'</span>, <span className="text-green-400">'N/email'</span>], (<span className="text-[#A78BFA]">record</span>, <span className="text-[#A78BFA]">email</span>) =&gt; {'{'}</div>
-                  <div className="pl-4"><span className="text-[#F6C430]">return</span> {'{'}</div>
-                  <div className="pl-8 text-[#6B7A99]">/**</div>
-                  <div className="pl-8 text-[#6B7A99]"> * @NApiVersion 2.1</div>
-                  <div className="pl-8 text-[#6B7A99]"> */</div>
-                  <div className="pl-8 text-[#7C5CFC] text-[10px]">// MIGRATED: beforeSubmit(type) → beforeSubmit({"{"}type{"}"}) destructuring</div>
-                  <div className="pl-8"><span className="text-[#A78BFA]">beforeSubmit</span>: ({'{'}<span className="text-[#F6C430]">type</span>{'}'}) =&gt; {'{'}</div>
-                  <div className="pl-12 text-[#7C5CFC] text-[10px]">// MIGRATED: nlapiLoadRecord → record.load()</div>
-                  <div className="pl-12"><span className="text-[#F6C430]">const</span> rec = record.<span className="text-[#A78BFA]">load</span>({'{'}</div>
-                  <div className="pl-16 text-[#A78BFA]">type: record.Type.SALES_ORDER,</div>
-                  <div className="pl-16 text-[#A78BFA]">id: context.newRecord.id</div>
-                  <div className="pl-12">{'}'});</div>
-                  <div className="pl-8">{'}'}</div>
-                  <div className="pl-4">{'}'}</div>
-                  <div>{'}'});</div>
-                  <div className="mt-3 pt-3 border-t border-[#1F2A3C] flex gap-2 flex-wrap">
-                    <span className="px-2.5 py-1 rounded-md bg-[#F6C430]/10 border border-[#F6C430]/20 text-[#F6C430] text-[10px] font-semibold">94% confidence</span>
-                    <span className="px-2.5 py-1 rounded-md bg-[#7C5CFC]/10 border border-[#7C5CFC]/20 text-[#A78BFA] text-[10px] font-semibold">12 MIGRATED comments</span>
-                    <span className="px-2.5 py-1 rounded-md bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-semibold">0 errors</span>
-                  </div>
-                </div>
-              </div>
-              <div className="order-1 lg:order-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#7C5CFC]/20 bg-[#7C5CFC]/5 mb-5">
-                  <Sparkles className="h-4 w-4 text-[#A78BFA]" />
-                  <span className="text-[#A78BFA] text-xs font-semibold">AI conversion engine</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white tracking-tight mb-4">
-                  The whole script converted. Every change documented.
-                </h3>
-                <p className="text-[#A8B4CC] leading-relaxed mb-6">
-                  AMD module structure, function signatures, error handling, API calls —
-                  everything converted. Every modified line gets a{" "}
-                  <code className="text-[#7C5CFC] bg-[#7C5CFC]/10 px-1.5 py-0.5 rounded text-xs">// MIGRATED:</code>{" "}
-                  comment explaining exactly what changed and why.
-                </p>
-                <ul className="space-y-2.5">
-                  {[
-                    "50+ deterministic API mapping rules",
-                    "Gemini AI for context-aware structural changes",
-                    "Three views: Code · Changes · Inline comments",
-                  ].map(i => (
-                    <li key={i} className="flex items-center gap-2.5 text-sm text-[#A8B4CC]">
-                      <CheckCircle className="h-4 w-4 text-[#A78BFA] shrink-0" />
-                      {i}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5 mb-5">
-                  <Download className="h-4 w-4 text-green-400" />
-                  <span className="text-green-400 text-xs font-semibold">Production-ready export</span>
-                </div>
-                <h3 className="text-2xl font-bold text-white tracking-tight mb-4">
-                  Download, upload to NetSuite, done.
-                </h3>
-                <p className="text-[#A8B4CC] leading-relaxed mb-6">
-                  Every converted file includes a professional header: conversion date, confidence
-                  score, change count, and a pre-flight deployment checklist. Your QA team will
-                  thank you.
-                </p>
-                <ul className="space-y-2.5">
-                  {[
-                    "Conversion report embedded in every file",
-                    "Pre-flight deployment checklist included",
-                    "Flagged lines for manual review highlighted",
-                  ].map(i => (
-                    <li key={i} className="flex items-center gap-2.5 text-sm text-[#A8B4CC]">
-                      <CheckCircle className="h-4 w-4 text-green-400 shrink-0" />
-                      {i}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-2xl border border-[#2A3650] bg-[#0F1420] overflow-hidden shadow-xl">
-                <div className="px-5 py-3 border-b border-[#1F2A3C] bg-[#141926] flex items-center gap-2">
-                  <FileCode2 className="h-4 w-4 text-[#6B7A99]" />
-                  <span className="text-xs text-[#6B7A99] font-mono">invoice_auto_email_2.1.js · 4.2 KB</span>
-                </div>
-                <div className="p-5 font-mono text-xs text-[#6B7A99] space-y-0.5">
-                  <div>/**</div>
-                  <div>&nbsp;* <span className="text-white font-semibold">SUITESCRIPT 2.1 — CONVERTED BY SUITEMIGRATE</span></div>
-                  <div>&nbsp;* Original: invoice_auto_email.js (SuiteScript 1.0)</div>
-                  <div>&nbsp;* Converted: {new Date().toLocaleDateString("en-US", { year:"numeric",month:"short",day:"numeric" })}</div>
-                  <div>&nbsp;*</div>
-                  <div className="text-green-400">&nbsp;* ✓ AMD module structure applied</div>
-                  <div className="text-green-400">&nbsp;* ✓ 12 API calls updated to SS 2.1</div>
-                  <div className="text-green-400">&nbsp;* ✓ Inline comments on every change</div>
-                  <div className="text-green-400">&nbsp;* ✓ @NApiVersion 2.1 annotation added</div>
-                  <div className="text-[#F6C430]">&nbsp;* ⚠  Line 47: manual review recommended</div>
-                  <div>&nbsp;*</div>
-                  <div>&nbsp;* Confidence: <span className="text-green-400 font-bold">94 / 100</span></div>
-                  <div>&nbsp;*/</div>
-                  <div className="mt-4 pt-3 border-t border-[#1F2A3C]">
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F6C430] text-[#0A0E1A] text-xs font-bold hover:bg-[#FFD24D] transition-colors">
-                      <Download className="h-3.5 w-3.5" />
-                      Download converted file
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════
-          SOCIAL PROOF
-      ═══════════════════════════════════════════ */}
-      <section className="hairline border-b py-20 px-4 bg-[#0F1420]">
-        <div className="mx-auto max-w-5xl">
-          <p className="section-tag text-center mb-12">Trusted by NetSuite developers at</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Persona grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
             {[
               {
-                quote: "We had 43 scripts on SS 1.0. SuiteMigrate scanned everything in 40 seconds and converted the first 5 in under 3 minutes. The inline comments made code review trivial.",
-                name: "Sara Köhler",
-                role: "Staff Engineer",
-                company: "Halftone",
+                title: "NetSuite Developers",
+                desc: "You build SuiteScripts. You need your SS 1.0 scripts converted to 2.1 accurately — AMD module structure, correct API calls, inline comments explaining every change. SuiteMigrate gets you there in seconds, not hours.",
+                tags: ["Script conversion", "Inline diff view", "Deploy-ready export"],
               },
               {
-                quote: "The confidence score alone saved us hours of QA. We knew exactly which scripts needed extra eyes and which were safe to push straight to production.",
-                name: "James Mwangi",
-                role: "NetSuite Developer",
-                company: "Foundry Labs",
+                title: "NetSuite Admins",
+                desc: "You manage a NetSuite account with dozens — maybe hundreds — of custom scripts. You have no idea which ones need migration and in which order. SuiteMigrate scans everything and gives you a prioritised risk-scored list in 60 seconds.",
+                tags: ["Full account scan", "Risk scoring", "Audit report"],
               },
               {
-                quote: "I was dreading the migration. Ran it on a Friday afternoon and had all 22 scripts converted before the weekend. The inline MIGRATED comments are genuinely brilliant.",
-                name: "Priya Nair",
-                role: "Lead Developer",
-                company: "Modus Systems",
+                title: "NetSuite Consultants",
+                desc: "You're managing multiple client migrations on a hard deadline. You need a reliable, repeatable conversion tool that produces professionally documented output you can hand to clients and stakeholders with confidence.",
+                tags: ["Batch conversion", "PDF audit export", "Client-ready output"],
               },
-            ].map((t) => (
-              <div key={t.name} className="rounded-2xl border border-[#2A3650] bg-[#141926] p-6">
-                <div className="flex gap-0.5 mb-4">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="h-3.5 w-3.5 text-[#F6C430] fill-[#F6C430]" />)}
-                </div>
-                <p className="text-sm text-[#A8B4CC] leading-relaxed mb-5 italic">&ldquo;{t.quote}&rdquo;</p>
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#F6C430] to-[#7C5CFC] flex items-center justify-center text-xs font-bold text-[#0A0E1A]">
-                    {t.name.split(" ").map(n => n[0]).join("")}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white">{t.name}</p>
-                    <p className="text-xs text-[#6B7A99]">{t.role}, {t.company}</p>
-                  </div>
+            ].map((p) => (
+              <div key={p.title} style={{ background: "var(--paper)", padding: "40px 34px", transition: "background .14s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--paper-warm)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--paper)")}>
+                <h3 style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 22, letterSpacing: "-0.015em", marginBottom: 12 }}>{p.title}</h3>
+                <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.65, marginBottom: 20 }}>{p.desc}</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {p.tags.map(t => (
+                    <span key={t} style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", padding: "4px 9px", borderRadius: 3, background: "rgba(15,23,42,.07)", color: "var(--ink-mute)" }}>{t}</span>
+                  ))}
                 </div>
               </div>
             ))}
@@ -443,239 +227,433 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          PRICING — 03
-      ═══════════════════════════════════════════ */}
-      <section id="pricing" className="py-28 px-4">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
-            <p className="section-tag mb-4">03 — Pricing</p>
-            <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-5">
-              Simple pricing.<br />
-              <span className="gradient-text">No surprises.</span>
-            </h2>
-            <p className="text-[#A8B4CC] max-w-md mx-auto">
-              Start free — 5 full conversions, no credit card. Upgrade when you need more.
-              Lifetime deal for developers who want it done once.
+      {/* ═══════════════════════════════════════
+          PROBLEM STRIP (dark)
+      ═══════════════════════════════════════ */}
+      <section style={{ padding: "60px 0", background: "var(--ink)", color: "var(--paper)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: "rgba(250,250,249,.4)" }}>
+              The situation before SuiteMigrate
             </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
+              {[
+                '"I have 200 custom scripts and no idea which ones are SS 1.0."',
+                '"I\'m manually rewriting each script — it takes a full day per script."',
+                '"The 2028 deadline is real but I don\'t know where to even start."',
+                '"I converted a script and it broke — I can\'t tell what changed and why."',
+              ].map((item) => (
+                <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "16px 18px", border: "1px solid rgba(250,250,249,.08)", borderRadius: 6, fontSize: 14, color: "rgba(250,250,249,.7)", lineHeight: 1.5 }}>
+                  <span style={{ color: "var(--clay)", flexShrink: 0, marginTop: 1, fontSize: 16 }}>⚠</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          FEATURES  — 01
+      ═══════════════════════════════════════ */}
+      <section id="how-it-works" style={{ padding: "140px 0", borderTop: "1px solid var(--rule)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2.2fr", gap: 80, marginBottom: 80, alignItems: "flex-end" }}>
+            <div className="section-num">01 — What SuiteMigrate does</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(34px,4.5vw,60px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              A migration engine built for{" "}
+              <span style={{ color: "var(--clay)", fontStyle: "italic" }}>NetSuite&apos;s reality.</span>
+            </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
-
-            {/* Free */}
-            <div className="rounded-2xl border border-[#2A3650] bg-[#0F1420] p-7 flex flex-col">
-              <div className="mb-7">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white">Free</h3>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full border border-[#2A3650] text-[#6B7A99]">No card needed</span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
+            {[
+              {
+                tag: "free",
+                title: "Account scan & risk scoring",
+                desc: "Opens on your active NetSuite tab and scans every script in under 60 seconds. No API keys, no credentials — reads your existing session. Every script gets a HIGH / MED / LOW risk score instantly.",
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M4 20h20M4 14h14M4 8h8" stroke="var(--ink)" strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                ),
+              },
+              {
+                tag: "free",
+                title: "AI-powered conversion",
+                desc: "Gemini AI converts your entire script — AMD module structure, function signatures, error handling, all API calls. 50+ mapping rules handle known patterns first; AI fills the gaps. Not find-and-replace.",
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M6 22l4-8 4 4 4-10 4 14" stroke="var(--clay)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ),
+              },
+              {
+                tag: "free",
+                title: "Inline MIGRATED comments",
+                desc: "Every line that changed gets a // MIGRATED: comment explaining what happened and why. Three review tabs: Code · Changes · Inline. You know exactly what to check before deploying.",
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect x="4" y="4" width="20" height="20" rx="2" stroke="var(--ink)" strokeWidth="1.2"/>
+                    <path d="M8 10h12M8 14h8M8 18h10" stroke="var(--clay)" strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                ),
+              },
+              {
+                tag: "free",
+                title: "Confidence score & flagging",
+                desc: "Every conversion gets a 0–100% confidence score. Lines needing manual review are flagged explicitly — never silently skipped. You always know what the AI is certain about and what needs your eyes.",
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <circle cx="14" cy="14" r="10" stroke="var(--ink)" strokeWidth="1.2"/>
+                    <path d="M14 8v6l4 2" stroke="var(--clay)" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                ),
+              },
+              {
+                tag: "free",
+                title: "Deploy-ready export",
+                desc: "Download converted scripts ready to upload to NetSuite. Every file includes a professional header: conversion date, confidence score, change count, and a pre-flight deployment checklist.",
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M14 4v14m0 0l-5-5m5 5l5-5M6 22h16" stroke="var(--ink)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                ),
+              },
+              {
+                tag: "free",
+                title: "Local-first, read-only",
+                desc: "The extension runs on your existing browser session. No credentials are stored or transmitted. Your scripts never leave your machine until you explicitly download them. No NetSuite write operations, ever.",
+                icon: (
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect x="4" y="10" width="20" height="14" rx="2" stroke="var(--ink)" strokeWidth="1.2"/>
+                    <path d="M9 10V7a5 5 0 0110 0v3" stroke="var(--clay)" strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                ),
+              },
+            ].map((f) => (
+              <div key={f.title} style={{ background: "var(--paper)", padding: "46px 34px", transition: "background .14s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--paper-warm)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--paper)")}>
+                <div style={{ width: 30, height: 30, marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {f.icon}
                 </div>
-                <div className="flex items-end gap-1.5 mb-3">
-                  <span className="text-5xl font-black text-white">$0</span>
-                  <span className="text-[#6B7A99] text-sm mb-2">/ forever</span>
-                </div>
-                <p className="text-sm text-[#6B7A99] leading-relaxed">
-                  Everything you need to understand your migration scope and start converting.
-                </p>
+                <span style={{ display: "inline-flex", alignItems: "center", fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".14em", padding: "3px 8px", borderRadius: 3, background: "rgba(15,23,42,.07)", color: "var(--ink-mute)", marginBottom: 18 }}>
+                  {f.tag}
+                </span>
+                <h3 style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 22, letterSpacing: "-0.015em", marginBottom: 10 }}>{f.title}</h3>
+                <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.65 }}>{f.desc}</p>
               </div>
-              <ul className="space-y-3 flex-1 mb-7">
-                {[
-                  "Unlimited account scanning",
-                  "Risk score for every script",
-                  "5 full AI conversions",
-                  "Inline comments + diff view",
-                  "PDF audit report export",
-                  "Chrome extension included",
-                ].map(f => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-[#A8B4CC]">
-                    <CheckCircle className="h-4 w-4 text-[#6B7A99] shrink-0 mt-0.5" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/signup">
-                <button className="w-full py-3 rounded-xl border border-[#2A3650] text-[#A8B4CC] hover:border-[#394A66] hover:text-white text-sm font-medium transition-all">
-                  Start free
-                </button>
-              </Link>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Pro — FEATURED */}
-            <div className="rounded-2xl border-2 border-[#F6C430]/50 bg-[#0F1420] p-7 flex flex-col relative shadow-2xl glow-gold-sm">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#F6C430] text-[#0A0E1A] text-[11px] font-bold shadow-lg">
-                  <Star className="h-3 w-3 fill-[#0A0E1A]" />
-                  Most popular
+      {/* ═══════════════════════════════════════
+          HOW IT WORKS  — 02
+      ═══════════════════════════════════════ */}
+      <section style={{ padding: "140px 0", borderTop: "1px solid var(--rule)", background: "rgba(237,233,223,.4)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2.2fr", gap: 80, marginBottom: 80, alignItems: "flex-end" }}>
+            <div className="section-num">02 — How it works</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(34px,4.5vw,60px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              From install to{" "}
+              <span style={{ color: "var(--clay)", fontStyle: "italic" }}>deployed in minutes.</span>
+            </h2>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
+            {/* Steps */}
+            <ol style={{ listStyle: "none" }}>
+              {[
+                {
+                  n: "01",
+                  title: "Install on Chrome — open on your NetSuite tab",
+                  desc: "Install from the Chrome Web Store. Open SuiteMigrate on any logged-in NetSuite tab. It detects your account automatically — Sandbox, Release Preview, or Production.",
+                },
+                {
+                  n: "02",
+                  title: "Scan your account — every script in 60 seconds",
+                  desc: "Click Scan. SuiteMigrate uses SuiteQL to pull every script record: name, type, version, deployment status. Every script gets a HIGH / MED / LOW migration risk score.",
+                },
+                {
+                  n: "03",
+                  title: "Select a script and convert",
+                  desc: "Click Convert on any script. Gemini AI runs a full structural conversion in under 15 seconds. The result shows exactly what changed with inline // MIGRATED: comments.",
+                },
+                {
+                  n: "04",
+                  title: "Review, download, and deploy",
+                  desc: "Review the three-tab output — Code, Changes, Inline. Download the converted file with its professional header. Upload to NetSuite and run your pre-flight checklist.",
+                },
+              ].map((s) => (
+                <li key={s.n} style={{ display: "flex", gap: 18, padding: "22px 0", borderBottom: "1px solid var(--rule)" }}>
+                  <span style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, letterSpacing: ".12em", color: "var(--ink-mute)", paddingTop: 4, flexShrink: 0, width: 28 }}>{s.n}</span>
+                  <div>
+                    <h4 style={{ fontSize: 15, fontWeight: 500, marginBottom: 4 }}>{s.title}</h4>
+                    <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.6 }}>{s.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            {/* Diff card mock */}
+            <div style={{
+              background: "var(--ink)", color: "var(--paper)",
+              borderRadius: 10, overflow: "hidden",
+              boxShadow: "0 32px 80px -20px rgba(0,0,0,.5)",
+              transform: "rotate(-1.5deg)",
+              fontFamily: "var(--f-mono)",
+            }}>
+              <div style={{ background: "#222226", height: 36, display: "flex", alignItems: "center", padding: "0 14px", gap: 5, borderBottom: "1px solid rgba(255,255,255,.07)" }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#ff5f57", display: "inline-block" }} />
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#febc2e", marginLeft: 3, display: "inline-block" }} />
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#28c840", marginLeft: 3, display: "inline-block" }} />
+                <span style={{ marginLeft: 10, fontFamily: "var(--f-mono)", fontSize: 10.5, color: "rgba(250,250,249,.35)", flex: 1 }}>
+                  SuiteMigrate · invoice_auto_email.js → 2.1
                 </span>
               </div>
-              <div className="mb-7">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white">Pro</h3>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full border border-[#F6C430]/30 text-[#F6C430] bg-[#F6C430]/5">Unlimited</span>
+              <div style={{ padding: 22 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <span style={{ fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "rgba(250,250,249,.35)" }}>8 changes · confidence 94%</span>
+                  <span style={{ fontSize: 9.5, color: "var(--clay)" }}>ready to deploy</span>
                 </div>
-                <div className="flex items-end gap-1.5 mb-1">
-                  <span className="text-5xl font-black text-white">$29</span>
-                  <span className="text-[#6B7A99] text-sm mb-2">/ month</span>
-                </div>
-                <p className="text-xs text-[#F6C430] mb-3">
-                  or <strong>$299 lifetime</strong> — pay once, own forever
-                </p>
-                <p className="text-sm text-[#6B7A99] leading-relaxed">
-                  Unlimited conversions. Full history. Professional exports. Everything.
-                </p>
-              </div>
-              <ul className="space-y-3 flex-1 mb-7">
                 {[
-                  "Everything in Free",
-                  "Unlimited script conversions",
-                  "Full conversion history",
-                  "ZIP export all converted scripts",
-                  "Priority conversion queue",
-                  "Early access to new features",
-                ].map(f => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-[#A8B4CC]">
-                    <CheckCircle className="h-4 w-4 text-[#F6C430] shrink-0 mt-0.5" />
-                    {f}
-                  </li>
+                  { badge: "MIGRATED", label: "AMD define() module structure", id: "L1–4", type: "changed" },
+                  { badge: "MIGRATED", label: "nlapiLoadRecord → record.load()", id: "L12", type: "changed" },
+                  { badge: "MIGRATED", label: "setFieldValue → setValue()", id: "L18", type: "changed" },
+                  { badge: "REVIEW",   label: "Complex nlapiSearchRecord call", id: "L47", type: "missing" },
+                  { badge: "MIGRATED", label: "nlapiSubmitRecord → rec.save()", id: "L52", type: "same" },
+                ].map((row) => (
+                  <div key={row.id} style={{
+                    display: "flex", alignItems: "center", gap: 11,
+                    padding: "9px 11px", borderRadius: 4, marginBottom: 4,
+                    background: row.type === "changed" ? "rgba(217,74,31,.15)" : row.type === "missing" ? "rgba(250,250,249,.05)" : "rgba(74,222,128,.07)",
+                    fontFamily: "var(--f-mono)", fontSize: 10.5,
+                  }}>
+                    <span style={{
+                      fontSize: 8.5, textTransform: "uppercase", letterSpacing: ".12em",
+                      padding: "2px 6px", borderRadius: 2, flexShrink: 0,
+                      background: row.type === "changed" ? "var(--clay)" : row.type === "missing" ? "rgba(250,250,249,.12)" : "rgba(74,222,128,.18)",
+                      color: row.type === "changed" ? "var(--paper)" : row.type === "missing" ? "rgba(250,250,249,.65)" : "#4ade80",
+                    }}>{row.badge}</span>
+                    <span style={{ flex: 1, color: "rgba(250,250,249,.85)" }}>{row.label}</span>
+                    <span style={{ color: "rgba(250,250,249,.3)", fontSize: 9.5 }}>{row.id}</span>
+                  </div>
                 ))}
-              </ul>
-              <Link href="/signup?plan=pro">
-                <button className="w-full py-3 rounded-xl bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] text-sm font-bold transition-all shadow-lg hover:shadow-[0_0_20px_rgba(246,196,48,0.3)] active:scale-[0.98]">
-                  Get Pro
-                </button>
-              </Link>
-            </div>
-
-            {/* Team */}
-            <div className="rounded-2xl border border-[#2A3650] bg-[#0F1420] p-7 flex flex-col">
-              <div className="mb-7">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-white">Team</h3>
-                  <span className="text-[10px] px-2.5 py-1 rounded-full border border-[#7C5CFC]/30 text-[#A78BFA] bg-[#7C5CFC]/5">For consultants</span>
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(250,250,249,.07)", display: "flex", justifyContent: "space-between", fontSize: 9.5, color: "rgba(250,250,249,.3)" }}>
+                  <span>1 review flagged · never writes to NetSuite</span>
+                  <span>download →</span>
                 </div>
-                <div className="flex items-end gap-1.5 mb-2">
-                  <span className="text-5xl font-black text-white">$99</span>
-                  <span className="text-[#6B7A99] text-sm mb-2">/ month</span>
-                </div>
-                <p className="text-sm text-[#6B7A99] leading-relaxed">
-                  For agencies and consultants managing multiple client NetSuite accounts.
-                </p>
               </div>
-              <ul className="space-y-3 flex-1 mb-7">
-                {[
-                  "Everything in Pro",
-                  "Unlimited team seats",
-                  "Shared conversion history",
-                  "Bulk export across accounts",
-                  "Client account management",
-                  "Dedicated support",
-                ].map(f => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-[#A8B4CC]">
-                    <CheckCircle className="h-4 w-4 text-[#A78BFA] shrink-0 mt-0.5" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/signup?plan=team">
-                <button className="w-full py-3 rounded-xl border border-[#7C5CFC]/40 text-[#A78BFA] hover:bg-[#7C5CFC]/10 text-sm font-medium transition-all">
-                  Get Team
-                </button>
-              </Link>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Promo hint */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-[#6B7A99]">
-              Have a promo code? Redeem in Settings after signup.{" "}
-              <code className="text-[#F6C430] bg-[#F6C430]/10 border border-[#F6C430]/20 px-2 py-0.5 rounded-md text-xs">TESTPRO</code>
-              {" "}unlocks unlimited conversions instantly.
+      {/* ═══════════════════════════════════════
+          QUOTE
+      ═══════════════════════════════════════ */}
+      <section style={{ padding: "120px 0", borderTop: "1px solid var(--rule)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <blockquote style={{
+            fontFamily: "var(--f-head)", fontWeight: 300,
+            fontSize: "clamp(24px,3.5vw,46px)", lineHeight: 1.18,
+            letterSpacing: "-0.02em", maxWidth: 860, margin: "0 auto",
+            textAlign: "center", position: "relative",
+          }}>
+            <span style={{ fontFamily: "var(--f-head)", color: "var(--clay)", fontSize: 120, lineHeight: 1, position: "absolute", top: -48, left: -28, opacity: .5, pointerEvents: "none" }} aria-hidden>&quot;</span>
+            We had 43 scripts on SS 1.0 and no idea where to start. SuiteMigrate scanned everything in 40 seconds and converted the first 5 in under 3 minutes. The inline MIGRATED comments made code review genuinely effortless.
+          </blockquote>
+          <p style={{ marginTop: 36, textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 11, letterSpacing: ".15em", textTransform: "uppercase", color: "var(--ink-mute)" }}>
+            Sara Köhler — Staff Engineer, Halftone
+          </p>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════
+          WHAT'S INCLUDED  — 03
+      ═══════════════════════════════════════ */}
+      <section style={{ padding: "0 0 140px" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div className="section-num" style={{ marginBottom: 12, display: "block" }}>03 — What&apos;s included</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(26px,3.5vw,44px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              Everything in the free plan.{" "}
+              <span style={{ color: "var(--clay)", fontStyle: "italic" }}>Really.</span>
+            </h2>
+            <p style={{ fontSize: 16, color: "var(--ink-soft)", marginTop: 16, maxWidth: 560, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
+              5 full AI conversions with all features included — no credit card, no trial expiry. Upgrade to Pro when you need unlimited.
             </p>
           </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)", borderRadius: 6, overflow: "hidden" }}>
+            {/* Feature col */}
+            <div style={{ background: "var(--paper)", padding: "28px 30px" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid var(--rule)" }}>Feature</div>
+              {[
+                "Account scan — full script inventory",
+                "Risk score (HIGH / MED / LOW) for every script",
+                "AI conversion — full structural rewrite",
+                "50+ API mapping rules (deterministic pass)",
+                "Inline // MIGRATED: comments on every change",
+                "Three review tabs: Code · Changes · Inline",
+                "Confidence score (0–100%) per conversion",
+                "Manual review flags — nothing silently skipped",
+                "Deploy-ready download with professional header",
+                "PDF audit report export",
+              ].map(f => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", fontSize: 13.5, borderBottom: "1px solid var(--rule)", color: "var(--ink-soft)" }}>{f}</div>
+              ))}
+            </div>
+            {/* Free col */}
+            <div style={{ background: "var(--paper)", padding: "28px 30px" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid var(--rule)" }}>Free (5 conversions)</div>
+              {Array(10).fill("✓").map((c, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid var(--rule)", color: "var(--clay)", fontSize: 13 }}>{c}</div>
+              ))}
+            </div>
+            {/* Pro col */}
+            <div style={{ background: "var(--ink)", color: "var(--paper)", padding: "28px 30px" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "rgba(250,250,249,.38)", marginBottom: 18, paddingBottom: 14, borderBottom: "1px solid rgba(250,250,249,.1)" }}>Pro (unlimited)</div>
+              {Array(10).fill("✓").map((c, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: "1px solid rgba(250,250,249,.08)", color: "var(--clay)", fontSize: 13 }}>{c}</div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          STATS
-      ═══════════════════════════════════════════ */}
-      <section className="hairline border-b py-16 px-4 bg-[#0F1420]">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid grid-cols-3 gap-8 text-center">
-            {[
-              { value: "2,400+", label: "Scripts migrated",     sub: "and counting" },
-              { value: "<15s",   label: "Average conversion",   sub: "per script" },
-              { value: "92%",    label: "Average confidence",   sub: "across all conversions" },
-            ].map(s => (
-              <div key={s.label}>
-                <div className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-2 gradient-text">{s.value}</div>
-                <div className="text-sm font-semibold text-[#A8B4CC]">{s.label}</div>
-                <div className="text-xs text-[#6B7A99] mt-0.5">{s.sub}</div>
+      {/* ═══════════════════════════════════════
+          PRICING  — 04
+      ═══════════════════════════════════════ */}
+      <section id="pricing" style={{ padding: "140px 0", borderTop: "1px solid var(--rule)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2.2fr", gap: 80, marginBottom: 80, alignItems: "flex-end" }}>
+            <div className="section-num">04 — Pricing</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(34px,4.5vw,60px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              Start free.{" "}
+              <span style={{ color: "var(--clay)", fontStyle: "italic" }}>Upgrade when you need more.</span>
+            </h2>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 840, margin: "0 auto 40px" }}>
+            {/* Free */}
+            <div style={{ padding: 38, border: "1px solid var(--rule)", borderRadius: 6, background: "var(--paper)", transition: "transform .18s" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 22 }}>Free</div>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 56, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 5 }}>$0</div>
+              <div style={{ fontSize: 14, color: "var(--ink-soft)", marginBottom: 5 }}>forever</div>
+              <div style={{ fontSize: 13.5, color: "var(--ink-mute)", marginBottom: 26 }}>No credit card required</div>
+              <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.6, marginBottom: 22 }}>
+                Full scan, risk scoring, audit report, and 5 complete AI conversions. Every feature, no restrictions — just 5 uses.
+              </p>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9, marginBottom: 30 }}>
+                {["Full account scan", "Risk scoring", "5 AI conversions", "Inline comments + diff view", "PDF audit report"].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "var(--ink-soft)" }}>
+                    <span style={{ color: "var(--ink-mute)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/signup" style={{ display: "block", width: "100%", padding: "13px 20px", borderRadius: 4, textAlign: "center", fontSize: 14, fontWeight: 500, border: "1px solid var(--rule)", background: "transparent", color: "var(--ink)", transition: "background .18s, color .18s" }}
+                className="plan-cta-free">
+                Start free — no card
+              </Link>
+            </div>
+
+            {/* Pro */}
+            <div style={{ padding: 38, border: "1px solid var(--ink)", borderRadius: 6, background: "var(--ink)", color: "var(--paper)", transition: "transform .18s" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".15em", color: "rgba(250,250,249,.5)", marginBottom: 22 }}>Pro</div>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 56, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 5 }}>$29</div>
+              <div style={{ fontSize: 14, color: "rgba(250,250,249,.55)", marginBottom: 5 }}>per month</div>
+              <div style={{ fontSize: 13.5, marginBottom: 26 }}>
+                or <strong style={{ color: "var(--clay)" }}>$299 lifetime</strong>
+                <span style={{ color: "rgba(250,250,249,.45)" }}> · pay once, own forever</span>
               </div>
-            ))}
+              <p style={{ fontSize: 14, color: "rgba(250,250,249,.6)", lineHeight: 1.6, marginBottom: 22 }}>
+                Unlimited conversions. Full history. Professional exports. Everything — for every script in every account.
+              </p>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 9, marginBottom: 30 }}>
+                {["Everything in Free", "Unlimited conversions", "Full conversion history", "ZIP export all scripts", "Priority queue"].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "rgba(250,250,249,.65)" }}>
+                    <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/signup?plan=pro" style={{ display: "block", width: "100%", padding: "13px 20px", borderRadius: 4, textAlign: "center", fontSize: 14, fontWeight: 500, background: "var(--clay)", color: "var(--paper)", border: "1px solid var(--clay)", transition: "background .18s" }}>
+                Get Pro
+              </Link>
+            </div>
           </div>
+
+          <p style={{ textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", letterSpacing: ".06em", lineHeight: 1.7 }}>
+            Team plan ($99/mo) available for consultants managing multiple client accounts.<br />
+            Have a promo code? Enter it in Settings after signup —{" "}
+            <code style={{ color: "var(--ink-soft)" }}>TESTPRO</code> unlocks unlimited conversions during beta.
+          </p>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          FAQ
-      ═══════════════════════════════════════════ */}
-      <section id="faq" className="py-24 px-4">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-12">
-            <p className="section-tag mb-4">04 — FAQ</p>
-            <h2 className="text-3xl font-extrabold text-white tracking-tight mb-2">Common questions</h2>
-            <p className="text-[#6B7A99] text-sm">Straight answers for NetSuite developers.</p>
+      {/* ═══════════════════════════════════════
+          FAQ  — 05
+      ═══════════════════════════════════════ */}
+      <section id="faq" style={{ padding: "120px 0", borderTop: "1px solid var(--rule)" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 2.2fr", gap: 80, marginBottom: 80, alignItems: "flex-end" }}>
+            <div className="section-num">05 — FAQ</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(34px,4.5vw,60px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              Common <span style={{ color: "var(--clay)", fontStyle: "italic" }}>questions.</span>
+            </h2>
           </div>
-          <div className="divide-y divide-[#1F2A3C]">
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
             {faqs.map(f => (
-              <div key={f.q} className="py-6">
-                <h3 className="font-semibold text-white mb-2.5 text-base">{f.q}</h3>
-                <p className="text-sm text-[#A8B4CC] leading-relaxed">{f.a}</p>
+              <div key={f.q} style={{ background: "var(--paper)", padding: 32, transition: "background .14s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--paper-warm)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--paper)")}>
+                <h4 style={{ fontSize: 15, fontWeight: 500, marginBottom: 10, letterSpacing: "-0.01em" }}>{f.q}</h4>
+                <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.7 }}>{f.a}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
+      {/* ═══════════════════════════════════════
           FINAL CTA
-      ═══════════════════════════════════════════ */}
-      <section className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#7C5CFC]/10 via-transparent to-[#F6C430]/8" />
-        </div>
-        <div className="relative mx-auto max-w-2xl text-center">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-5">
-            Start migrating today.
-            <br />
-            <span className="gradient-text">The deadline won&apos;t wait.</span>
+      ═══════════════════════════════════════ */}
+      <section style={{ padding: "160px 0", borderTop: "1px solid var(--rule)", textAlign: "center" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+          <h2 style={{
+            fontFamily: "var(--f-head)", fontWeight: 300,
+            fontSize: "clamp(34px,5vw,64px)", lineHeight: 1.04,
+            letterSpacing: "-0.025em", marginBottom: 18,
+          }}>
+            Ready for the 2028 deadline?<br />
+            <span style={{ color: "var(--clay)", fontStyle: "italic" }}>Start in sixty seconds.</span>
           </h2>
-          <p className="text-[#A8B4CC] mb-3 text-lg leading-relaxed">
-            5 free conversions. Inline comments on every change. Ready to deploy.
+          <p style={{ fontSize: 17, color: "var(--ink-soft)", maxWidth: 460, margin: "0 auto 40px", lineHeight: 1.6 }}>
+            Install. Scan your account. Convert 5 scripts free. Your data never leaves your browser.
           </p>
-          <p className="text-[#6B7A99] text-sm mb-10">
-            Local-first. Read-only by default. We never store your scripts.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/signup">
-              <button className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] font-bold text-base transition-all shadow-xl hover:shadow-[0_0_40px_rgba(246,196,48,0.4)] active:scale-[0.98]">
-                <Chrome className="h-5 w-5" />
-                Start for free
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </Link>
-            <Link href="/pricing">
-              <button className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border border-[#2A3650] text-[#A8B4CC] hover:text-white hover:border-[#394A66] text-base font-medium transition-all">
-                View all plans
-              </button>
-            </Link>
-          </div>
-          <p className="text-xs text-[#434E66] mt-6">
-            5 free conversions · No credit card · Any NetSuite environment
+          <Link href="/signup" className="btn-pill" style={{ fontSize: 16, padding: "15px 32px" }}>
+            Install free on Chrome
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 7h12m0 0L8 2m5 5L8 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </Link>
+          <p style={{ marginTop: 20, fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", letterSpacing: ".06em" }}>
+            Free · Read-only · Never writes to NetSuite · 5 free conversions · No credit card
           </p>
         </div>
       </section>
 
       <Footer />
+
+      {/* Responsive hero card hide */}
+      <style>{`
+        @media (max-width: 1060px) { .hero-card-hide { display: none !important; } }
+        .plan-cta-free:hover { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; transform: translateY(-1px); }
+      `}</style>
     </div>
   )
 }

@@ -4,15 +4,12 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { MobileSidebarTrigger } from "@/components/dashboard/sidebar"
-import { LogOut, User, ChevronDown, Zap, Crown } from "lucide-react"
+import { LogOut, User, ChevronDown } from "lucide-react"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import Link from "next/link"
 
-const PLAN_CONFIG: Record<string, { label: string; cls: string }> = {
-  free:     { label: "Free Plan",  cls: "border-[#2A3650] text-[#6B7A99]" },
-  pro:      { label: "Pro",        cls: "border-[#F6C430]/30 text-[#F6C430] bg-[#F6C430]/8" },
-  lifetime: { label: "Lifetime",   cls: "border-[#F6C430]/50 text-[#F6C430] bg-[#F6C430]/10" },
-  team:     { label: "Team",       cls: "border-[#A78BFA]/30 text-[#A78BFA] bg-[#7C5CFC]/8" },
+const PLAN_LABELS: Record<string, string> = {
+  free: "Free", pro: "Pro", lifetime: "Lifetime", team: "Team",
 }
 
 export function DashboardHeader({ user, plan = "free" }: { user: SupabaseUser; plan?: string }) {
@@ -26,95 +23,122 @@ export function DashboardHeader({ user, plan = "free" }: { user: SupabaseUser; p
     router.refresh()
   }
 
-  const name = user.user_metadata?.name || user.email?.split("@")[0] || "User"
+  const name     = user.user_metadata?.name || user.email?.split("@")[0] || "User"
   const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
-  const cfg = PLAN_CONFIG[plan] ?? PLAN_CONFIG.free
+  const planLabel = PLAN_LABELS[plan] ?? "Free"
 
   return (
-    <header className="border-b border-[#1F2A3C] bg-[#0A0E1A] px-4 lg:px-6 py-3.5 flex items-center justify-between shrink-0">
-      {/* Left */}
-      <div className="flex items-center gap-3">
+    <header style={{
+      borderBottom: "1px solid var(--rule)",
+      background: "rgba(250,250,249,.95)",
+      backdropFilter: "blur(8px)",
+      padding: "12px 24px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      flexShrink: 0,
+    }}>
+      {/* Left: mobile trigger */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <MobileSidebarTrigger />
-        <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
-          <div className="h-7 w-7 rounded-lg bg-[#F6C430] flex items-center justify-center">
-            <Zap className="h-3.5 w-3.5 text-[#0A0E1A]" />
-          </div>
-          <span className="font-bold text-white text-sm">SuiteMigrate</span>
+        {/* Mobile logo */}
+        <Link href="/dashboard" style={{ display: "flex", alignItems: "center", gap: 7, textDecoration: "none" }} className="mobile-logo">
+          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+          <span style={{ fontFamily: "var(--f-head)", fontSize: 16, fontWeight: 400, color: "var(--ink)" }}>SuiteMigrate</span>
         </Link>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-3">
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         {/* Plan badge */}
-        <span className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${cfg.cls}`}>
-          <Crown className="h-3 w-3" />
-          {cfg.label}
+        <span style={{
+          fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase",
+          letterSpacing: ".14em", padding: "4px 10px", borderRadius: 3,
+          background: plan === "free" ? "rgba(15,23,42,.07)" : "rgba(217,74,31,.10)",
+          color: plan === "free" ? "var(--ink-mute)" : "var(--clay)",
+        }}>
+          {planLabel}
         </span>
 
         {/* Upgrade button — free only */}
         {plan === "free" && (
-          <Link href="/dashboard/billing">
-            <button className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] text-xs font-bold transition-all shadow-sm">
-              <Zap className="h-3 w-3" />
-              Upgrade
-            </button>
+          <Link href="/dashboard/billing" className="btn-pill" style={{ padding: "7px 16px", fontSize: 12 }}>
+            Upgrade
           </Link>
         )}
 
-        {/* User dropdown */}
-        <div className="relative">
+        {/* User menu */}
+        <div style={{ position: "relative" }}>
           <button
             onClick={() => setOpen(!open)}
-            className="flex items-center gap-2 pl-1 pr-2 py-1.5 rounded-xl hover:bg-[#141926] transition-all"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: "none", border: "none", cursor: "pointer",
+              padding: "5px 8px", borderRadius: 4,
+              transition: "background .14s",
+            }}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(15,23,42,.06)")}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
           >
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#F6C430] to-[#7C5CFC] flex items-center justify-center text-[11px] font-black text-[#0A0E1A] shrink-0">
+            {/* Avatar */}
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "var(--ink)", color: "var(--paper)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 11, fontWeight: 700, fontFamily: "var(--f-mono)",
+              flexShrink: 0,
+            }}>
               {initials}
             </div>
-            <div className="hidden sm:block text-left">
-              <p className="text-sm font-semibold text-white leading-none">{name}</p>
-              <p className="text-[11px] text-[#6B7A99] mt-0.5 truncate max-w-[130px]">{user.email}</p>
+            <div style={{ textAlign: "left" }} className="user-info-desktop">
+              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)", lineHeight: 1.2, margin: 0 }}>{name}</p>
+              <p style={{ fontSize: 11, color: "var(--ink-mute)", margin: 0, marginTop: 1, maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-[#434E66] hidden sm:block" />
+            <ChevronDown size={14} style={{ color: "var(--ink-mute)" }} className="user-info-desktop" />
           </button>
 
           {open && (
             <>
-              <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-              <div className="absolute right-0 top-full mt-2 w-52 rounded-2xl border border-[#2A3650] bg-[#0F1420] shadow-2xl z-20 overflow-hidden">
-                <div className="p-4 border-b border-[#1F2A3C]">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#F6C430] to-[#7C5CFC] flex items-center justify-center text-sm font-black text-[#0A0E1A] shrink-0">
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">{name}</p>
-                      <p className="text-[11px] text-[#6B7A99] truncate">{user.email}</p>
-                    </div>
-                  </div>
+              <div style={{ position: "fixed", inset: 0, zIndex: 10 }} onClick={() => setOpen(false)} />
+              <div style={{
+                position: "absolute", right: 0, top: "calc(100% + 6px)",
+                width: 200, borderRadius: 6,
+                border: "1px solid var(--rule)", background: "var(--paper)",
+                boxShadow: "0 8px 24px -4px rgba(15,23,42,.12)",
+                zIndex: 20, overflow: "hidden",
+              }}>
+                <div style={{ padding: "12px 14px", borderBottom: "1px solid var(--rule)" }}>
+                  <p style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)", margin: 0 }}>{name}</p>
+                  <p style={{ fontSize: 11, color: "var(--ink-mute)", margin: 0, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
                 </div>
-                <div className="p-2">
+                <div style={{ padding: "6px" }}>
                   <Link
                     href="/dashboard/settings"
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#A8B4CC] hover:text-white hover:bg-[#141926] rounded-xl transition-all"
+                    style={{
+                      display: "flex", alignItems: "center", gap: 9,
+                      padding: "8px 10px", borderRadius: 4,
+                      fontSize: 13, color: "var(--ink-soft)", textDecoration: "none",
+                      transition: "background .12s, color .12s",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(15,23,42,.06)"; (e.currentTarget as HTMLElement).style.color = "var(--ink)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "var(--ink-soft)"; }}
                   >
-                    <User className="h-4 w-4" />
+                    <User size={14} />
                     Account Settings
                   </Link>
-                  <Link
-                    href="/dashboard/billing"
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#A8B4CC] hover:text-white hover:bg-[#141926] rounded-xl transition-all"
-                  >
-                    <Crown className="h-4 w-4" />
-                    Billing &amp; Plans
-                  </Link>
-                  <div className="my-1 border-t border-[#1F2A3C]" />
+                  <div style={{ height: 1, background: "var(--rule)", margin: "4px 0" }} />
                   <button
                     onClick={logout}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all"
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 9,
+                      padding: "8px 10px", borderRadius: 4,
+                      fontSize: 13, color: "#dc2626",
+                      background: "none", border: "none", cursor: "pointer",
+                      transition: "background .12s",
+                    }}
+                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(220,38,38,.07)")}
+                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
                   >
-                    <LogOut className="h-4 w-4" />
+                    <LogOut size={14} />
                     Sign out
                   </button>
                 </div>
@@ -123,6 +147,16 @@ export function DashboardHeader({ user, plan = "free" }: { user: SupabaseUser; p
           )}
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .user-info-desktop { display: none !important; }
+        }
+        @media (min-width: 769px) {
+          .mobile-logo { display: none !important; }
+          .mobile-trigger { display: none !important; }
+        }
+      `}</style>
     </header>
   )
 }

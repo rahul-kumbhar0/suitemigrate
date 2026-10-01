@@ -1,39 +1,48 @@
 import Link from "next/link"
-import { Zap } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1F2A3C] bg-[#0A0E1A]">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
-
+    <footer style={{ borderTop: "1px solid var(--rule)", padding: "56px 0 36px", background: "var(--paper)" }}>
+      <div style={{ maxWidth: 1240, margin: "0 auto", padding: "0 40px" }}>
+        {/* Grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr 1fr 1fr",
+          gap: 56,
+          marginBottom: 56,
+          paddingBottom: 56,
+          borderBottom: "1px solid var(--rule)",
+        }}>
           {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-[#F6C430] flex items-center justify-center">
-                <Zap className="h-4 w-4 text-[#0A0E1A]" />
-              </div>
-              <span className="text-base font-bold text-white">
-                Suite<span className="gradient-text">Migrate</span>
+          <div>
+            <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 9, textDecoration: "none", marginBottom: 14 }}>
+              <span style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+              <span style={{ fontFamily: "var(--f-head)", fontSize: 21, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+                SuiteMigrate
               </span>
             </Link>
-            <p className="text-sm text-[#6B7A99] leading-relaxed">
-              The fastest way to migrate your NetSuite scripts to SuiteScript 2.1 — before the deadline hits.
+            <p style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 0, maxWidth: 250, lineHeight: 1.65 }}>
+              The fastest way to migrate NetSuite SuiteScript 1.0/2.0 to 2.1 before the 2028 deadline.
+              Not affiliated with or endorsed by Oracle.
             </p>
           </div>
 
           {/* Product */}
           <div>
-            <h4 className="text-xs font-semibold text-white uppercase tracking-widest mb-5">Product</h4>
-            <ul className="space-y-3">
+            <h4 style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: "var(--ink-mute)", marginBottom: 18, fontWeight: 500 }}>
+              Product
+            </h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
               {[
-                { label: "Features",      href: "/#how-it-works" },
-                { label: "Pricing",       href: "/#pricing" },
-                { label: "How it works",  href: "/#how-it-works" },
-                { label: "FAQ",           href: "/#faq" },
+                { label: "Features",     href: "/#how-it-works" },
+                { label: "How it works", href: "/#how-it-works" },
+                { label: "Pricing",      href: "/#pricing" },
+                { label: "FAQ",          href: "/#faq" },
               ].map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-[#6B7A99] hover:text-white transition-colors">
+                  <Link href={l.href} style={{ fontSize: 14, color: "var(--ink)", textDecoration: "none", transition: "color .18s" }}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = "var(--clay)")}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = "var(--ink)")}>
                     {l.label}
                   </Link>
                 </li>
@@ -43,8 +52,10 @@ export function Footer() {
 
           {/* Account */}
           <div>
-            <h4 className="text-xs font-semibold text-white uppercase tracking-widest mb-5">Account</h4>
-            <ul className="space-y-3">
+            <h4 style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: "var(--ink-mute)", marginBottom: 18, fontWeight: 500 }}>
+              Account
+            </h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
               {[
                 { label: "Sign up free", href: "/signup" },
                 { label: "Sign in",      href: "/login" },
@@ -53,7 +64,9 @@ export function Footer() {
                 { label: "Settings",     href: "/dashboard/settings" },
               ].map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-[#6B7A99] hover:text-white transition-colors">
+                  <Link href={l.href} style={{ fontSize: 14, color: "var(--ink)", textDecoration: "none", transition: "color .18s" }}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = "var(--clay)")}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = "var(--ink)")}>
                     {l.label}
                   </Link>
                 </li>
@@ -63,14 +76,18 @@ export function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-xs font-semibold text-white uppercase tracking-widest mb-5">Legal</h4>
-            <ul className="space-y-3">
+            <h4 style={{ fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".18em", color: "var(--ink-mute)", marginBottom: 18, fontWeight: 500 }}>
+              Legal
+            </h4>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 9 }}>
               {[
                 { label: "Privacy Policy",   href: "/privacy" },
                 { label: "Terms of Service", href: "/terms" },
               ].map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-[#6B7A99] hover:text-white transition-colors">
+                  <Link href={l.href} style={{ fontSize: 14, color: "var(--ink)", textDecoration: "none", transition: "color .18s" }}
+                    onMouseEnter={e => ((e.target as HTMLElement).style.color = "var(--clay)")}
+                    onMouseLeave={e => ((e.target as HTMLElement).style.color = "var(--ink)")}>
                     {l.label}
                   </Link>
                 </li>
@@ -80,15 +97,24 @@ export function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-8 border-t border-[#1F2A3C] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-[#434E66]">
-            © {new Date().getFullYear()} SuiteMigrate. All rights reserved.
-          </p>
-          <p className="text-xs text-[#434E66]">
-            Built for NetSuite developers, by a NetSuite developer.
-          </p>
+        <div style={{
+          display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10,
+          fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-mute)",
+        }}>
+          <span>© {new Date().getFullYear()} SuiteMigrate — migrate before the deadline</span>
+          <span>v1.0 · read-only · local-first · not affiliated with Oracle</span>
         </div>
       </div>
+
+      {/* Responsive */}
+      <style>{`
+        @media (max-width: 1060px) {
+          .footer-grid-inner { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .footer-grid-inner { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </footer>
   )
 }

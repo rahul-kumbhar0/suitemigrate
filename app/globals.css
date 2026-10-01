@@ -1,190 +1,165 @@
+/* SuiteMigrate — Marketing website
+   Editorial feel that converts NetSuite developers
+   Fonts: Plus Jakarta Sans (headings) · Inter (body) · DM Mono (data/labels)
+   Palette: paper #fafaf9 · ink #0f172a · clay #d94a1f · rule rgba(15,23,42,.10) */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Cal+Sans&family=JetBrains+Mono:wght@400;500&display=swap');
+:root {
+  --paper:      #fafaf9;
+  --paper-warm: #f5f0eb;
+  --ink:        #0f172a;
+  --ink-soft:   #475569;
+  --ink-mute:   #94a3b8;
+  --clay:       #d94a1f;
+  --clay-light: rgba(217,74,31,.10);
+  --rule:       rgba(15,23,42,0.10);
+  --blue:       #2563eb;
+  --f-head:     'Plus Jakarta Sans', system-ui, sans-serif;
+  --f-sans:     'Inter', system-ui, sans-serif;
+  --f-mono:     'DM Mono', ui-monospace, monospace;
 
-/* ─────────────────────────────────────────
-   PREMIUM DESIGN TOKENS
-   Palette: Midnight Navy · Soft White · Gold
-   ───────────────────────────────────────── */
-@layer base {
-  :root {
-    /* Surface */
-    --bg:           220 25% 6%;     /* #0A0E1A — page background */
-    --surface-1:    220 22% 9%;     /* #0F1420 — cards */
-    --surface-2:    220 20% 12%;    /* #141926 — elevated cards */
-    --surface-3:    220 18% 16%;    /* #1C2333 — hover states */
-
-    /* Borders */
-    --border-sub:   220 20% 18%;    /* #1F2A3C — subtle border */
-    --border-mid:   220 18% 24%;    /* #2A3650 — mid border */
-    --border-hi:    220 16% 32%;    /* #394A66 — bright border */
-
-    /* Text */
-    --text-primary:   0 0% 97%;     /* #F7F8FA — headings */
-    --text-secondary: 220 15% 70%;  /* #A8B4CC — body */
-    --text-muted:     220 12% 48%;  /* #6B7A99 — muted */
-    --text-faint:     220 10% 32%;  /* #434E66 — very faint */
-
-    /* Gold accent — the premium touch */
-    --gold:         45 95% 58%;     /* #F6C430 */
-    --gold-dim:     45 80% 48%;     /* #D4A520 */
-    --gold-glow:    45 95% 58%;
-    --gold-bg:      45 60% 12%;     /* #221C07 */
-    --gold-border:  45 70% 28%;     /* #4A3C0A */
-
-    /* Violet accent — depth & energy */
-    --violet:       258 90% 66%;    /* #7C5CFC */
-    --violet-dim:   258 70% 55%;    /* #6247D4 */
-    --violet-bg:    258 60% 12%;    /* #120E2A */
-    --violet-border: 258 50% 28%;   /* #2E2466 */
-
-    /* Status */
-    --success:      142 70% 45%;
-    --warning:      38 95% 55%;
-    --danger:       0 78% 58%;
-
-    /* shadcn compat */
-    --background:   220 25% 6%;
-    --foreground:   0 0% 97%;
-    --card:         220 22% 9%;
-    --card-foreground: 0 0% 97%;
-    --popover:      220 22% 9%;
-    --popover-foreground: 0 0% 97%;
-    --primary:      45 95% 58%;
-    --primary-foreground: 220 25% 6%;
-    --secondary:    220 20% 12%;
-    --secondary-foreground: 0 0% 97%;
-    --muted:        220 18% 16%;
-    --muted-foreground: 220 12% 48%;
-    --accent:       258 60% 12%;
-    --accent-foreground: 0 0% 97%;
-    --destructive:  0 78% 58%;
-    --destructive-foreground: 0 0% 97%;
-    --border:       220 20% 18%;
-    --input:        220 20% 18%;
-    --ring:         45 95% 58%;
-    --radius:       0.75rem;
-  }
+  /* shadcn compat */
+  --background: 60 9% 98%;
+  --foreground: 222 47% 11%;
+  --card: 60 9% 98%;
+  --card-foreground: 222 47% 11%;
+  --popover: 60 9% 98%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 222 47% 11%;
+  --primary-foreground: 60 9% 98%;
+  --secondary: 30 20% 94%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 30 15% 92%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 30 20% 94%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 14 80% 49%;
+  --destructive-foreground: 60 9% 98%;
+  --border: 222 13% 91%;
+  --input: 222 13% 91%;
+  --ring: 14 80% 49%;
+  --radius: 0.375rem;
 }
 
-@layer base {
-  * { border-color: hsl(var(--border-sub)); box-sizing: border-box; }
-  html {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-  }
-  body {
-    background: hsl(var(--bg));
-    color: hsl(var(--text-secondary));
-    font-family: 'Inter', system-ui, sans-serif;
-    line-height: 1.6;
-  }
-  h1, h2, h3, h4 {
-    color: hsl(var(--text-primary));
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-  code, pre, kbd { font-family: 'JetBrains Mono', monospace; }
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-@layer utilities {
-  /* ── Gradient text (gold) ── */
-  .gradient-text {
-    background: linear-gradient(135deg, #F6C430 0%, #FFE27A 50%, #D4A520 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+/* dot-grid texture */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(0,0,0,.025) 1px, transparent 0);
+  background-size: 3px 3px;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: multiply;
+}
+body > * { position: relative; z-index: 1; }
 
-  /* ── Gradient text (violet) ── */
-  .gradient-text-violet {
-    background: linear-gradient(135deg, #7C5CFC 0%, #A78BFA 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+::selection { background: var(--clay); color: var(--paper); }
+a { color: inherit; text-decoration: none; }
 
-  /* ── Card styles ── */
-  .card-premium {
-    background: hsl(var(--surface-1));
-    border: 1px solid hsl(var(--border-sub));
-    border-radius: var(--radius);
-  }
-  .card-elevated {
-    background: hsl(var(--surface-2));
-    border: 1px solid hsl(var(--border-mid));
-    border-radius: var(--radius);
-  }
+/* ── Typography helpers ── */
+.font-head { font-family: var(--f-head); }
+.font-mono { font-family: var(--f-mono); }
 
-  /* ── Gold border gradient ── */
-  .border-gold {
-    border: 1px solid hsl(var(--gold-border));
-    background: hsl(var(--gold-bg));
-  }
-  .border-violet {
-    border: 1px solid hsl(var(--violet-border));
-    background: hsl(var(--violet-bg));
-  }
+/* Tailwind override — h1/h2/h3 use head font */
+h1, h2, h3, h4 { font-family: var(--f-head); }
 
-  /* ── Glows ── */
-  .glow-gold    { box-shadow: 0 0 60px rgba(246,196,48,0.15), 0 0 20px rgba(246,196,48,0.08); }
-  .glow-gold-sm { box-shadow: 0 0 30px rgba(246,196,48,0.10); }
-  .glow-violet  { box-shadow: 0 0 60px rgba(124,92,252,0.20); }
-  .glow-emerald { box-shadow: 0 0 40px rgba(124,92,252,0.12); }
-  .glow-emerald-sm { box-shadow: 0 0 20px rgba(124,92,252,0.08); }
+/* gradient-text → clay for SuiteDiff style */
+.gradient-text { color: var(--clay); }
 
-  /* ── Gradient border (gold) ── */
-  .gradient-border {
-    background: linear-gradient(hsl(var(--surface-1)), hsl(var(--surface-1))) padding-box,
-      linear-gradient(135deg, #F6C430, #7C5CFC) border-box;
-    border: 1px solid transparent;
-  }
-
-  /* ── Subtle dot grid ── */
-  .bg-grid {
-    background-image: radial-gradient(circle, rgba(124,92,252,0.08) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-
-  /* ── Noise texture on hero ── */
-  .bg-hero {
-    background:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124,92,252,0.18) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(246,196,48,0.06) 0%, transparent 50%),
-      hsl(var(--bg));
-  }
-
-  /* ── Divider ── */
-  .hairline { border-top: 1px solid hsl(var(--border-sub)); }
-
-  /* ── Section tag ── */
-  .section-tag {
-    @apply text-[10px] font-semibold tracking-[0.15em] uppercase;
-    color: hsl(var(--text-faint));
-  }
-
-  .text-balance { text-wrap: balance; }
-
-  /* ── Code block ── */
-  .code-block {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    line-height: 1.7;
-  }
+/* eyebrow label */
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: var(--ink-mute);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.eyebrow::before {
+  content: "";
+  width: 28px; height: 1px;
+  background: var(--ink-mute);
+  flex-shrink: 0;
 }
 
-/* ── Scrollbar ── */
+/* section number */
+.section-num {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  padding-top: 4px;
+}
+
+/* btn-pill */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 13px 26px;
+  font-size: 15px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--f-sans);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background .22s, transform .18s;
+}
+.btn-pill:hover { background: var(--clay); transform: translateY(-2px); }
+
+/* legacy gradient-border kept for compat */
+.gradient-border { border: 1px solid var(--rule); }
+.glow-emerald    { box-shadow: none; }
+.glow-emerald-sm { box-shadow: none; }
+.bg-grid {
+  background-image: radial-gradient(rgba(0,0,0,.025) 1px, transparent 0);
+  background-size: 3px 3px;
+}
+.hairline { border-top: 1px solid var(--rule); }
+
+/* scrollbar */
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track  { background: hsl(var(--bg)); }
-::-webkit-scrollbar-thumb  { background: hsl(var(--border-mid)); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: hsl(var(--border-hi)); }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb { background: rgba(15,23,42,.15); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,.3); }
 
-/* ── Selection ── */
-::selection {
-  background: rgba(246,196,48,0.25);
-  color: hsl(var(--text-primary));
+/* animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up   { animation: fadeUp .85s ease-out both; }
+.delay-1   { animation-delay: .1s; }
+.delay-2   { animation-delay: .24s; }
+.delay-3   { animation-delay: .38s; }
+.delay-4   { animation-delay: .52s; }
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .25; }
 }

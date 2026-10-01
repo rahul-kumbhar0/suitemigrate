@@ -3,10 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import { cn } from "@/lib/utils"
 import {
-  Zap, LayoutDashboard, History, CreditCard,
-  Users, Settings, Chrome, ExternalLink, Menu, X,
+  LayoutDashboard, History, CreditCard,
+  Users, Settings, Chrome, Menu, X,
 } from "lucide-react"
 
 const navItems = [
@@ -24,39 +23,60 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <>
-      <nav className="flex-1 px-3 py-5 space-y-0.5">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all",
-              isActive(item)
-                ? "bg-[#F6C430]/10 text-[#F6C430] border border-[#F6C430]/20 shadow-sm"
-                : "text-[#6B7A99] hover:text-white hover:bg-[#141926]"
-            )}
-          >
-            <item.icon className={cn("h-4 w-4 shrink-0", isActive(item) ? "text-[#F6C430]" : "text-[#434E66]")} />
-            {item.label}
-          </Link>
-        ))}
+      <nav style={{ flex: 1, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
+        {navItems.map((item) => {
+          const active = isActive(item)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                padding: "9px 12px", borderRadius: 4,
+                fontSize: 14, fontFamily: "var(--f-sans)",
+                textDecoration: "none", transition: "background .14s, color .14s",
+                background: active ? "rgba(15,23,42,.07)" : "transparent",
+                color: active ? "var(--ink)" : "var(--ink-soft)",
+                fontWeight: active ? 500 : 400,
+                borderLeft: active ? "2px solid var(--clay)" : "2px solid transparent",
+              }}
+            >
+              <item.icon size={15} style={{ flexShrink: 0, color: active ? "var(--clay)" : "var(--ink-mute)" }} />
+              {item.label}
+            </Link>
+          )
+        })}
       </nav>
 
       {/* Extension CTA */}
-      <div className="px-3 pb-5">
-        <div className="rounded-xl border border-[#2A3650] bg-[#0F1420] p-3 mb-3">
-          <p className="text-xs font-semibold text-white mb-1">Chrome Extension</p>
-          <p className="text-[10px] text-[#6B7A99] mb-2.5 leading-relaxed">
-            Install to scan NetSuite scripts directly from your browser.
+      <div style={{ padding: "0 16px 24px" }}>
+        <div style={{
+          border: "1px solid var(--rule)",
+          borderRadius: 6,
+          padding: "14px 16px",
+          background: "rgba(217,74,31,.04)",
+        }}>
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--ink-mute)", marginBottom: 6 }}>
+            Chrome Extension
+          </p>
+          <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5, marginBottom: 10 }}>
+            Install to scan NetSuite scripts from your browser.
           </p>
           <a
             href="#"
-            className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] text-xs font-bold transition-all"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              width: "100%", padding: "8px 12px", borderRadius: 999,
+              background: "var(--ink)", color: "var(--paper)",
+              fontSize: 12, fontFamily: "var(--f-sans)", fontWeight: 500,
+              textDecoration: "none", transition: "background .2s",
+            }}
+            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--clay)")}
+            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "var(--ink)")}
           >
-            <Chrome className="h-3.5 w-3.5" />
-            Install Extension
-            <ExternalLink className="h-3 w-3" />
+            <Chrome size={13} />
+            Install free
           </a>
         </div>
       </div>
@@ -66,57 +86,75 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function MobileSidebarTrigger() {
   const [open, setOpen] = useState(false)
+
   return (
     <>
       <button
-        className="lg:hidden p-2 rounded-lg text-[#6B7A99] hover:text-white hover:bg-[#141926] transition-all"
         onClick={() => setOpen(true)}
+        style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", padding: 4 }}
+        className="mobile-trigger"
+        aria-label="Open menu"
       >
-        <Menu className="h-5 w-5" />
+        <Menu size={20} />
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm lg:hidden"
           onClick={() => setOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 40, background: "rgba(15,23,42,.4)", backdropFilter: "blur(4px)" }}
         />
       )}
 
-      <div className={cn(
-        "fixed top-0 left-0 bottom-0 z-50 w-64 bg-[#0A0E1A] border-r border-[#1F2A3C] flex flex-col transition-transform duration-200 lg:hidden",
-        open ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="px-5 py-4 border-b border-[#1F2A3C] flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-            <div className="h-7 w-7 rounded-lg bg-[#F6C430] flex items-center justify-center">
-              <Zap className="h-3.5 w-3.5 text-[#0A0E1A]" />
-            </div>
-            <span className="font-bold text-white text-sm">Suite<span className="gradient-text">Migrate</span></span>
+      <div style={{
+        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50,
+        width: 240, background: "var(--paper)",
+        borderRight: "1px solid var(--rule)",
+        display: "flex", flexDirection: "column",
+        transform: open ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform .2s ease",
+      }}>
+        <div style={{ padding: "18px 20px", borderBottom: "1px solid var(--rule)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" onClick={() => setOpen(false)} style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+            <span style={{ fontFamily: "var(--f-head)", fontSize: 17, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+              SuiteMigrate
+            </span>
           </Link>
-          <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg text-[#6B7A99] hover:text-white hover:bg-[#141926]">
-            <X className="h-4 w-4" />
+          <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)" }}>
+            <X size={18} />
           </button>
         </div>
         <NavLinks onNavigate={() => setOpen(false)} />
       </div>
+
+      <style>{`.mobile-trigger { display: block !important; }`}</style>
     </>
   )
 }
 
 export function DashboardSidebar() {
   return (
-    <aside className="hidden lg:flex flex-col w-60 border-r border-[#1F2A3C] bg-[#0A0E1A] shrink-0">
-      <div className="px-5 py-5 border-b border-[#1F2A3C]">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-[#F6C430] flex items-center justify-center shadow-sm">
-            <Zap className="h-4 w-4 text-[#0A0E1A]" />
-          </div>
-          <span className="font-bold text-white tracking-tight">
-            Suite<span className="gradient-text">Migrate</span>
+    <aside style={{
+      width: 220, flexShrink: 0,
+      borderRight: "1px solid var(--rule)",
+      background: "var(--paper)",
+      display: "flex", flexDirection: "column",
+    }} className="dash-sidebar">
+      {/* Logo */}
+      <div style={{ padding: "20px 20px 18px", borderBottom: "1px solid var(--rule)" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "var(--clay)", display: "inline-block" }} />
+          <span style={{ fontFamily: "var(--f-head)", fontSize: 18, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--ink)" }}>
+            SuiteMigrate
           </span>
         </Link>
       </div>
+
       <NavLinks />
+
+      <style>{`
+        @media (max-width: 768px) { .dash-sidebar { display: none !important; } }
+      `}</style>
     </aside>
   )
 }

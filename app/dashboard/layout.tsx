@@ -6,7 +6,6 @@ import { DashboardHeader } from "@/components/dashboard/header"
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) redirect("/login")
 
   let plan = "free"
@@ -14,11 +13,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (profile) plan = profile.plan
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] flex">
+    <div style={{ minHeight: "100vh", background: "var(--paper)", display: "flex" }}>
       <DashboardSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <DashboardHeader user={user} plan={plan} />
-        <main className="flex-1 p-5 lg:p-8 overflow-auto">
+        <main style={{ flex: 1, padding: "40px 32px", overflowY: "auto" }}>
           {children}
         </main>
       </div>

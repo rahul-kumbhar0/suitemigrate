@@ -2,11 +2,10 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { Menu, X, Zap } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export function Navbar() {
-  const [open, setOpen]       = useState(false)
+  const [open, setOpen]         = useState(false)
   const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
@@ -17,56 +16,62 @@ export function Navbar() {
   }, [])
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[#1F2A3C] bg-[#0A0E1A]/80 backdrop-blur-xl">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-[#F6C430] flex items-center justify-center shadow-sm">
-              <Zap className="h-4 w-4 text-[#0A0E1A]" />
-            </div>
-            <span className="text-base font-bold text-white tracking-tight">
-              Suite<span className="gradient-text">Migrate</span>
+    <>
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        background: "rgba(246,244,239,.82)",
+        borderBottom: "1px solid rgba(15,23,42,0.10)",
+      }}>
+        <div style={{
+          maxWidth: 1240, margin: "0 auto",
+          padding: "18px 40px",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20,
+        }}>
+          {/* Brand */}
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
+            <span style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--clay)", flexShrink: 0, display: "inline-block" }} />
+            <span style={{
+              fontFamily: "var(--f-head)", fontSize: 21, fontWeight: 400,
+              letterSpacing: "-0.02em", color: "var(--ink)",
+            }}>
+              SuiteMigrate
             </span>
           </Link>
 
-          {/* Desktop nav links */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* Desktop links */}
+          <ul style={{ display: "flex", gap: 34, listStyle: "none", margin: 0, padding: 0 }} className="nav-links-desktop">
             {[
-              { label: "Features", href: "/#how-it-works" },
-              { label: "Pricing",  href: "/#pricing" },
-              { label: "FAQ",      href: "/#faq" },
+              { label: "Who it&apos;s for", href: "/#who" },
+              { label: "Features",          href: "/#how-it-works" },
+              { label: "How it works",      href: "/#how-it-works" },
+              { label: "Pricing",           href: "/#pricing" },
+              { label: "FAQ",               href: "/#faq" },
             ].map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="px-3.5 py-2 rounded-lg text-sm text-[#A8B4CC] hover:text-white hover:bg-[#141926] transition-all"
-              >
-                {l.label}
-              </Link>
+              <li key={l.href}>
+                <Link href={l.href} style={{ fontSize: 14, color: "var(--ink-soft)", transition: "color .2s", textDecoration: "none" }}
+                  onMouseEnter={e => ((e.target as HTMLElement).style.color = "var(--ink)")}
+                  onMouseLeave={e => ((e.target as HTMLElement).style.color = "var(--ink-soft)")}>
+                  {l.label.replace(/&apos;/g, "'")}
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
 
           {/* CTA */}
-          <div className="hidden md:flex items-center gap-3">
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }} className="nav-cta-desktop">
             {loggedIn ? (
-              <Link href="/dashboard">
-                <button className="px-4 py-2 rounded-lg bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] text-sm font-semibold transition-all shadow-sm">
-                  Dashboard →
-                </button>
+              <Link href="/dashboard" className="btn-pill" style={{ padding: "9px 20px", fontSize: 13 }}>
+                Dashboard →
               </Link>
             ) : (
               <>
-                <Link href="/login">
-                  <button className="px-4 py-2 rounded-lg text-sm text-[#A8B4CC] hover:text-white hover:bg-[#141926] transition-all">
-                    Sign in
-                  </button>
+                <Link href="/login" style={{ fontSize: 14, color: "var(--ink-soft)", textDecoration: "none" }}>
+                  Sign in
                 </Link>
-                <Link href="/signup">
-                  <button className="px-4 py-2 rounded-lg bg-[#F6C430] hover:bg-[#FFD24D] text-[#0A0E1A] text-sm font-semibold transition-all shadow-sm hover:shadow-[0_0_16px_rgba(246,196,48,0.3)]">
-                    Get started free
-                  </button>
+                <Link href="/signup" className="btn-pill" style={{ padding: "9px 20px", fontSize: 13 }}>
+                  Install free →
                 </Link>
               </>
             )}
@@ -74,55 +79,66 @@ export function Navbar() {
 
           {/* Mobile toggle */}
           <button
-            className="md:hidden p-2 rounded-lg text-[#A8B4CC] hover:text-white hover:bg-[#141926] transition-all"
             onClick={() => setOpen(!open)}
+            style={{ display: "none", background: "none", border: "none", cursor: "pointer", color: "var(--ink-soft)", padding: 4 }}
+            className="nav-mobile-toggle"
+            aria-label="Menu"
           >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 4l12 12M16 4L4 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            )}
           </button>
         </div>
 
         {/* Mobile menu */}
         {open && (
-          <div className="md:hidden py-4 border-t border-[#1F2A3C] space-y-1">
+          <div style={{ borderTop: "1px solid rgba(15,23,42,.1)", padding: "16px 22px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
             {[
-              { label: "Features", href: "/#how-it-works" },
-              { label: "Pricing",  href: "/#pricing" },
-              { label: "FAQ",      href: "/#faq" },
+              { label: "Who it's for",  href: "/#who" },
+              { label: "Features",      href: "/#how-it-works" },
+              { label: "How it works",  href: "/#how-it-works" },
+              { label: "Pricing",       href: "/#pricing" },
+              { label: "FAQ",           href: "/#faq" },
             ].map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="block px-3 py-2.5 rounded-lg text-sm text-[#A8B4CC] hover:text-white hover:bg-[#141926] transition-all"
-              >
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
+                style={{ fontSize: 14, color: "var(--ink-soft)", padding: "10px 0", textDecoration: "none", borderBottom: "1px solid rgba(15,23,42,.06)" }}>
                 {l.label}
               </Link>
             ))}
-            <div className="pt-3 space-y-2 border-t border-[#1F2A3C] mt-2">
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
               {loggedIn ? (
-                <Link href="/dashboard" onClick={() => setOpen(false)}>
-                  <button className="w-full py-2.5 rounded-xl bg-[#F6C430] text-[#0A0E1A] text-sm font-bold">
-                    Dashboard →
-                  </button>
+                <Link href="/dashboard" className="btn-pill" style={{ justifyContent: "center", fontSize: 14 }}>
+                  Dashboard →
                 </Link>
               ) : (
                 <>
-                  <Link href="/login" onClick={() => setOpen(false)}>
-                    <button className="w-full py-2.5 rounded-xl border border-[#2A3650] text-[#A8B4CC] text-sm">
-                      Sign in
-                    </button>
+                  <Link href="/login" style={{ fontSize: 14, color: "var(--ink-soft)", textAlign: "center", padding: "11px 0", border: "1px solid rgba(15,23,42,.15)", borderRadius: 999, textDecoration: "none" }}>
+                    Sign in
                   </Link>
-                  <Link href="/signup" onClick={() => setOpen(false)}>
-                    <button className="w-full py-2.5 rounded-xl bg-[#F6C430] text-[#0A0E1A] text-sm font-bold">
-                      Get started free
-                    </button>
+                  <Link href="/signup" className="btn-pill" style={{ justifyContent: "center", fontSize: 14 }}>
+                    Install free →
                   </Link>
                 </>
               )}
             </div>
           </div>
         )}
-      </div>
-    </nav>
+      </nav>
+
+      {/* Responsive overrides */}
+      <style>{`
+        @media (max-width: 768px) {
+          .nav-links-desktop { display: none !important; }
+          .nav-cta-desktop   { display: none !important; }
+          .nav-mobile-toggle { display: block !important; }
+        }
+      `}</style>
+    </>
   )
 }
