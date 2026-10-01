@@ -9,8 +9,30 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect("/login")
 
   let plan = "free"
-  const { data: profile } = await supabase.from("users").select("plan").eq("id", user.id).single()
-  if (profile) plan = profile.plan
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("plan")
+        .eq("id", user.id)
+        .maybeSingle()
+      if (profile) plan = profile.plan
+
+      // Auto-create user row if it doesn't exist (trigger may have failed)
+      if (!profile) {
+        await supabase.from("users").upsert({
+          id: user.id,
+          email: user.email ?? "",
+          name: user.user_metadata?.name ?? null,
+          plan: "free",
+          conversions_used: 0,
+          conversions_limit: 5,
+        }, { onConflict: "id", ignoreDuplicates: true })
+      }
+    } catch {
+      // silently continue with plan = "free"
+    }
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--paper)", display: "flex" }}>

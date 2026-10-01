@@ -17,8 +17,10 @@ export default function SettingsPage() {
       const { data: { user: u } } = await supabase.auth.getUser()
       setUser(u)
       if (u) {
-        const res = await fetch("/api/user")
-        if (res.ok) { const d = await res.json(); setUserPlan(d.plan || "free") }
+        try {
+          const res = await fetch("/api/user")
+          if (res.ok) { const d = await res.json(); setUserPlan(d.plan || "free") }
+        } catch { /* use default free */ }
       }
     }
     load()

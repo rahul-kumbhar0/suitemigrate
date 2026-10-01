@@ -8,8 +8,16 @@ export default async function DashboardPage() {
 
   let profile = { plan: "free", conversions_used: 0, conversions_limit: 5 as number | null }
   if (user) {
-    const { data } = await supabase.from("users").select("plan,conversions_used,conversions_limit").eq("id", user.id).single()
-    if (data) profile = data
+    try {
+      const { data } = await supabase
+        .from("users")
+        .select("plan,conversions_used,conversions_limit")
+        .eq("id", user.id)
+        .maybeSingle()
+      if (data) profile = data
+    } catch {
+      // use defaults
+    }
   }
 
   const name     = user?.user_metadata?.name || user?.email?.split("@")[0] || "there"
