@@ -161,9 +161,7 @@ export default function SettingsPage() {
 
         <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 4, background: "rgba(15,23,42,.04)", border: "1px solid var(--rule)" }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-soft)", lineHeight: 1.8 }}>
-            Try: <span style={{ color: "var(--clay)" }}>TESTPRO</span> — unlimited conversions for testing
-            <br />
-            Or: <span style={{ color: "var(--ink)" }}>FOUNDER2026</span> — lifetime unlimited access
+            Enter a valid promo code above. Codes are case-insensitive.
           </p>
         </div>
       </Section>

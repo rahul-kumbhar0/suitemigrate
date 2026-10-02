@@ -4,13 +4,21 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
-// Promo codes (in production, store these in database)
-const PROMO_CODES: Record<string, { plan: string; conversionsLimit: number | null }> = {
-  "FOUNDER2026": { plan: "lifetime", conversionsLimit: null }, // Unlimited
-  "PRO30": { plan: "pro", conversionsLimit: null }, // Unlimited for 30 days
-  "BETA100": { plan: "pro", conversionsLimit: 100 }, // 100 conversions
-  "TESTPRO": { plan: "pro", conversionsLimit: null }, // Your personal test code
-}
+// ---------------------------------------------------------------------------
+// SECURITY NOTE
+// ---------------------------------------------------------------------------
+// Promo codes are server-validated here — never sent to the client.
+// TESTPRO has been invalidated. Codes are now loaded from the database
+// (promo_codes table) so they can be individually expired, revoked,
+// or limited to a set number of uses without a code deployment.
+//
+// TODO (OWNER): Implement single-use tracking:
+//   1. Add a "used_by" JSONB column or a separate "promo_redemptions" table.
+//   2. On redemption, insert a row and reject if the code has already been used
+//      by this user (or globally, for single-use codes).
+//   3. Set an "expires_at" on each code in the database.
+//   4. Review any URL-param or localStorage logic that might bypass billing.
+// ---------------------------------------------------------------------------
 
 export async function POST(request: Request) {
   try {
@@ -25,65 +33,61 @@ export async function POST(request: Request) {
     const { code } = body
 
     if (!code || typeof code !== "string") {
-      return NextResponse.json(
-        { error: "Promo code is required" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Promo code is required" }, { status: 400 })
     }
 
-    // Check if code is valid
-    const promoData = PROMO_CODES[code.toUpperCase()]
-    if (!promoData) {
-      return NextResponse.json(
-        { error: "Invalid promo code" },
-        { status: 400 }
-      )
-    }
+    const normalised = code.trim().toUpperCase()
 
-    // Update user plan
+    // Look up the code in the database — never in client-visible source code.
     const admin = createAdminClient()
+    const { data: promoRow, error: promoError } = await admin
+      .from("promo_codes")
+      .select("code, plan, conversions, duration_days, expires_at, active")
+      .eq("code", normalised)
+      .eq("active", true)
+      .maybeSingle()
+
+    if (promoError) {
+      console.error("[/api/promo/redeem] DB error:", promoError)
+      return NextResponse.json({ error: "Failed to validate promo code" }, { status: 500 })
+    }
+
+    if (!promoRow) {
+      return NextResponse.json({ error: "Invalid or expired promo code" }, { status: 400 })
+    }
+
+    // Check expiry
+    if (promoRow.expires_at && new Date(promoRow.expires_at) < new Date()) {
+      return NextResponse.json({ error: "This promo code has expired" }, { status: 400 })
+    }
+
+    // Apply to user
     const { error: updateError } = await admin
       .from("users")
       .update({
-        plan: promoData.plan,
-        conversions_limit: promoData.conversionsLimit,
-        // Reset usage count
+        plan: promoRow.plan,
+        conversions_limit: promoRow.conversions ?? null,
         conversions_used: 0,
       })
       .eq("id", user.id)
 
     if (updateError) {
-      console.error("[/api/promo/redeem]", updateError)
-      return NextResponse.json(
-        { error: "Failed to apply promo code" },
-        { status: 500 }
-      )
+      console.error("[/api/promo/redeem] update error:", updateError)
+      return NextResponse.json({ error: "Failed to apply promo code" }, { status: 500 })
     }
-
-    // Log promo code redemption (optional - add promo_codes table later)
-    await admin.from("conversions").insert({
-      user_id: user.id,
-      script_name: `Promo Code Redeemed: ${code}`,
-      original_version: "1.0",
-      script_type: "System",
-      original_code: `Promo code: ${code}`,
-      converted_code: `Plan upgraded to: ${promoData.plan}`,
-      confidence_score: 100,
-      changes_log: [`Redeemed promo code: ${code}`, `Upgraded to ${promoData.plan} plan`],
-      manual_review_lines: [],
-      ns_account_id: "promo",
-    }).select().single()
 
     return NextResponse.json({
       success: true,
-      message: `Promo code applied! You now have ${promoData.plan} plan.`,
-      plan: promoData.plan,
-      conversionsLimit: promoData.conversionsLimit,
+      message: `Promo code applied! You now have the ${promoRow.plan} plan.`,
+      plan: promoRow.plan,
+      conversionsLimit: promoRow.conversions ?? null,
     })
 
   } catch (err: unknown) {
     console.error("[/api/promo/redeem]", err)
-    const message = err instanceof Error ? err.message : "Failed to redeem promo code"
-    return NextResponse.json({ error: message }, { status: 500 })
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to redeem promo code" },
+      { status: 500 }
+    )
   }
 }
