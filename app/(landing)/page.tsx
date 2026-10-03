@@ -6,37 +6,59 @@ import { Footer } from "@/components/landing/footer"
 import { Download, GitCompare, CheckCircle, Sparkles, BarChart3, Zap, Search, FileText, AlertTriangle } from "lucide-react"
 
 // ---------------------------------------------------------------------------
-// Part 1 of 2 — copy update per brief received [date TBD]
-// Sections updated: hero, deadline, how-it-works, social proof, features
-// Sections NOT yet updated (Part 2): pricing table, comparison, trust, FAQ, footer
+// Part 1 + 2 of 2 — copy update complete
 // [OWNER TO CONFIRM] items are listed in CONTENT-TODO.md
 // ---------------------------------------------------------------------------
 
-// NOTE: promo code hint removed from FAQ — never display codes in public UI.
+// NOTE: promo codes are never displayed in public UI.
 const faqs = [
+  // ── Core product ──────────────────────────────────────────────
+  {
+    q: "Why not just paste my script into ChatGPT?",
+    a: "Pasting one script is straightforward. SuiteMigrate does the parts that don't scale: it scans your whole account, risk-scores every script, checks for known SuiteScript 2.1 behaviour differences, and produces a report you can hand to a client or manager. One-off pastes don't give you the inventory, the risk prioritisation, or the audit trail.",
+  },
+  {
+    q: "Do I need to migrate my 2.0 scripts?",
+    a: "Yes. SuiteScript 2.0 and 2.x scripts are in scope for the 2028.2 deadline. From 2028.1, NetSuite will run them under the 2.1 engine by default. Oracle documents engine differences (ES2023 vs ES5.1) that can silently change results — decimal handling, date operations, RESTlet responses.",
+  },
+  {
+    q: "Can I use NetSuite's own preference to run 2.0 scripts as 2.1?",
+    a: "Yes, that setting exists. But it doesn't tell you which of your scripts will behave differently once the engine changes — it just flips the switch. SuiteMigrate's scan and behaviour-difference checks show you exactly which scripts are at risk before anything breaks.",
+  },
+  {
+    q: "Is my code safe?",
+    // §9.2 — links to the security section
+    a: "See the Security & privacy section below. In short: the extension reads script records using your existing NetSuite session and never modifies your account. If you choose to convert a script, the code is sent to the AI provider for that conversion only. See the data-handling note near the top of the page for full details.",
+  },
+  {
+    q: "What happens to my scripts if I cancel?",
+    a: "Any scripts you have already downloaded are yours — they are standard JavaScript files on your machine. Conversion history stored in your account is accessible until your subscription ends. We do not delete your data immediately on cancellation; see the Terms of Service for the retention period.",
+  },
+  {
+    q: "Do you offer refunds?",
+    // [OWNER TO CONFIRM] refund period (7 or 14 days) — matches §7.5 placeholder
+    a: "Monthly plans can be cancelled at any time; you keep access until the end of the billing period and no further charge is made. For the first payment on any paid plan, a [7/14]-day money-back guarantee applies if the service does not work as described — contact support. [OWNER TO CONFIRM refund period]",
+  },
+  // ── Technical ─────────────────────────────────────────────────
   {
     q: "Does SuiteMigrate store my NetSuite credentials?",
     a: "No. The extension authenticates using your existing browser session — the same session you already have open. Your NetSuite credentials are never entered into, captured by, or transmitted through SuiteMigrate.",
   },
   {
     q: "How accurate is the AI conversion?",
-    a: "SuiteMigrate runs 50+ deterministic API mapping rules first, then Gemini AI handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently guessed.",
+    a: "SuiteMigrate runs 50+ deterministic API mapping rules first, then Gemini AI handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
   },
   {
     q: "Which script types are supported?",
     a: "UserEvent, Suitelet, Scheduled, Map/Reduce, ClientScript, RESTlet, Portlet, MassUpdate — all types are supported. Both SS 1.0 → 2.1 and SS 2.0 / 2.x → 2.1 conversion paths are covered.",
   },
   {
-    q: "Why does the 2028.2 deadline matter for 2.0 scripts too?",
-    a: "SuiteScript 2.1 runs a different engine (ES2023 vs ES5.1). Oracle documents behavior differences that can silently change results — decimal handling, date operations, RESTlet responses. Running 2.0 scripts unmodified after 2028.2 is not supported.",
+    q: "Does it work with multiple accounts or Sandbox environments?",
+    a: "Yes. The extension detects the current NetSuite environment automatically — Production, Sandbox, and Release Preview are all supported. Consultants and partners can scan multiple accounts by switching environments.",
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited account scanning, risk scoring for every script, and 5 complete AI conversions — including inline comments, diff view, confidence scoring, and download. No credit card required.",
-  },
-  {
-    q: "Does it work with multiple accounts or Sandbox environments?",
-    a: "Yes. The extension detects the current NetSuite environment automatically — Production, Sandbox, and Release Preview are all supported. Consultants and partners can scan multiple accounts by switching environments.",
+    a: "Unlimited account scanning and risk scoring, plus 5 complete AI conversions with confidence scoring, inline comments, and diff view. PDF audit report, batch conversion, and ZIP export are included on Pro and Team plans.",
   },
 ]
 
@@ -113,7 +135,7 @@ export default function LandingPage() {
           5 free conversions. No credit card.
         </p>
 
-        {/* Disclaimer — §2.5: "local-first" / "never leave" removed, Oracle disclaimer kept */}
+        {/* §9.1 — accurate data-handling statement (replaces removed "local-first" claim) */}
         <p className="fade-up delay-4" style={{
           fontFamily: "var(--f-mono)", fontSize: 10,
           color: "var(--ink-mute)", letterSpacing: ".04em",
@@ -121,6 +143,22 @@ export default function LandingPage() {
         }}>
           Read-only · Never writes to NetSuite · Not affiliated with Oracle
         </p>
+        {/* §9.1 data-handling note — [OWNER TO CONFIRM every detail below] */}
+        <div className="fade-up delay-4" style={{
+          marginTop: 14, padding: "10px 16px",
+          border: "1px solid var(--rule)", borderRadius: 4,
+          background: "rgba(15,23,42,.03)",
+          maxWidth: 560, display: "inline-block", textAlign: "left",
+        }}>
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
+            <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
+            The extension reads script metadata in your browser using your active NetSuite session.
+            {" "}When you convert a script, that script&apos;s code is sent to Google Gemini for AI processing.
+            {" "}[OWNER TO CONFIRM: stored after conversion yes/no · used for model training yes/no]
+            {" "}·{" "}
+            <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
+          </p>
+        </div>
 
         {/* Hero mock card */}
         <div className="landing-hero-card" style={{
@@ -541,60 +579,72 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          03 — WHAT'S INCLUDED
-          §6.5: "Everything in the free plan. Really." removed
+          03 — COMPARISON TABLE  (§8 of brief)
+          Only rows that differ across plans are shown.
+          Rows where all three plans are identical are omitted.
       ═══════════════════════════════════════════ */}
       <section style={{ padding: "0 0 100px" }}>
         <div className="landing-section-padding">
           <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <div className="section-num" style={{ display: "block", marginBottom: 10 }}>03 — What&apos;s included in each plan</div>
+            <div className="section-num" style={{ display: "block", marginBottom: 10 }}>03 — Plan comparison</div>
             <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(22px,3.5vw,42px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
-              Free plan includes 5 conversions.{" "}
-              <em style={{ fontStyle: "italic", color: "var(--clay)" }}>Pro is unlimited.</em>
+              What changes between plans.
             </h2>
-            <p style={{ fontSize: 15, color: "var(--ink-soft)", marginTop: 12, maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.65 }}>
-              Both plans include every feature below. The free plan is capped at 5 conversions; Pro removes the cap.
+            <p style={{ fontSize: 14, color: "var(--ink-soft)", marginTop: 10, maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.65 }}>
+              Account scan, risk scoring, AI conversion, confidence score, inline comments, and diff view are included on all plans.
             </p>
           </div>
-          <div className="landing-compare-grid">
-            <div style={{ background: "var(--paper)", padding: "22px 24px" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--rule)" }}>Feature</div>
-              {[
-                "Account scan — full script inventory",
-                "Risk score (HIGH / MED / LOW) per script",
-                "SuiteScript 2.1 behaviour-difference checks",
-                "AI structural conversion",
-                "50+ API mapping rules",
-                "Inline // MIGRATED: comments",
-                "Code · Changes · Inline review tabs",
-                "Confidence score (0–100%) per conversion",
-                "Manual review flags — nothing silently skipped",
-                "Deploy-ready download with conversion header",
-                "PDF audit report",
-                "ZIP export of all converted scripts",
-              ].map(f => (
-                <div key={f} style={{ padding: "9px 0", fontSize: 13, borderBottom: "1px solid var(--rule)", color: "var(--ink-soft)" }}>{f}</div>
-              ))}
-            </div>
-            <div style={{ background: "var(--paper)", padding: "22px 24px" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid var(--rule)" }}>Free (5 conversions)</div>
-              {Array(12).fill("✓").map((c, i) => (
-                <div key={i} style={{ padding: "9px 0", borderBottom: "1px solid var(--rule)", color: "var(--clay)", fontSize: 13 }}>{c}</div>
-              ))}
-            </div>
-            <div style={{ background: "var(--ink)", padding: "22px 24px" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "rgba(250,250,249,.38)", marginBottom: 14, paddingBottom: 12, borderBottom: "1px solid rgba(250,250,249,.1)" }}>Pro (unlimited)</div>
-              {Array(12).fill("✓").map((c, i) => (
-                <div key={i} style={{ padding: "9px 0", borderBottom: "1px solid rgba(250,250,249,.08)", color: "var(--clay)", fontSize: 13 }}>{c}</div>
-              ))}
-            </div>
+
+          {/* §8.1 — only differing rows */}
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid var(--rule)" }}>
+              <thead>
+                <tr style={{ background: "rgba(15,23,42,.04)", borderBottom: "1px solid var(--rule)" }}>
+                  <th style={{ textAlign: "left", padding: "12px 20px", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", fontWeight: 500, width: "44%" }}>
+                    Feature
+                  </th>
+                  {["Free", "Pro", "Team"].map(h => (
+                    <th key={h} style={{ padding: "12px 16px", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink)", fontWeight: 600 }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  team: "Unlimited" },
+                  { f: "Batch conversion",         free: "—",          pro: "✓",          team: "✓" },
+                  { f: "ZIP export",               free: "—",          pro: "✓",          team: "✓" },
+                  { f: "PDF audit report",         free: "—",          pro: "✓",          team: "✓" },
+                  { f: "Conversion history",       free: "—",          pro: "✓",          team: "Shared" },
+                  { f: "Multiple accounts",        free: "—",          pro: "—",          team: "✓" },
+                  { f: "Client-branded reports",   free: "—",          pro: "—",          team: "✓" },
+                  { f: "Seats",                    free: "1",          pro: "1",          team: "Multiple" },
+                ].map((row, i) => (
+                  <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
+                    <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
+                    {[row.free, row.pro, row.team].map((v, j) => (
+                      <td key={j} style={{
+                        padding: "11px 16px", textAlign: "center", fontSize: 13,
+                        color: v === "✓" ? "var(--clay)" : v === "—" ? "var(--ink-mute)" : "var(--ink)",
+                        fontFamily: (v === "✓" || v === "—") ? "var(--f-mono)" : "var(--f-sans)",
+                        fontWeight: v === "✓" ? 600 : 400,
+                      }}>
+                        {v}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════
-          04 — PRICING
-          TESTPRO hint removed (§1.1 / §2 of brief)
+          04 — PRICING  (§7 of brief)
+          Three full cards: Free / Pro (highlighted) / Team
+          Lifetime repositioned as early-adopter footnote
       ═══════════════════════════════════════════ */}
       <section id="pricing" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -605,57 +655,249 @@ export default function LandingPage() {
               <em style={{ fontStyle: "italic", color: "var(--clay)" }}>Upgrade when you need more.</em>
             </h2>
           </div>
-          <div className="landing-pricing-grid">
-            {/* Free */}
-            <div style={{ padding: 34, border: "1px solid var(--rule)", borderRadius: 5, background: "var(--paper)" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 18 }}>Free</div>
-              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(36px,5vw,52px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$0</div>
-              <div style={{ fontSize: 13.5, color: "var(--ink-soft)", marginBottom: 4 }}>forever</div>
-              <div style={{ fontSize: 12.5, color: "var(--ink-mute)", marginBottom: 22 }}>No credit card required</div>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-                {["Full account scan","Risk scoring","5 AI conversions","Inline comments + diff","PDF audit report"].map(f => (
-                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "var(--ink-soft)" }}>
+
+          {/* §7.1 Three cards — responsive 3-col */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 32 }}>
+
+            {/* §7.3 FREE */}
+            <div style={{ padding: "32px 28px", border: "1px solid var(--rule)", borderRadius: 5, background: "var(--paper)", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Free</div>
+              {/* §7.2 audience line */}
+              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>Try it on your account</div>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$0</div>
+              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>forever</div>
+              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>No credit card required</div>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
+                {[
+                  "Account scan — full inventory",
+                  "Risk score per script",
+                  "5 AI conversions",
+                  "Side-by-side diff view",
+                  "Inline // MIGRATED: comments",
+                  "Confidence score",
+                ].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
                     <span style={{ color: "var(--ink-mute)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>{f}
                   </li>
                 ))}
+                {/* §7.3 NOT included */}
+                {["PDF audit report","Batch conversion","ZIP export"].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)", textDecoration: "line-through", opacity: .7 }}>
+                    <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>{f}
+                  </li>
+                ))}
               </ul>
-              <Link href="/signup" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none" }}>
-                Scan my account free
+              <Link href="/signup" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
+                Start free
               </Link>
             </div>
-            {/* Pro */}
-            <div style={{ padding: 34, border: "1px solid var(--ink)", borderRadius: 5, background: "var(--ink)", color: "var(--paper)" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "rgba(250,250,249,.45)", marginBottom: 18 }}>Pro</div>
-              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(36px,5vw,52px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$29</div>
-              <div style={{ fontSize: 13.5, color: "rgba(250,250,249,.5)", marginBottom: 4 }}>per month</div>
-              <div style={{ fontSize: 12.5, color: "var(--clay)", marginBottom: 22 }}>or <strong>$299 lifetime</strong> — pay once, own forever</div>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24 }}>
-                {["Everything in Free","Unlimited conversions","Full conversion history","ZIP export all scripts","Priority queue"].map(f => (
-                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: "rgba(250,250,249,.65)" }}>
+
+            {/* §7.1 PRO — highlighted, Most popular badge */}
+            <div style={{ padding: "32px 28px", border: "2px solid var(--ink)", borderRadius: 5, background: "var(--ink)", color: "var(--paper)", display: "flex", flexDirection: "column", position: "relative" }}>
+              {/* §7.1 badge */}
+              <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", background: "var(--clay)", color: "var(--paper)", fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".14em", padding: "3px 12px", borderRadius: 3, whiteSpace: "nowrap" }}>
+                Most popular
+              </div>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "rgba(250,250,249,.45)", marginBottom: 6 }}>Pro</div>
+              {/* §7.2 audience line */}
+              <div style={{ fontSize: 12.5, color: "rgba(250,250,249,.55)", marginBottom: 18, fontStyle: "italic" }}>One developer, one migration</div>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
+                {/* §7.5 [OWNER TO CONFIRM monthly price] */}
+                $29
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(250,250,249,.5)", marginBottom: 4 }}>per month · [OWNER TO CONFIRM price]</div>
+              {/* §7.5 Migration Pass option */}
+              <div style={{ fontSize: 12, marginBottom: 4 }}>
+                <span style={{ color: "rgba(250,250,249,.45)" }}>or </span>
+                <strong style={{ color: "var(--clay)" }}>Migration Pass</strong>
+                <span style={{ color: "rgba(250,250,249,.45)" }}> — one-time · [OWNER TO CONFIRM price &amp; terms]</span>
+              </div>
+              {/* §7.5 guarantee + cancel */}
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "rgba(250,250,249,.35)", marginBottom: 20, letterSpacing: ".04em" }}>
+                Cancel anytime · [7/14]-day money-back guarantee [OWNER TO CONFIRM]
+              </div>
+              {/* §7.4 feature order */}
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
+                {[
+                  "Unlimited conversions",
+                  "Batch conversion (whole account)",
+                  "ZIP export of all scripts",
+                  "PDF audit report",
+                  "Conversion history",
+                  "Priority queue",
+                ].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "rgba(250,250,249,.75)" }}>
                     <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=pro" className="pro-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, background: "var(--clay)", color: "var(--paper)", textDecoration: "none", border: "1px solid var(--clay)" }}>
+              <Link href="/signup?plan=pro" className="pro-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, background: "var(--clay)", color: "var(--paper)", textDecoration: "none", border: "1px solid var(--clay)", marginTop: "auto" }}>
                 Get Pro
               </Link>
             </div>
+
+            {/* §7.6 TEAM — full card, not a footnote */}
+            <div style={{ padding: "32px 28px", border: "1px solid var(--rule)", borderRadius: 5, background: "var(--paper)", display: "flex", flexDirection: "column" }}>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Team</div>
+              {/* §7.2 audience line */}
+              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>Consultants managing multiple clients</div>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$99</div>
+              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>per month · [OWNER TO CONFIRM price]</div>
+              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Multiple seats included</div>
+              {/* §7.6 features */}
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
+                {[
+                  "Everything in Pro",
+                  "Multiple NetSuite accounts",
+                  "Shared conversion history",
+                  "Client-branded PDF reports",
+                  "Multiple seats",
+                ].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
+                    <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>{f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/signup?plan=team" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginBottom: 10 }}>
+                Get Team
+              </Link>
+              {/* §7.6 invoice / custom quote link */}
+              <a href="mailto:support@suitemigrate.com" style={{ display: "block", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", textDecoration: "none", letterSpacing: ".04em" }}
+                className="team-contact-link">
+                Need an invoice or custom quote? Contact us →
+              </a>
+            </div>
           </div>
-          <p style={{ textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", letterSpacing: ".06em", marginTop: 20, lineHeight: 1.8 }}>
-            Team plan ($99/mo) for consultants managing multiple client accounts.
+
+          {/* §7.7 Early-adopter lifetime deal — footnote, not main card */}
+          <div style={{ maxWidth: 560, margin: "0 auto 28px", padding: "14px 20px", border: "1px solid var(--rule)", borderRadius: 4, background: "rgba(217,74,31,.03)", textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--clay)", marginBottom: 6 }}>
+              Early-adopter lifetime deal
+            </p>
+            <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.65 }}>
+              {/* §7.7 [OWNER TO CONFIRM price, limit, and end date] */}
+              One-time payment — Pro access forever, all future features included.
+              Limited availability or end date: [OWNER TO CONFIRM]. Price: [OWNER TO CONFIRM].
+            </p>
+            <Link href="/signup?plan=lifetime" style={{ display: "inline-block", marginTop: 10, fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--clay)", textDecoration: "none", letterSpacing: ".04em" }}
+              className="lifetime-link">
+              Get the lifetime deal →
+            </Link>
+          </div>
+
+          {/* §7.8 savings line [OWNER TO CONFIRM figures] */}
+          <div style={{ maxWidth: 680, margin: "0 auto 24px", textAlign: "center" }}>
+            <p style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(16px,2.5vw,22px)", letterSpacing: "-0.015em", color: "var(--ink)", lineHeight: 1.5 }}>
+              Manual migration: about 1 day per script.
+              43 scripts = 43 days.
+              With SuiteMigrate: scan and convert in under an hour.
+            </p>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", marginTop: 6 }}>
+              [OWNER TO CONFIRM figures against real usage data]
+            </p>
+          </div>
+
+          {/* §7.9 small print */}
+          <p style={{ textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", letterSpacing: ".04em", lineHeight: 1.9 }}>
+            {/* [OWNER TO CONFIRM] currency, tax, payment provider */}
+            Prices in USD · Tax not included · [OWNER TO CONFIRM currency and tax treatment]
+            <br />
+            Payments processed by Razorpay ·{" "}
+            <Link href="/terms" style={{ color: "var(--ink-soft)", textDecoration: "underline" }}>Billing &amp; refund terms</Link>
           </p>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════
-          05 — FAQ
-          — TESTPRO reference removed
-          — Updated answers
+          05 — SECURITY & PRIVACY  (§9 of brief)
+          What the extension reads, what is sent to AI,
+          no modifications to NetSuite.
+      ═══════════════════════════════════════════ */}
+      <section id="security" style={{ padding: "80px 0", borderTop: "1px solid var(--rule)", background: "rgba(237,233,223,.4)" }}>
+        <div className="landing-section-padding">
+          <div className="landing-section-header">
+            <div className="section-num">05 — Security &amp; privacy</div>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(26px,4.5vw,54px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
+              What the extension does{" "}
+              <em style={{ fontStyle: "italic", color: "var(--clay)" }}>— and doesn&apos;t do.</em>
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
+            {[
+              {
+                title: "What the extension reads",
+                // §9.1 / §4.3 — [OWNER TO CONFIRM exact API endpoints + permissions]
+                items: [
+                  "Script records and Script Deployment records via SuiteQL REST API",
+                  "Current page URL to detect the active environment",
+                  "Your active NetSuite browser session (not your credentials)",
+                  "[OWNER TO CONFIRM: full list of API endpoints used]",
+                ],
+                footer: null,
+              },
+              {
+                title: "What the extension never does",
+                items: [
+                  "Never creates, modifies or deletes any NetSuite data",
+                  "Never reads or stores your NetSuite password",
+                  "Never accesses data outside NetSuite domains",
+                  "Never sends your session token to our servers",
+                ],
+                footer: null,
+              },
+              {
+                title: "What is sent to the AI provider",
+                // §9.1 — [OWNER TO CONFIRM all details]
+                items: [
+                  "The script code you explicitly choose to convert",
+                  "Sent to Google Gemini API for that conversion only",
+                  "[OWNER TO CONFIRM: is code stored after processing?]",
+                  "[OWNER TO CONFIRM: is code used for model training?]",
+                ],
+                footer: "[OWNER TO CONFIRM all items above against the Gemini API terms and real code behaviour before publishing]",
+              },
+              {
+                title: "Your data",
+                items: [
+                  "Converted scripts are stored in your account for re-download",
+                  "You can delete your account and all data at any time",
+                  "Payment details are processed by Razorpay — never stored by us",
+                  "See Privacy Policy for full retention details",
+                ],
+                footer: null,
+              },
+            ].map(block => (
+              <div key={block.title} className="hover-warm" style={{ background: "var(--paper)", padding: "28px 24px", transition: "background .14s" }}>
+                <h3 style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 17, letterSpacing: "-0.01em", color: "var(--ink)", marginBottom: 14 }}>{block.title}</h3>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {block.items.map((item, i) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: item.startsWith("[OWNER") ? "var(--clay)" : "var(--ink-soft)", lineHeight: 1.6 }}>
+                      <span style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-mute)", flexShrink: 0, marginTop: 1 }}>—</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                {block.footer && (
+                  <p style={{ marginTop: 12, fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--clay)", lineHeight: 1.6 }}>
+                    {block.footer}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+          {/* §9.3 BYOK / redaction TODO placeholder — visible only in code */}
+          {/* [OWNER TODO] Consider a bring-your-own-API-key option or a code-redaction
+              option for NDA-bound consultants — see CONTENT-TODO.md item P-3 */}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          06 — FAQ  (§10 of brief)
       ═══════════════════════════════════════════ */}
       <section id="faq" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
           <div className="landing-section-header">
-            <div className="section-num">05 — FAQ</div>
+            <div className="section-num">06 — FAQ</div>
             <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(26px,4.5vw,54px)", lineHeight: 1.04, letterSpacing: "-0.025em" }}>
               Common <em style={{ fontStyle: "italic", color: "var(--clay)" }}>questions.</em>
             </h2>
@@ -699,10 +941,12 @@ export default function LandingPage() {
       <Footer />
 
       <style>{`
-        .ghost-cta:hover     { color: var(--ink) !important; }
-        .hover-warm:hover    { background: var(--paper-warm) !important; }
-        .free-plan-cta:hover { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
-        .pro-plan-cta:hover  { background: #c23d15 !important; }
+        .ghost-cta:hover        { color: var(--ink) !important; }
+        .hover-warm:hover       { background: var(--paper-warm) !important; }
+        .free-plan-cta:hover    { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
+        .pro-plan-cta:hover     { background: #c23d15 !important; }
+        .team-contact-link:hover { color: var(--ink) !important; }
+        .lifetime-link:hover    { text-decoration: underline !important; }
       `}</style>
     </div>
   )

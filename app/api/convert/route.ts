@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { convertScript } from "@/lib/conversion-engine/gemini"
-import { canConvert } from "@/lib/plans"
+import { canConvert, canBatchConvert } from "@/lib/plans"
 import { getCorsHeaders, corsOptions } from "@/lib/cors"
 import type { Plan } from "@/types"
 
@@ -103,6 +103,20 @@ export async function POST(request: Request) {
           message: "You have used all your free conversions. Upgrade to continue.",
           plan: userPlan,
           conversionsUsed,
+        },
+        { status: 402, headers }
+      )
+    }
+
+    // ── §12.2 Batch gating — server-side ───────────────────────────
+    // batch=true is only allowed on Pro, Lifetime, and Team plans.
+    const isBatch = body.batch === true
+    if (isBatch && !canBatchConvert(userPlan)) {
+      return NextResponse.json(
+        {
+          error: "feature_not_available",
+          message: "Batch conversion is available on Pro and Team plans. Upgrade to convert your whole account.",
+          plan: userPlan,
         },
         { status: 402, headers }
       )

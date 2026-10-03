@@ -52,7 +52,7 @@ export async function GET(request: Request) {
           name: user.user_metadata?.name || null,
           plan: "free",
           conversions_used: 0,
-          conversions_limit: 2,
+          conversions_limit: 5, // matches PLAN_LIMITS.free in lib/plans.ts
         })
         .select("*")
         .single()
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       name: profile?.name || user.user_metadata?.name,
       plan,
       conversionsUsed: used,
-      conversionsLimit: isUnlimited(plan) ? null : 2,
+      conversionsLimit: isUnlimited(plan) ? null : 5,
       conversionsRemaining: remaining === Infinity ? null : remaining,
       unlimited: isUnlimited(plan),
       teamId: profile?.team_id || null,

@@ -19,6 +19,7 @@ export interface NSScript {
   description?: string
   riskLevel: "HIGH" | "MEDIUM" | "LOW" | "NONE"
   needsMigration: boolean
+  hasFile?: boolean         // whether scriptfile column is non-null
 }
 
 export interface NSAccount {

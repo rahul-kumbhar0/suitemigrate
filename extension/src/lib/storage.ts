@@ -54,3 +54,10 @@ export async function getAllAccounts(): Promise<NSAccount[]> {
   const accounts = (await getStorage("accounts")) || {}
   return Object.values(accounts)
 }
+
+/** Item 6: Clear all conversion history and cached account data */
+export async function clearHistory(): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.remove(["conversions", "accounts", "lastActiveAccount"], resolve)
+  })
+}

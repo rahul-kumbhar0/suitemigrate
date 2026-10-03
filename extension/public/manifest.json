@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SuiteMigrate — SuiteScript 2.1 Migrator",
   "short_name": "SuiteMigrate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scan your NetSuite account and automatically convert SuiteScript 1.0/2.0 scripts to 2.1 before the 2028 deadline.",
 
   "icons": {
@@ -28,38 +28,16 @@
     "type": "module"
   },
 
-  "content_scripts": [
-    {
-      "matches": [
-        "https://*.app.netsuite.com/*",
-        "https://*.netsuite.com/*",
-        "https://*.suitetapp.com/*"
-      ],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
-
   "permissions": [
     "storage",
-    "alarms",
     "scripting",
-    "tabs"
+    "activeTab"
   ],
 
   "host_permissions": [
     "https://*.app.netsuite.com/*",
     "https://*.netsuite.com/*",
     "https://*.suitetapp.com/*",
-    "http://localhost:3000/*",
-    "https://suitemigrate.vercel.app/*",
-    "https://suitemigrate.com/*"
-  ],
-
-  "web_accessible_resources": [
-    {
-      "resources": ["icons/*"],
-      "matches": ["<all_urls>"]
-    }
+    "https://suitemigrate.vercel.app/*"
   ]
 }

@@ -1,44 +1,90 @@
 import { useState, useEffect, useCallback } from "react"
-import { RefreshCw, ChevronDown, FileSearch, XCircle } from "lucide-react"
+import { RefreshCw, ChevronDown, FileSearch, XCircle, Trash2 } from "lucide-react"
 import Header from "../components/Header"
 import { useStore } from "../../lib/store"
-import { getAllAccounts, saveAccount } from "../../lib/storage"
+import { getAllAccounts, saveAccount, clearHistory } from "../../lib/storage"
 import type { NSAccount, NSScript } from "../../lib/types"
+import { isLegacyVersion, getRiskLevel } from "../../lib/suiteql"
 
+// ── Inline scanner injected into the NetSuite tab ────────────────────────────
+// Must be self-contained — no imports, no closure variables.
 function inlineScanner() {
   const host = window.location.hostname
   const match = host.match(/^([a-z0-9_-]+)\.(?:app\.)?netsuite\.com/i)
   const accountId = match ? match[1] : host.split(".")[0] || null
-  if (!accountId) return { error: "Could not detect NetSuite account ID from URL: " + host }
+
+  if (!accountId) {
+    return { error: "Could not detect NetSuite account ID from URL: " + host }
+  }
+
   const nameEl = document.querySelector('[data-componentid="ns_header_company_name"]')
   const accountName = nameEl?.textContent?.trim() || document.title.split(" - ")[0] || "NetSuite Account"
   const base = `${window.location.protocol}//${window.location.hostname}/services/rest`
-  return fetch(`${base}/query/v1/suiteql?limit=1000`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", prefer: "transient" },
-    credentials: "include",
-    body: JSON.stringify({ q: `SELECT s.id, s.name, s.scripttype, s.apiversion, s.description FROM script s WHERE s.isinactive = 'F' ORDER BY s.name` }),
-  })
-    .then(r => { if (!r.ok) throw new Error(`SuiteQL failed: ${r.status}`); return r.json() })
-    .then(data => {
-      const typeMap: Record<string, string> = { USEREVENT: "UserEvent", SUITELET: "Suitelet", SCHEDULED: "ScheduledScript", MAPREDUCE: "MapReduce", CLIENT: "ClientScript", RESTLET: "RESTlet", PORTLET: "Portlet", MASSUPDATE: "MassUpdate" }
-      const scripts: NSScript[] = (data.items || []).map((row: Record<string, string>): NSScript => {
-        const v = row.apiversion || "1.0"
-        const needsMigration = v !== "2.1"
-        const riskLevel = (v === "1.0" || v === "1") ? "HIGH" : (v === "2.0" || v === "2") ? "MEDIUM" : "NONE"
-        return { id: row.id, name: row.name || "Unnamed Script", scriptType: typeMap[(row.scripttype || "").toUpperCase()] || row.scripttype || "Unknown", apiVersion: v, description: row.description || "", riskLevel: riskLevel as NSScript["riskLevel"], needsMigration }
-      })
-      return { accountId, accountName, scripts }
+
+  // Item 4: paginated SuiteQL, include scriptfile for code-fetch indicator
+  async function fetchPage(offset: number): Promise<Record<string, string>[]> {
+    const r = await fetch(`${base}/query/v1/suiteql?limit=1000&offset=${offset}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", prefer: "transient" },
+      credentials: "include",
+      body: JSON.stringify({
+        q: `SELECT s.id, s.name, s.scripttype, s.apiversion, s.description, s.scriptfile FROM script s WHERE s.isinactive = 'F' ORDER BY s.name`,
+      }),
     })
-    .catch((err: Error) => ({ error: err.message }))
+    if (!r.ok) throw new Error(`SuiteQL failed: ${r.status} ${r.statusText}`)
+    const d = await r.json()
+    return d.items || []
+  }
+
+  return (async () => {
+    const typeMap: Record<string, string> = {
+      USEREVENT: "UserEvent", SUITELET: "Suitelet", SCHEDULED: "ScheduledScript",
+      MAPREDUCE: "MapReduce", CLIENT: "ClientScript", RESTLET: "RESTlet",
+      PORTLET: "Portlet", MASSUPDATE: "MassUpdate",
+    }
+
+    const all: Record<string, string>[] = []
+    let offset = 0
+    while (true) {
+      const page = await fetchPage(offset)
+      all.push(...page)
+      if (page.length < 1000) break
+      offset += 1000
+    }
+
+    const scripts = all.map((row) => {
+      const apiVersion = (row.apiversion || "1.0").trim()
+      // Item 4: consistent rule — only "2.1" is done
+      const needsMigration = apiVersion !== "2.1"
+      const riskLevel =
+        apiVersion === "1.0" || apiVersion === "1" ? "HIGH" :
+        apiVersion.startsWith("2.0") || apiVersion.startsWith("2.x") ? "MEDIUM" :
+        apiVersion === "2.1" ? "NONE" : "HIGH"
+
+      return {
+        id: row.id,
+        name: row.name || "Unnamed Script",
+        scriptType: typeMap[(row.scripttype || "").toUpperCase()] || row.scripttype || "Unknown",
+        apiVersion,
+        description: row.description || "",
+        riskLevel,
+        needsMigration,
+        hasFile: !!row.scriptfile,
+      }
+    })
+
+    return { accountId, accountName, scripts }
+  })()
 }
 
 export default function DashboardView() {
   const { user, accounts, activeAccount, setAccounts, setActiveAccount, setView, isScanning, setScanning, setScanError, scanError } = useStore()
-  const [showMenu, setShowMenu]     = useState(false)
-  const [isNS, setIsNS]             = useState(false)
-  const [tabId, setTabId]           = useState<number | null>(null)
-  const [scanStatus, setScanStatus] = useState("")
+  const [showMenu, setShowMenu]         = useState(false)
+  const [isNS, setIsNS]                 = useState(false)
+  const [tabId, setTabId]               = useState<number | null>(null)
+  const [scanStatus, setScanStatus]     = useState("")
+  const [clearing, setClearing]         = useState(false)
+  const [clearDone, setClearDone]       = useState(false)
 
   useEffect(() => {
     try {
@@ -54,28 +100,58 @@ export default function DashboardView() {
 
   const handleScan = useCallback(async () => {
     if (!isNS || !tabId) return
-    setScanning(true); setScanError(null); setScanStatus("Connecting to NetSuite...")
+    setScanning(true); setScanError(null); setScanStatus("Connecting…")
+
     try {
-      setScanStatus("Running SuiteQL query...")
-      const results = await chrome.scripting.executeScript({ target: { tabId }, func: inlineScanner })
-      const result = results?.[0]?.result as { accountId: string; accountName: string; scripts: NSScript[] } | { error: string } | null
-      if (!result) { setScanError("No response from NetSuite tab."); return }
-      if ("error" in result) { setScanError(result.error); return }
-      setScanStatus("Processing results...")
-      const account: NSAccount = { accountId: result.accountId, accountName: result.accountName, lastScannedAt: new Date().toISOString(), scripts: result.scripts, scriptsTotal: result.scripts.length, scriptsNeedingUpdate: result.scripts.filter(s => s.needsMigration).length }
+      setScanStatus("Running SuiteQL query…")
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: inlineScanner,
+      })
+
+      const result = results?.[0]?.result as
+        | { accountId: string; accountName: string; scripts: NSScript[] }
+        | { error: string }
+        | null
+
+      if (!result)              { setScanError("No response from NetSuite tab."); return }
+      if ("error" in result)    { setScanError(result.error); return }
+
+      setScanStatus("Saving…")
+      const account: NSAccount = {
+        accountId: result.accountId,
+        accountName: result.accountName,
+        lastScannedAt: new Date().toISOString(),
+        scripts: result.scripts,
+        scriptsTotal: result.scripts.length,
+        scriptsNeedingUpdate: result.scripts.filter(s => s.needsMigration).length,
+      }
       await saveAccount(account)
       setActiveAccount(account)
       setAccounts(await getAllAccounts())
       setView("script_list")
+
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      setScanError(msg.includes("Cannot access") ? "Cannot access this page. Make sure you are on a NetSuite tab." : `Scan failed: ${msg}`)
+      setScanError(msg.includes("Cannot access")
+        ? "Cannot access this page. Make sure you are on a NetSuite tab."
+        : `Scan failed: ${msg}`)
     } finally { setScanning(false); setScanStatus("") }
   }, [isNS, tabId, setScanning, setScanError, setActiveAccount, setAccounts, setView])
 
-  const display    = activeAccount || accounts[0]
-  const needsUpd   = display?.scripts.filter(s => s.needsMigration).length || 0
-  const onLatest   = display?.scripts.filter(s => !s.needsMigration).length || 0
+  // Item 6: Clear history
+  const handleClearHistory = async () => {
+    setClearing(true)
+    await clearHistory()
+    setAccounts([])
+    setClearing(false)
+    setClearDone(true)
+    setTimeout(() => setClearDone(false), 2500)
+  }
+
+  const display  = activeAccount || accounts[0]
+  const needsUpd = display?.scripts.filter(s => s.needsMigration).length || 0
+  const onLatest = display?.scripts.filter(s => !s.needsMigration).length || 0
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -99,7 +175,7 @@ export default function DashboardView() {
               )}
             </div>
             <button onClick={handleScan} disabled={isScanning || !isNS} className="btn-primary" style={{ fontSize: 11, padding: "6px 12px", flexShrink: 0 }}>
-              {isScanning ? <><div className="spinner" style={{ width: 11, height: 11 }} /> Scanning...</> : <><RefreshCw size={11} /> Scan</>}
+              {isScanning ? <><div className="spinner" style={{ width: 11, height: 11 }} /> Scanning…</> : <><RefreshCw size={11} /> Scan</>}
             </button>
           </div>
 
@@ -111,15 +187,18 @@ export default function DashboardView() {
             <div style={{ marginTop: 8, paddingTop: 8, borderTop: "1px solid var(--rule)", display: "flex", flexDirection: "column", gap: 2 }}>
               {accounts.map(acc => (
                 <button key={acc.accountId} onClick={() => { setActiveAccount(acc); setShowMenu(false) }}
-                  style={{ width: "100%", textAlign: "left", padding: "6px 8px", borderRadius: 3, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--ink-soft)", fontFamily: "var(--f-sans)", transition: "background .12s" }}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--paper-warm)")}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}>
+                  style={{ width: "100%", textAlign: "left", padding: "6px 8px", borderRadius: 3, background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--ink-soft)", fontFamily: "var(--f-sans)" }}>
                   {acc.accountName} ({acc.accountId})
                 </button>
               ))}
             </div>
           )}
-          {!isNS && <p style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-mute)", fontFamily: "var(--f-mono)" }}>Navigate to a NetSuite tab first</p>}
+
+          {!isNS && (
+            <p style={{ marginTop: 6, fontSize: 10.5, color: "var(--ink-mute)", fontFamily: "var(--f-mono)" }}>
+              Navigate to a NetSuite tab first
+            </p>
+          )}
         </div>
 
         {/* Scan error */}
@@ -131,7 +210,7 @@ export default function DashboardView() {
                 <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--clay)", marginBottom: 3 }}>Scan Error</p>
                 <p style={{ fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.5 }}>{scanError}</p>
               </div>
-              <button onClick={() => setScanError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)", fontSize: 16, lineHeight: 1 }}>×</button>
+              <button onClick={() => setScanError(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ink-mute)", fontSize: 16 }}>×</button>
             </div>
           </div>
         )}
@@ -160,7 +239,7 @@ export default function DashboardView() {
           </div>
         )}
 
-        {/* CTA to view scripts */}
+        {/* CTA */}
         {display && needsUpd > 0 && (
           <button onClick={() => { setActiveAccount(display); setView("script_list") }} className="btn-primary" style={{ width: "100%", justifyContent: "center" }}>
             View {needsUpd} script{needsUpd !== 1 ? "s" : ""} to migrate →
@@ -197,6 +276,23 @@ export default function DashboardView() {
             ))}
           </div>
         </div>
+
+        {/* Item 6: Clear history */}
+        <button
+          onClick={handleClearHistory}
+          disabled={clearing}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            width: "100%", padding: "7px 12px", borderRadius: 999,
+            background: "transparent", border: "1px solid var(--rule)",
+            fontSize: 11, fontFamily: "var(--f-sans)", color: clearDone ? "#15803d" : "var(--ink-mute)",
+            cursor: clearing ? "not-allowed" : "pointer", opacity: clearing ? .6 : 1,
+            transition: "color .2s",
+          }}
+        >
+          <Trash2 size={11} />
+          {clearDone ? "History cleared" : clearing ? "Clearing…" : "Clear scan history & cache"}
+        </button>
 
       </div>
     </div>

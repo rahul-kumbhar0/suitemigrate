@@ -37,6 +37,10 @@ interface AppStore {
   // Conversions history
   conversions: ConversionResult[]
   addConversion: (r: ConversionResult) => void
+
+  // Item 7: Privacy consent — shown once before the first conversion
+  privacyAccepted: boolean
+  setPrivacyAccepted: (v: boolean) => void
 }
 
 export const useStore = create<AppStore>((set) => ({
@@ -69,4 +73,7 @@ export const useStore = create<AppStore>((set) => ({
   conversions: [],
   addConversion: (r) =>
     set((s) => ({ conversions: [r, ...s.conversions].slice(0, 50) })),
+
+  privacyAccepted: false,
+  setPrivacyAccepted: (privacyAccepted) => set({ privacyAccepted }),
 }))
