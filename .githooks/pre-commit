@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Pre-commit: fail if common secret patterns are staged.
+# Install: git config core.hooksPath .githooks
+
+set -e
+
+PATTERNS=(
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.'  # Supabase / generic JWT header
+  'AIzaSy[0-9A-Za-z_-]{33}'                   # Google API key
+  'rzp_(live|test)_[0-9A-Za-z]{14}'            # Razorpay key
+  're_[0-9A-Za-z]{24,}'                        # Resend API key
+  'AAAA[0-9A-Za-z_-]{178}'                     # FCM server key
+  'sk-[0-9A-Za-z]{40,}'                        # OpenAI key pattern
+  'ghp_[0-9A-Za-z]{36}'                        # GitHub personal token
+)
+
+# Only check staged text files
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -v '^\.githooks/' | grep -v '\.png$' | grep -v '\.jpg$' | grep -v '\.ico$' | grep -v 'package-lock\.json' | grep -v '\.next/' || true)
+
+if [ -z "$FILES" ]; then
+  exit 0
+fi
+
+FOUND=0
+for PATTERN in "${PATTERNS[@]}"; do
+  MATCH=$(git diff --cached -- $FILES 2>/dev/null | grep '^+' | grep -v '^+++' | grep -E "$PATTERN" || true)
+  if [ -n "$MATCH" ]; then
+    echo "❌ PRE-COMMIT: Possible secret detected matching pattern: $PATTERN"
+    echo "$MATCH" | head -3
+    FOUND=1
+  fi
+done
+
+if [ "$FOUND" -eq 1 ]; then
+  echo ""
+  echo "Commit blocked. Remove the secret, rotate it, and try again."
+  echo "If this is a false positive, use: git commit --no-verify"
+  exit 1
+fi
+
+exit 0

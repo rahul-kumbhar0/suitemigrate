@@ -45,7 +45,7 @@ MAX_LINES      = 10,000     // ~100,000-150,000 tokens
 
 ## Real-World Script Sizes
 
-### Typical NetSuite Scripts
+### Typical NetSuite Scripts (internal estimates)
 | Script Type | Typical Size | Lines | Tokens | Status |
 |------------|--------------|-------|--------|--------|
 | UserEvent | Small | 100-500 | 1K-5K | ✅ Fast |
@@ -165,7 +165,7 @@ define(['N/record', 'N/search', ...20 more modules], function(...) {
 - Input: $0.10 per 1M tokens
 - Output: $0.40 per 1M tokens
 
-### Example Costs
+### Example Costs (internal estimates)
 | Script Size | Input Tokens | Output Tokens | Cost |
 |------------|--------------|---------------|------|
 | 500 lines | ~5K | ~6K | $0.003 |
@@ -183,7 +183,7 @@ define(['N/record', 'N/search', ...20 more modules], function(...) {
 **A:** You'll get an error. Remove blank lines, comments, or extract helper functions to a separate module.
 
 ### Q: Can I increase the limit for my account?
-**A:** Enterprise plan (contact sales) can have custom limits up to 50,000 lines. But we recommend refactoring for maintainability.
+**A:** Contact us at support@suitemigrate.com to discuss your requirements.
 
 ### Q: Will Gemini actually understand 10,000 lines of code?
 **A:** Yes! Gemini 2.0 Flash has a 1M token context window (equivalent to ~60,000 lines of code). But quality degrades with size — smaller is better.
@@ -198,7 +198,8 @@ define(['N/record', 'N/search', ...20 more modules], function(...) {
 
 ## Performance Benchmarks
 
-**Test Environment:** MacBook Pro M2, Gemini 2.0 Flash API
+> **Note:** These are internal estimates, not externally measured figures. Actual performance varies with script complexity, AI service load, and network conditions.
+
 
 | Lines | Size | Time | Confidence | Manual Review |
 |-------|------|------|-----------|---------------|

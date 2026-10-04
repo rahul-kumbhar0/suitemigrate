@@ -2,12 +2,12 @@
 
 **Automatically convert NetSuite SuiteScript 1.0 → 2.1 before the 2028 deadline.**
 
-SuiteMigrate is a Chrome extension + web app that scans your NetSuite account and uses AI (Gemini 2.0 Flash) to convert legacy SuiteScript code to the modern 2.1 standard.
+SuiteMigrate is a Chrome extension + web app that scans your NetSuite account and uses AI (SuiteMigrate AI) to convert legacy SuiteScript code to the modern 2.1 standard.
 
 ## 🚀 Features
 
 - **Chrome Extension** — Scan NetSuite accounts directly from the browser
-- **AI-Powered Conversion** — Gemini 2.0 Flash with 50+ hardcoded SS 1.0→2.1 API mappings
+- **AI-Powered Conversion** — rule-based preprocessing plus AI with hardcoded SS 1.0→2.1 API mappings
 - **Rule-Based Preprocessing** — Apply known mechanical transforms before AI
 - **Confidence Scoring** — See conversion quality (0-100%) with manual review flags
 - **Plan Enforcement** — Free (5 conversions), Pro, Lifetime, Team plans
@@ -24,7 +24,7 @@ SuiteMigrate is a Chrome extension + web app that scans your NetSuite account an
 **Backend:**
 - Next.js API routes
 - Supabase (auth + database)
-- Gemini 2.0 Flash (AI conversion)
+- AI conversion service (server-side)
 
 **Chrome Extension:**
 - Vite + React
@@ -232,8 +232,8 @@ All tables are created via `supabase/schema.sql`:
 **Fix:** Check browser console for errors, verify CORS headers in `/api/auth/session`
 
 ### Gemini API returns 400 error
-**Cause:** Invalid API key or model name  
-**Fix:** Verify `GEMINI_API_KEY` is correct and `GEMINI_MODEL` is `gemini-2.0-flash-exp`
+**Cause:** AI service configuration error  
+**Fix:** Check server logs and verify AI API key is set in Vercel environment variables
 
 ### "Conversion limit reached" error on first conversion
 **Cause:** User profile not created in database  
@@ -245,11 +245,12 @@ All tables are created via `supabase/schema.sql`:
 
 ## 📝 License
 
-MIT
+All rights reserved. See LICENSE file.
+<!-- TODO (OWNER): Replace with final licence once chosen with legal advice. -->
 
 ## 🤝 Contributing
 
-PRs welcome! Please open an issue first to discuss major changes.
+This is a private repository. Please contact the owner before contributing.
 
 ## 📧 Support
 

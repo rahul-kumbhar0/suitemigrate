@@ -107,9 +107,12 @@ export const BEHAVIOUR_DIFFERENCE_RULES: BehaviourFlag[] = [
 /**
  * Run behaviour-difference checks on a script's source code.
  * Returns an array of flags for any patterns detected.
- * Called during the scan phase, not the conversion phase.
  *
- * [OWNER TO PROVIDE] the full rule list to replace the stubs above.
+ * INTERNAL USE ONLY — do not expose results in UI or marketing copy
+ * until the rule list is confirmed against Oracle documentation (TODO E-4).
+ * See CONTENT-TODO.md item E-4.
+ *
+ * @internal
  */
 export function checkBehaviourDifferences(code: string): BehaviourFlag[] {
   return BEHAVIOUR_DIFFERENCE_RULES.filter(rule => rule.pattern.test(code))

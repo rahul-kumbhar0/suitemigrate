@@ -1,32 +1,28 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { checkPromoRateLimit, getClientIp } from "@/lib/ratelimit"
 
 export const dynamic = "force-dynamic"
 
-// ---------------------------------------------------------------------------
-// SECURITY NOTE
-// ---------------------------------------------------------------------------
-// Promo codes are server-validated here — never sent to the client.
-// TESTPRO has been invalidated. Codes are now loaded from the database
-// (promo_codes table) so they can be individually expired, revoked,
-// or limited to a set number of uses without a code deployment.
-//
-// TODO (OWNER): Implement single-use tracking:
-//   1. Add a "used_by" JSONB column or a separate "promo_redemptions" table.
-//   2. On redemption, insert a row and reject if the code has already been used
-//      by this user (or globally, for single-use codes).
-//   3. Set an "expires_at" on each code in the database.
-//   4. Review any URL-param or localStorage logic that might bypass billing.
-// ---------------------------------------------------------------------------
-
 export async function POST(request: Request) {
+  const ip = getClientIp(request)
+
   try {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // ── Rate limit: 5 attempts/user/hour + 10/IP/hour ────────────────
+    const rl = await checkPromoRateLimit(user.id, ip)
+    if (rl.limited) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later.", retryAfter: rl.resetIn },
+        { status: 429, headers: { "Retry-After": String(rl.resetIn) } }
+      )
     }
 
     const body = await request.json()
@@ -37,9 +33,8 @@ export async function POST(request: Request) {
     }
 
     const normalised = code.trim().toUpperCase()
-
-    // Look up the code in the database — never in client-visible source code.
     const admin = createAdminClient()
+
     const { data: promoRow, error: promoError } = await admin
       .from("promo_codes")
       .select("code, plan, conversions, duration_days, expires_at, active")
@@ -56,19 +51,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid or expired promo code" }, { status: 400 })
     }
 
-    // Check expiry
     if (promoRow.expires_at && new Date(promoRow.expires_at) < new Date()) {
       return NextResponse.json({ error: "This promo code has expired" }, { status: 400 })
     }
 
-    // Apply to user
     const { error: updateError } = await admin
       .from("users")
-      .update({
-        plan: promoRow.plan,
-        conversions_limit: promoRow.conversions ?? null,
-        conversions_used: 0,
-      })
+      .update({ plan: promoRow.plan, conversions_limit: promoRow.conversions ?? null, conversions_used: 0 })
       .eq("id", user.id)
 
     if (updateError) {
@@ -86,7 +75,7 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     console.error("[/api/promo/redeem]", err)
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to redeem promo code" },
+      { error: "Failed to redeem promo code" },
       { status: 500 }
     )
   }

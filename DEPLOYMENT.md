@@ -137,7 +137,7 @@ zip -r ../suitemigrate-extension-v1.0.0.zip dist/
    - **Language:** English
 5. Add screenshots (already generated in `extension/assets/`)
 6. Privacy practices:
-   - Does NOT collect user data
+   - **Do NOT select "Does not collect user data"** — the extension handles user email, session info, and website content (script code). See CWS-LISTING.md for the full data-use disclosure.
    - Privacy policy URL: `https://suitemigrate.vercel.app/privacy`
 7. Submit for review (takes 1-3 days)
 

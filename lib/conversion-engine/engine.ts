@@ -159,12 +159,22 @@ Output ONLY the converted JavaScript code. No markdown code fences. No explanati
 export async function convertScript(input: ConversionInput): Promise<ConversionResult> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    // Server log only — client gets the generic busy message
     console.error("[engine] AI_API_KEY not configured")
     throw new Error("AI service configuration error")
   }
 
-  const estimatedTokens = input.code.length + 2000
+  // Task 3: reject experimental models in production
+  const requestedModel = process.env.GEMINI_MODEL || "gemini-1.5-flash"
+  const fallbackModel  = process.env.GEMINI_FALLBACK_MODEL || "gemini-1.5-flash"
+  const isProduction   = process.env.NODE_ENV === "production"
+
+  if (isProduction && requestedModel.includes("-exp")) {
+    // TODO: operator must set GEMINI_MODEL to a non-experimental model in prod
+    console.error(`[engine] Experimental model "${requestedModel}" is not allowed in production. Falling back to ${fallbackModel}.`)
+    // Fall through and use fallbackModel
+  }
+
+  const useModel = (isProduction && requestedModel.includes("-exp")) ? fallbackModel : requestedModel
   const MAX_TOKENS = 900_000
 
   if (estimatedTokens > MAX_TOKENS) {
@@ -178,10 +188,10 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
   const systemPrompt = buildSystemPrompt(preprocessResult)
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
-  // Provider/model details stay server-side; never sent to clients
+  // Provider/model details stay server-side; never returned to clients
   const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+    model: useModel,
     systemInstruction: systemPrompt,
     generationConfig: {
       temperature: 0.2,
