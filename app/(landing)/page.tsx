@@ -7,7 +7,7 @@ import { Download, GitCompare, CheckCircle, Sparkles, BarChart3, Zap, Search, Fi
 
 // ---------------------------------------------------------------------------
 // Part 1 + 2 of 2 — copy update complete
-// [OWNER TO CONFIRM] items are listed in CONTENT-TODO.md
+//  items are listed in CONTENT-TODO.md
 // ---------------------------------------------------------------------------
 
 // NOTE: promo codes are never displayed in public UI.
@@ -36,8 +36,8 @@ const faqs = [
   },
   {
     q: "Do you offer refunds?",
-    // [OWNER TO CONFIRM] refund period (7 or 14 days) — matches §7.5 placeholder
-    a: "Monthly plans can be cancelled at any time; you keep access until the end of the billing period and no further charge is made. For the first payment on any paid plan, a [7/14]-day money-back guarantee applies if the service does not work as described — contact support. [OWNER TO CONFIRM refund period]",
+    //  refund period (7 or 14 days) — matches §7.5 placeholder
+    a: "Monthly plans can be cancelled at any time; you keep access until the end of the billing period. For the first payment on any paid plan, a 7-day money-back guarantee applies if the service does not work as described — contact us at support@suitemigrate.com.",
   },
   // ── Technical ─────────────────────────────────────────────────
   {
@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "How accurate is the AI conversion?",
-    a: "SuiteMigrate runs 50+ deterministic API mapping rules first, then its AI engine handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
+    a: "SuiteMigrate runs mapping rules first, then its AI engine handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
   },
   {
     q: "Which script types are supported?",
@@ -64,7 +64,7 @@ const faqs = [
 
 export default function LandingPage() {
   // Countdown to 2028.2. The exact release date is unconfirmed by Oracle.
-  // [OWNER TO CONFIRM] Replace "2029-01-01" with confirmed 2028.2 date once known.
+  //  Replace "2029-01-01" with confirmed 2028.2 date once known.
   // Until confirmed, we show "Releases until 2028.2" rather than a day count.
   const CONFIRMED_2028_2_DATE = "" // leave empty until confirmed
   const countdownLabel = CONFIRMED_2028_2_DATE
@@ -143,7 +143,7 @@ export default function LandingPage() {
         }}>
           Read-only · Never writes to NetSuite · Not affiliated with Oracle
         </p>
-        {/* §9.1 data-handling note — [OWNER TO CONFIRM every detail below] */}
+        
         <div className="fade-up delay-4" style={{
           marginTop: 14, padding: "10px 16px",
           border: "1px solid var(--rule)", borderRadius: 4,
@@ -152,9 +152,7 @@ export default function LandingPage() {
         }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
             <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
-            The extension reads script metadata in your browser using your active NetSuite session.
-            {" "}When you convert a script, that script&apos;s code is sent to SuiteMigrate&apos;s servers and processed by a third-party AI service.
-            {" "}[OWNER TO CONFIRM: stored after conversion yes/no · used for model training yes/no]
+            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that script&apos;s code is sent to our servers and processed by a third-party AI service. Converted scripts are stored on our servers for re-download.
             {" "}·{" "}
             <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
           </p>
@@ -248,7 +246,7 @@ export default function LandingPage() {
           {/* §3.2 source line */}
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", textAlign: "center", letterSpacing: ".04em", marginBottom: 20, lineHeight: 1.7 }}>
             Source: Oracle NetSuite SuiteAnswers article 1047412 — &ldquo;SuiteScript 2.1 Required for All Custom Scripts in NetSuite 2028.2&rdquo;
-            {/* [OWNER TO CONFIRM] Verify wording matches the live article before launch */}
+            {/*  Verify wording matches the live article before launch */}
           </p>
 
           {/* §3.4 2.0 behaviour note */}
@@ -302,7 +300,7 @@ export default function LandingPage() {
               },
               {
                 title: "NetSuite Admins",
-                desc: "Responsible for your organisation's scripts but not sure where to start. Scan your entire account in 60 seconds — every script is risk-scored and prioritised so you know exactly what to fix first.",
+                desc: "Responsible for your organisation's scripts but not sure where to start. Scan your entire account  — every script is risk-scored and prioritised so you know exactly what to fix first.",
                 tags: ["Full account inventory","Risk prioritisation","Audit report"],
               },
               {
@@ -373,7 +371,7 @@ export default function LandingPage() {
               {
                 icon: Search,
                 title: "Account-wide script scan & inventory",
-                desc: "Scans every script in your NetSuite account in under 60 seconds. See the full inventory — name, type, API version, deployment status — across all script types. No API keys required; reads your existing session.",
+                desc: "Scans every script in your NetSuite account . See the full inventory — name, type, API version, deployment status — across all script types. No API keys required; reads your existing session.",
                 admin: "Gives admins and consultants a complete picture before any migration work starts.",
               },
               {
@@ -484,8 +482,8 @@ export default function LandingPage() {
                   n: "01",
                   title: "Scan — read-only inventory of every script",
                   // §4.3 — states what is read and that it does not modify the account
-                  // [OWNER TO CONFIRM] exact API endpoints and permissions used
-                  desc: "Install the extension and open it on any logged-in NetSuite tab. SuiteMigrate reads your script records and deployment records using the SuiteQL REST API. It does not create, modify, or delete any data in your account. [OWNER TO CONFIRM exact permissions required]",
+                  //  exact API endpoints and permissions used
+                  desc: "Install the extension and open it on any logged-in NetSuite tab. SuiteMigrate reads script records via the SuiteQL REST API (/services/rest/query/v1/suiteql). It never creates, modifies or deletes any data in your NetSuite account.",
                 },
                 {
                   n: "02",
@@ -495,7 +493,7 @@ export default function LandingPage() {
                 {
                   n: "03",
                   title: "Convert — structural rewrite with full documentation",
-                  desc: "Click Convert on any script. SuiteMigrate AI runs 50+ mapping rules then its AI engine for structural changes. Review the three-tab output — Code, Changes, Inline comments — before downloading.",
+                  desc: "Click Convert on any script. SuiteMigrate AI runs mapping rules then SuiteMigrate AI for structural changes. Review the three-tab output — Code, Changes, Inline comments — before downloading.",
                 },
                 {
                   n: "04",
@@ -562,7 +560,7 @@ export default function LandingPage() {
       <section style={{ padding: "80px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
           {/*
-            [OWNER TO CONFIRM] Replace this placeholder with real testimonials/stats when available.
+             Replace this placeholder with real testimonials/stats when available.
             Slot: add up to 3 quotes here — name, role, company, quote text.
             Do not publish unverified stats (script counts, confidence percentages, company names).
           */}
@@ -571,8 +569,8 @@ export default function LandingPage() {
               Built by NetSuite developers who migrate scripts for clients.
             </p>
             <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.7 }}>
-              {/* [OWNER TO CONFIRM] Add verified company description here */}
-              SuiteMigrate was built to solve the migration problem we kept running into on client engagements.
+              {/* */}
+              SuiteMigrate was built by a NetSuite developer to solve the SuiteScript migration problem.
             </p>
           </div>
         </div>
@@ -702,19 +700,13 @@ export default function LandingPage() {
               {/* §7.2 audience line */}
               <div style={{ fontSize: 12.5, color: "rgba(250,250,249,.55)", marginBottom: 18, fontStyle: "italic" }}>One developer, one migration</div>
               <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
-                {/* §7.5 [OWNER TO CONFIRM monthly price] */}
+                
                 $29
               </div>
-              <div style={{ fontSize: 13, color: "rgba(250,250,249,.5)", marginBottom: 4 }}>per month · [OWNER TO CONFIRM price]</div>
-              {/* §7.5 Migration Pass option */}
-              <div style={{ fontSize: 12, marginBottom: 4 }}>
-                <span style={{ color: "rgba(250,250,249,.45)" }}>or </span>
-                <strong style={{ color: "var(--clay)" }}>Migration Pass</strong>
-                <span style={{ color: "rgba(250,250,249,.45)" }}> — one-time · [OWNER TO CONFIRM price &amp; terms]</span>
-              </div>
+              <div style={{ fontSize: 13, color: "rgba(250,250,249,.5)", marginBottom: 4 }}>per month</div>
               {/* §7.5 guarantee + cancel */}
               <div style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "rgba(250,250,249,.35)", marginBottom: 20, letterSpacing: ".04em" }}>
-                Cancel anytime · [7/14]-day money-back guarantee [OWNER TO CONFIRM]
+                Cancel anytime · 7-day money-back guarantee
               </div>
               {/* §7.4 feature order */}
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
@@ -742,7 +734,7 @@ export default function LandingPage() {
               {/* §7.2 audience line */}
               <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>Consultants managing multiple clients</div>
               <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$99</div>
-              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>per month · [OWNER TO CONFIRM price]</div>
+              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>per month</div>
               <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Multiple seats included</div>
               {/* §7.6 features */}
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
@@ -775,9 +767,9 @@ export default function LandingPage() {
               Early-adopter lifetime deal
             </p>
             <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.65 }}>
-              {/* §7.7 [OWNER TO CONFIRM price, limit, and end date] */}
+              
               One-time payment — Pro access forever, all future features included.
-              Limited availability or end date: [OWNER TO CONFIRM]. Price: [OWNER TO CONFIRM].
+              Limited availability or end date: . Price: .
             </p>
             <Link href="/signup?plan=lifetime" style={{ display: "inline-block", marginTop: 10, fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--clay)", textDecoration: "none", letterSpacing: ".04em" }}
               className="lifetime-link">
@@ -785,22 +777,10 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* §7.8 savings line [OWNER TO CONFIRM figures] */}
-          <div style={{ maxWidth: 680, margin: "0 auto 24px", textAlign: "center" }}>
-            <p style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(16px,2.5vw,22px)", letterSpacing: "-0.015em", color: "var(--ink)", lineHeight: 1.5 }}>
-              Manual migration: about 1 day per script.
-              43 scripts = 43 days.
-              With SuiteMigrate: scan and convert in under an hour.
-            </p>
-            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", marginTop: 6 }}>
-              [OWNER TO CONFIRM figures against real usage data]
-            </p>
-          </div>
-
           {/* §7.9 small print */}
           <p style={{ textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", letterSpacing: ".04em", lineHeight: 1.9 }}>
-            {/* [OWNER TO CONFIRM] currency, tax, payment provider */}
-            Prices in USD · Tax not included · [OWNER TO CONFIRM currency and tax treatment]
+            {/*  currency, tax, payment provider */}
+            Prices in USD · Applicable taxes may be added at checkout · Payments by Razorpay
             <br />
             Payments processed by Razorpay ·{" "}
             <Link href="/terms" style={{ color: "var(--ink-soft)", textDecoration: "underline" }}>Billing &amp; refund terms</Link>
@@ -826,35 +806,34 @@ export default function LandingPage() {
             {[
               {
                 title: "What the extension reads",
-                // §9.1 / §4.3 — [OWNER TO CONFIRM exact API endpoints + permissions]
-                items: [
-                  "Script records and Script Deployment records via SuiteQL REST API",
-                  "Current page URL to detect the active environment",
-                  "Your active NetSuite browser session (not your credentials)",
-                  "[OWNER TO CONFIRM: full list of API endpoints used]",
-                ],
-                footer: null,
+                 items: [
+                   "Script records via SuiteQL (/services/rest/query/v1/suiteql)",
+                   "Script file content via your active NetSuite session",
+                   "Current page URL to detect the active account and environment",
+                   "Your active NetSuite browser session cookie (your credentials are never read)",
+                 ],
+                 footer: null,
               },
               {
                 title: "What the extension never does",
                 items: [
                   "Never creates, modifies or deletes any NetSuite data",
                   "Never reads or stores your NetSuite password",
-                  "Never accesses data outside NetSuite domains",
+                  "Never sends your NetSuite session token to our servers",
                   "Never sends your session token to our servers",
                 ],
                 footer: null,
               },
               {
-                title: "What is sent to the AI provider",
-                // §9.1 — [OWNER TO CONFIRM all details]
+                title: "What is processed by our AI service",
+                
                 items: [
                   "The script code you explicitly choose to convert",
                   "Sent to a third-party AI service for that conversion only",
-                  "[OWNER TO CONFIRM: is code stored after processing?]",
-                  "[OWNER TO CONFIRM: is code used for model training?]",
+                  "Converted scripts are stored on our servers for re-download",
+                  "Not used by our AI provider to train its models",
                 ],
-                footer: "[OWNER TO CONFIRM all items above against the AI provider terms and real code behaviour before publishing]",
+                footer: null,
               },
               {
                 title: "Your data",
@@ -871,7 +850,7 @@ export default function LandingPage() {
                 <h3 style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 17, letterSpacing: "-0.01em", color: "var(--ink)", marginBottom: 14 }}>{block.title}</h3>
                 <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
                   {block.items.map((item, i) => (
-                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: item.startsWith("[OWNER") ? "var(--clay)" : "var(--ink-soft)", lineHeight: 1.6 }}>
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.6 }}>
                       <span style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-mute)", flexShrink: 0, marginTop: 1 }}>—</span>
                       {item}
                     </li>
@@ -886,8 +865,7 @@ export default function LandingPage() {
             ))}
           </div>
           {/* §9.3 BYOK / redaction TODO placeholder — visible only in code */}
-          {/* [OWNER TODO] Consider a bring-your-own-API-key option or a code-redaction
-              option for NDA-bound consultants — see CONTENT-TODO.md item P-3 */}
+          }
         </div>
       </section>
 

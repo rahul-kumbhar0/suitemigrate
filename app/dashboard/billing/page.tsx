@@ -2,16 +2,16 @@ import { createClient } from "@/lib/supabase/server"
 import { CheckCircle, Shield, CreditCard } from "lucide-react"
 import Link from "next/link"
 
-// E13: Only show plans that exist. Team card removed until Team features are implemented.
-// Features listed match what is actually gated server-side.
-// [OWNER TO CONFIRM] prices before launch.
+// Confirmed prices — Pro $29/mo, Lifetime $299
+// Team = waitlist only (no price)
+// Migration Pass = removed
 const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "$29",              // [OWNER TO CONFIRM]
+    price: "$29",
     period: "/ month",
-    alt: "or one-time Migration Pass · [OWNER TO CONFIRM price]",
+    alt: "7-day money-back guarantee",
     altClay: true,
     desc: "One developer, one migration. Unlimited conversions.",
     features: [
@@ -26,19 +26,19 @@ const plans = [
   },
   {
     id: "lifetime",
-    name: "Early-adopter Lifetime",
-    price: "[OWNER TO CONFIRM]",  // [OWNER TO CONFIRM] price and availability
+    name: "Lifetime",
+    price: "$299",
     period: "one time",
-    alt: "Pay once — use forever · limited availability [OWNER TO CONFIRM end date]",
+    alt: "Pro access for the life of the product",
     altClay: false,
-    desc: "Every Pro feature, no renewals, all future updates.",
+    desc: "Every Pro feature, no renewals, no subscription.",
     features: [
       "Everything in Pro",
       "Lifetime access — no renewals",
       "All future features included",
       "Priority conversion queue",
     ],
-    cta: "Get Lifetime Deal",
+    cta: "Get Lifetime",
     dark: true,
   },
 ]
@@ -56,9 +56,7 @@ export default async function BillingPage() {
         .eq("id", user.id)
         .maybeSingle()
       if (data) profile = data
-    } catch {
-      // use defaults
-    }
+    } catch { /* use defaults */ }
   }
 
   const planLabels: Record<string, string> = { free: "Free", pro: "Pro", lifetime: "Lifetime", team: "Team" }
@@ -105,7 +103,7 @@ export default async function BillingPage() {
         </h2>
       </div>
 
-      {/* Plan cards — 2 col max since Team card removed pending Team features */}
+      {/* Plan cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 40, maxWidth: 640 }}>
         {plans.map((plan) => (
           <div key={plan.id} style={{
@@ -113,7 +111,6 @@ export default async function BillingPage() {
             background: plan.dark ? "var(--ink)" : "var(--paper)",
             border: `1px solid ${plan.dark ? "var(--ink)" : "var(--rule)"}`,
             display: "flex", flexDirection: "column",
-            transition: "transform .18s",
           }}>
             <div style={{ fontFamily: "var(--f-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".15em", color: plan.dark ? "rgba(250,250,249,.5)" : "var(--ink-mute)", marginBottom: 18 }}>
               {plan.name}
@@ -140,13 +137,18 @@ export default async function BillingPage() {
               background: plan.dark ? "var(--clay)" : "transparent",
               color: plan.dark ? "var(--paper)" : "var(--ink)",
               border: `1px solid ${plan.dark ? "var(--clay)" : "var(--rule)"}`,
-              transition: "background .18s, color .18s, transform .16s",
+              transition: "background .18s, color .18s",
             }} className={`billing-cta${plan.dark ? " billing-cta--dark" : ""}`}>
               {plan.cta}
             </Link>
           </div>
         ))}
       </div>
+
+      {/* Prices in USD — applicable taxes may be added at checkout */}
+      <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", letterSpacing: ".04em", marginBottom: 20, textAlign: "center" }}>
+        Prices in USD · Applicable taxes may be added at checkout · Payments by Razorpay
+      </p>
 
       {/* Trust row */}
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 28, paddingTop: 20, borderTop: "1px solid var(--rule)" }}>
@@ -163,7 +165,7 @@ export default async function BillingPage() {
       </div>
 
       <style>{`
-        .billing-cta:hover { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; transform: translateY(-1px); }
+        .billing-cta:hover { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
         .billing-cta--dark:hover { background: #c23d15 !important; }
       `}</style>
     </div>

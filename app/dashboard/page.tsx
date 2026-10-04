@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const limit    = profile.conversions_limit
   const plan     = profile.plan
   const pct      = limit ? Math.min((used / limit) * 100, 100) : 0
-  const daysLeft = Math.ceil((new Date("2028-06-01").getTime() - Date.now()) / 86_400_000) // 2028.2 — [OWNER TO CONFIRM exact date]
+  const daysLeft = Math.ceil((new Date("2028-06-01").getTime() - Date.now()) / 86_400_000) // TODO: update to confirmed 2028.2 release date when Oracle announces it
   const planLabels: Record<string, string> = { free: "Free", pro: "Pro", lifetime: "Lifetime", team: "Team" }
 
   return (
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
               Install the Chrome extension to start scanning
             </h3>
             <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.6 }}>
-              Reads your existing NetSuite session — no credentials required. Open NetSuite, click the extension, full script inventory in 60 seconds.
+              Reads your existing NetSuite session — no credentials required. Open NetSuite, click the extension, and your full script inventory appears.
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, flexShrink: 0 }}>
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
               {plan === "free" && (
                 <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
                   <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.55, marginBottom: 10 }}>
-                    Pro: unlimited conversions. {/* [OWNER TO CONFIRM] price before launch */}
+                    Pro: $29/month or <strong style={{ color: "var(--ink)" }}>$299 lifetime</strong>. Unlimited conversions.
                   </p>
                   <Link href="/dashboard/billing" className="btn-pill" style={{ fontSize: 11.5, padding: "8px 16px", display: "flex", justifyContent: "center" }}>
                     Upgrade →

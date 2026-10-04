@@ -26,7 +26,6 @@ export function Footer() {
               Find every legacy SuiteScript before the 2028.2 deadline.
               Not affiliated with or endorsed by Oracle Corporation or NetSuite.
             </p>
-            {/* §11.2 support email — [OWNER TO CONFIRM] */}
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", lineHeight: 1.7 }}>
               Support:{" "}
               <a
@@ -34,7 +33,6 @@ export function Footer() {
                 style={{ color: "var(--ink-soft)", textDecoration: "none" }}
                 className="footer-link"
               >
-                {/* [OWNER TO CONFIRM] support email address */}
                 support@suitemigrate.com
               </a>
             </p>
@@ -90,7 +88,7 @@ export function Footer() {
                 { label: "Privacy Policy",   href: "/privacy" },
                 { label: "Terms of Service", href: "/terms" },
                 {
-                  // §11.2 Refund Policy link — [OWNER TO CONFIRM] page exists
+                  
                   label: "Refund Policy",
                   href: "/refund",
                 },
