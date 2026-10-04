@@ -12,7 +12,14 @@ export default async function DashboardPage() {
       const { data } = await supabase
         .from("users").select("plan,conversions_used,conversions_limit")
         .eq("id", user.id).maybeSingle()
-      if (data) profile = data
+      if (data) {
+        profile = data
+        // Auto-heal stale limit
+        if (data.plan === "free" && data.conversions_limit === 2) {
+          await supabase.from("users").update({ conversions_limit: 5 }).eq("id", user.id)
+          profile = { ...data, conversions_limit: 5 }
+        }
+      }
     } catch { /* use defaults */ }
   }
 

@@ -11,10 +11,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
   let plan = "free"
   try {
     const { data: profile } = await supabase
-      .from("users").select("plan").eq("id", user.id).maybeSingle()
-    if (profile) plan = profile.plan
+      .from("users").select("plan, conversions_limit").eq("id", user.id).maybeSingle()
 
-    if (!profile) {
+    if (profile) {
+      plan = profile.plan
+      // Auto-heal: if free user still has the old stale limit of 2, fix it to 5
+      if (profile.plan === "free" && profile.conversions_limit === 2) {
+        await supabase
+          .from("users")
+          .update({ conversions_limit: 5 })
+          .eq("id", user.id)
+      }
+    } else {
+      // New user — create profile with correct limit
       await supabase.from("users").upsert({
         id: user.id,
         email: user.email ?? "",
