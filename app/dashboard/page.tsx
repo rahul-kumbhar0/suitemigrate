@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const limit    = profile.conversions_limit
   const plan     = profile.plan
   const pct      = limit ? Math.min((used / limit) * 100, 100) : 0
-  const daysLeft = Math.ceil((new Date("2028-01-01").getTime() - Date.now()) / 86_400_000)
+  const daysLeft = Math.ceil((new Date("2028-06-01").getTime() - Date.now()) / 86_400_000) // 2028.2 — [OWNER TO CONFIRM exact date]
   const planLabels: Record<string, string> = { free: "Free", pro: "Pro", lifetime: "Lifetime", team: "Team" }
 
   return (
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
           { label: "Conversions used",  value: limit ? `${used} / ${limit}` : `${used}`, sub: plan === "free" ? "free tier" : "unlimited" },
           { label: "Scripts scanned",   value: "0",                sub: "all accounts" },
           { label: "Accounts linked",   value: "0",                sub: "environments" },
-          { label: "Days to 2028.1",    value: daysLeft.toString(), sub: "hard deadline" },
+          { label: "Days to 2028.2",    value: daysLeft.toString(), sub: "hard cutoff deadline" },
         ].map((s, i) => (
           <div key={s.label} style={{ background: "var(--paper)", padding: "18px 16px" }}>
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 8 }}>{s.label}</p>
@@ -154,7 +154,7 @@ export default async function DashboardPage() {
               {plan === "free" && (
                 <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
                   <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.55, marginBottom: 10 }}>
-                    Pro: $29/mo or <strong style={{ color: "var(--ink)" }}>$299 lifetime</strong>. Unlimited.
+                    Pro: unlimited conversions. {/* [OWNER TO CONFIRM] price before launch */}
                   </p>
                   <Link href="/dashboard/billing" className="btn-pill" style={{ fontSize: 11.5, padding: "8px 16px", display: "flex", justifyContent: "center" }}>
                     Upgrade →
@@ -172,9 +172,9 @@ export default async function DashboardPage() {
             </div>
             <div style={{ padding: "8px 10px" }}>
               {[
-                { date: "2027.1", label: "SS 1.0 limited support", color: "#b45309" },
-                { date: "2028.1", label: "2.1 runs by default",     color: "#c2410c" },
-                { date: "2028.2", label: "Hard cutoff",             color: "var(--clay)" },
+                { date: "2027.1", label: "SS 1.0 limited support",            color: "#b45309" },
+                { date: "2028.1", label: "SS 2.0/2.x run as 2.1 by default", color: "#c2410c" },
+                { date: "2028.2", label: "Hard cutoff — scripts must be 2.1", color: "var(--clay)" },
               ].map(d => (
                 <div key={d.date} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 8px", borderBottom: "1px solid var(--rule)" }}>
                   <span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{d.label}</span>

@@ -2,42 +2,44 @@ import { createClient } from "@/lib/supabase/server"
 import { CheckCircle, Shield, CreditCard } from "lucide-react"
 import Link from "next/link"
 
+// E13: Only show plans that exist. Team card removed until Team features are implemented.
+// Features listed match what is actually gated server-side.
+// [OWNER TO CONFIRM] prices before launch.
 const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "$29",
+    price: "$29",              // [OWNER TO CONFIRM]
     period: "/ month",
-    alt: "or $299 lifetime · pay once",
+    alt: "or one-time Migration Pass · [OWNER TO CONFIRM price]",
     altClay: true,
-    desc: "For developers actively migrating scripts.",
-    features: ["Unlimited script conversions", "Full conversion history", "Inline comments + diff view", "ZIP export of converted scripts", "Priority conversion queue"],
+    desc: "One developer, one migration. Unlimited conversions.",
+    features: [
+      "Unlimited script conversions",
+      "Batch conversion (whole account at once)",
+      "HTML audit report export",
+      "Conversion history",
+      "Priority conversion queue",
+    ],
     cta: "Get Pro",
     dark: false,
   },
   {
     id: "lifetime",
-    name: "Lifetime",
-    price: "$299",
+    name: "Early-adopter Lifetime",
+    price: "[OWNER TO CONFIRM]",  // [OWNER TO CONFIRM] price and availability
     period: "one time",
-    alt: "Pay once — use forever. Best value.",
+    alt: "Pay once — use forever · limited availability [OWNER TO CONFIRM end date]",
     altClay: false,
-    desc: "Every feature, no renewals, all future updates.",
-    features: ["Everything in Pro", "Lifetime access — no renewals", "All future features included", "Priority conversion queue"],
-    cta: "Buy Lifetime — $299",
+    desc: "Every Pro feature, no renewals, all future updates.",
+    features: [
+      "Everything in Pro",
+      "Lifetime access — no renewals",
+      "All future features included",
+      "Priority conversion queue",
+    ],
+    cta: "Get Lifetime Deal",
     dark: true,
-  },
-  {
-    id: "team",
-    name: "Team",
-    price: "$99",
-    period: "/ month",
-    alt: "For agencies & consultants",
-    altClay: false,
-    desc: "Multiple accounts, shared history, bulk export.",
-    features: ["Everything in Pro", "Unlimited team seats", "Shared conversion history", "Client account management", "Bulk export across accounts"],
-    cta: "Get Team",
-    dark: false,
   },
 ]
 
@@ -98,13 +100,13 @@ export default async function BillingPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2.2fr", gap: 60, marginBottom: 40, alignItems: "flex-end" }}>
         <div className="section-num">Upgrade your plan</div>
         <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(24px,3vw,40px)", letterSpacing: "-0.025em", color: "var(--ink)", lineHeight: 1.04 }}>
-          More conversions,{" "}
-          <span style={{ color: "var(--clay)", fontStyle: "italic" }}>no limits.</span>
+          Unlimited conversions.{" "}
+          <span style={{ color: "var(--clay)", fontStyle: "italic" }}>No limits.</span>
         </h2>
       </div>
 
-      {/* Plan cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 40 }}>
+      {/* Plan cards — 2 col max since Team card removed pending Team features */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 40, maxWidth: 640 }}>
         {plans.map((plan) => (
           <div key={plan.id} style={{
             padding: 32, borderRadius: 6,
