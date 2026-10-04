@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "How accurate is the AI conversion?",
-    a: "SuiteMigrate runs 50+ deterministic API mapping rules first, then Gemini AI handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
+    a: "SuiteMigrate runs 50+ deterministic API mapping rules first, then its AI engine handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
   },
   {
     q: "Which script types are supported?",
@@ -153,7 +153,7 @@ export default function LandingPage() {
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
             <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
             The extension reads script metadata in your browser using your active NetSuite session.
-            {" "}When you convert a script, that script&apos;s code is sent to Google Gemini for AI processing.
+            {" "}When you convert a script, that script&apos;s code is sent to SuiteMigrate&apos;s servers and processed by a third-party AI service.
             {" "}[OWNER TO CONFIRM: stored after conversion yes/no · used for model training yes/no]
             {" "}·{" "}
             <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
@@ -495,7 +495,7 @@ export default function LandingPage() {
                 {
                   n: "03",
                   title: "Convert — structural rewrite with full documentation",
-                  desc: "Click Convert on any script. The conversion runs 50+ mapping rules then Gemini AI for structural changes. Review the three-tab output — Code, Changes, Inline comments — before downloading.",
+                  desc: "Click Convert on any script. SuiteMigrate AI runs 50+ mapping rules then its AI engine for structural changes. Review the three-tab output — Code, Changes, Inline comments — before downloading.",
                 },
                 {
                   n: "04",
@@ -850,11 +850,11 @@ export default function LandingPage() {
                 // §9.1 — [OWNER TO CONFIRM all details]
                 items: [
                   "The script code you explicitly choose to convert",
-                  "Sent to Google Gemini API for that conversion only",
+                  "Sent to a third-party AI service for that conversion only",
                   "[OWNER TO CONFIRM: is code stored after processing?]",
                   "[OWNER TO CONFIRM: is code used for model training?]",
                 ],
-                footer: "[OWNER TO CONFIRM all items above against the Gemini API terms and real code behaviour before publishing]",
+                footer: "[OWNER TO CONFIRM all items above against the AI provider terms and real code behaviour before publishing]",
               },
               {
                 title: "Your data",

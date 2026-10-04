@@ -1,33 +1,26 @@
 /**
  * Auth — polls /api/auth/session to check auth status
- * No localStorage sync needed — uses HTTP-only cookies set by Supabase
+ * Uses credentials:include (HTTP-only cookies set by Supabase)
+ * No Bearer token needed — session cookie handles auth.
+ *
+ * Item 1 fix: all fallbacks default to production URL, not localhost
  */
 
 import { getStorage, setStorage, clearAuth } from "./storage"
 import type { AuthUser } from "./types"
 
-const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000"
+// Single source — Vite replaces at build time; default is production URL
+const APP_URL = import.meta.env.VITE_APP_URL || "https://suitemigrate.vercel.app"
 
-/**
- * Fetch current user session from /api/auth/session
- * Uses credentials:include to send HTTP-only cookies
- */
 export async function fetchCurrentUser(): Promise<AuthUser | null> {
   try {
     const res = await fetch(`${APP_URL}/api/auth/session`, {
-      credentials: "include", // Send HTTP-only cookies
-      headers: {
-        "Content-Type": "application/json",
-      },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
     })
 
     if (!res.ok) {
-      // 401 = not authenticated
-      if (res.status === 401) {
-        await clearAuth()
-        return null
-      }
-      // Network or server error — return cached user if available
+      if (res.status === 401) { await clearAuth(); return null }
       return null
     }
 
@@ -42,10 +35,7 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
       unlimited?: boolean
     }
 
-    if (!data.authenticated || !data.id) {
-      await clearAuth()
-      return null
-    }
+    if (!data.authenticated || !data.id) { await clearAuth(); return null }
 
     const user: AuthUser = {
       id: data.id,
@@ -57,12 +47,10 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
       unlimited: data.unlimited ?? false,
     }
 
-    // Cache for instant display
     await setStorage("authUser", user)
     return user
   } catch (err) {
-    console.error("[fetchCurrentUser]", err)
-    // Network error — return cached user (might be offline)
+    console.error("[auth] fetchCurrentUser error:", err)
     return null
   }
 }
@@ -72,27 +60,16 @@ export async function getCachedUser(): Promise<AuthUser | null> {
 }
 
 export async function signOut(): Promise<void> {
-  // Clear extension storage
   await clearAuth()
-
-  // Call website logout API
-  const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000"
   try {
     await fetch(`${APP_URL}/api/auth/logout`, {
       method: "POST",
       credentials: "include",
     })
   } catch {
-    // Logout failed on server — at least we cleared local cache
+    // Server logout failed — local cache is already cleared
   }
 }
 
-export function getLoginUrl(): string {
-  const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000"
-  return `${APP_URL}/login`
-}
-
-export function getSignupUrl(): string {
-  const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000"
-  return `${APP_URL}/signup`
-}
+export function getLoginUrl():  string { return `${APP_URL}/login` }
+export function getSignupUrl(): string { return `${APP_URL}/signup` }

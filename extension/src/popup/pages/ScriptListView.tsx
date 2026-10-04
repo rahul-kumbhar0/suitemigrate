@@ -19,7 +19,7 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
         <p style={{ fontSize: 12.5, color: "var(--ink)", lineHeight: 1.65, marginBottom: 12 }}>
           The script code you choose to convert is sent to{" "}
           <strong>our server</strong> and then to{" "}
-          <strong>Google Gemini AI</strong> for processing.
+          <strong>SuiteMigrate AI</strong> for processing.
         </p>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: 14 }}>
           {/* [OWNER TO CONFIRM] storage and training details — see E-3 in CONTENT-TODO.md */}
@@ -219,14 +219,27 @@ export default function ScriptListView() {
           ))}
         </div>
 
-        {/* Audit report — available to all plans client-side; PDF gated server-side */}
-        <button
-          onClick={() => downloadAuditReport(activeAccount)}
-          className="btn-outline"
-          style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
-        >
-          <Download size={11} /> Export Audit Report
-        </button>
+        {/* E14: Audit report — HTML download, gated to paid plans
+            Server-side gate is in /api/export/pdf. This client gate is a UI hint only;
+            the server enforces the restriction independently. */}
+        {user && !user.unlimited ? (
+          <button
+            onClick={() => setView("upgrade")}
+            className="btn-outline"
+            style={{ width: "100%", justifyContent: "center", fontSize: 11, opacity: 0.6, cursor: "pointer" }}
+            title="HTML audit report is available on Pro and Team plans"
+          >
+            <Download size={11} /> HTML Audit Report (Pro)
+          </button>
+        ) : (
+          <button
+            onClick={() => downloadAuditReport(activeAccount)}
+            className="btn-outline"
+            style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+          >
+            <Download size={11} /> HTML Audit Report
+          </button>
+        )}
       </div>
 
       {/* Script list */}

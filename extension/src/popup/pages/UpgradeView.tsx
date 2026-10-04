@@ -1,11 +1,12 @@
 /**
- * UpgradeView — Item 7 of extension fix brief
+ * UpgradeView — E13 of brief
  *
- * Changes:
- * - Added Team plan card (placeholder price [OWNER TO CONFIRM])
- * - Features match what is actually gated server-side (PDF, batch, ZIP, history)
- * - "Diff view" removed — it exists but is NOT gated (available on free plan)
- * - Upgrade link goes to /dashboard/billing, not the raw checkout API
+ * Rules:
+ * - Show only features that actually exist and are gated
+ * - ZIP export removed: downloadAllConversions is multi-download, not a real ZIP
+ * - Diff/Changes view removed: exists and is FREE (not a paid differentiator)
+ * - Team card removed until Team features exist [OWNER TO CONFIRM]
+ * - Prices kept as-is until confirmed [OWNER TO CONFIRM]
  */
 
 import { ArrowRight } from "lucide-react"
@@ -13,55 +14,26 @@ import { useStore } from "../../lib/store"
 import { getUpgradeUrl } from "../../lib/api"
 import Header from "../components/Header"
 
-const plans = [
-  {
-    id: "pro",
-    name: "Pro",
-    price: "$29",
-    period: "/month",
-    altLine: "or Migration Pass — one-time · [OWNER TO CONFIRM price]",
-    audience: "One developer, one migration",
-    desc: "Unlimited conversions and the full export toolkit.",
-    dark: true,
-    features: [
-      "Unlimited conversions",
-      "Batch conversion (whole account)",
-      "ZIP export of all scripts",
-      "PDF audit report",
-      "Conversion history",
-      "Priority queue",
-    ],
-  },
-  {
-    id: "team",
-    name: "Team",
-    price: "[OWNER TO CONFIRM]", // §7.6 placeholder
-    period: "/month",
-    altLine: "Multiple seats included",
-    audience: "Consultants managing multiple clients",
-    desc: "Everything in Pro, across multiple client accounts.",
-    dark: false,
-    features: [
-      "Everything in Pro",
-      "Multiple NetSuite accounts",
-      "Shared conversion history",
-      "Client-branded PDF reports",
-      "Multiple seats",
-    ],
-  },
-]
+// TODO [OWNER TO CONFIRM]: finalise Pro price before launch
+// TODO [OWNER TO CONFIRM]: add Team card only when team features are implemented
+const PRO_FEATURES = [
+  "Unlimited conversions",
+  "Batch conversion (convert whole account at once)",
+  "HTML audit report export",
+  "Conversion history (up to 100 scripts)",
+  "Priority conversion queue",
+] as const
 
 export default function UpgradeView() {
   const { setView } = useStore()
 
-  const handleUpgrade = (planId: string) => {
-    // Opens the billing page, not the raw checkout API
-    chrome.tabs.create({ url: getUpgradeUrl(planId) })
+  const handleUpgrade = () => {
+    chrome.tabs.create({ url: getUpgradeUrl("pro") })
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <Header showBack onBack={() => setView("script_list")} title="Upgrade Plan" />
+      <Header showBack onBack={() => setView("script_list")} title="Upgrade to Pro" />
 
       <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
 
@@ -71,73 +43,70 @@ export default function UpgradeView() {
             Free conversions used
           </p>
           <p style={{ fontSize: 11.5, color: "var(--ink-soft)", lineHeight: 1.55 }}>
-            You&apos;ve used your 5 free conversions. Upgrade to continue migrating.
+            You&apos;ve used your 5 free conversions. Upgrade to keep migrating.
           </p>
         </div>
 
-        {/* Plan cards */}
-        {plans.map(plan => (
-          <div key={plan.id} style={{
-            border: `1px solid ${plan.dark ? "var(--ink)" : "var(--rule)"}`,
-            borderRadius: 4, padding: "14px 16px",
-            background: plan.dark ? "var(--ink)" : "var(--paper)",
-          }}>
-            {/* Plan header */}
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 4 }}>
-              <div>
-                <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: plan.dark ? "rgba(250,250,249,.45)" : "var(--ink-mute)", marginBottom: 2 }}>
-                  {plan.name}
-                </p>
-                <p style={{ fontSize: 11, fontStyle: "italic", color: plan.dark ? "rgba(250,250,249,.5)" : "var(--ink-mute)" }}>
-                  {plan.audience}
-                </p>
-              </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <span style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 22, letterSpacing: "-0.02em", color: plan.dark ? "var(--paper)" : "var(--ink)" }}>
-                  {plan.price}
-                </span>
-                <span style={{ fontSize: 10.5, color: plan.dark ? "rgba(250,250,249,.45)" : "var(--ink-mute)", marginLeft: 2 }}>
-                  {plan.period}
-                </span>
-              </div>
+        {/* Pro card */}
+        <div style={{
+          border: "1px solid var(--ink)",
+          borderRadius: 4, padding: "16px",
+          background: "var(--ink)",
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
+            <div>
+              <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "rgba(250,250,249,.45)", marginBottom: 2 }}>
+                Pro
+              </p>
+              <p style={{ fontSize: 11, fontStyle: "italic", color: "rgba(250,250,249,.5)" }}>
+                One developer, one migration
+              </p>
             </div>
-
-            {/* Alt line */}
-            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: plan.dark ? "rgba(250,250,249,.35)" : "var(--ink-mute)", marginBottom: 10, letterSpacing: ".04em" }}>
-              {plan.altLine}
-            </p>
-
-            {/* Features — only gated ones listed */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
-              {plan.features.map(f => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: plan.dark ? "rgba(250,250,249,.7)" : "var(--ink-soft)" }}>
-                  <span style={{ color: plan.dark ? "var(--clay)" : "var(--clay)", fontFamily: "var(--f-mono)", fontSize: 10 }}>✓</span>
-                  {f}
-                </div>
-              ))}
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              {/* [OWNER TO CONFIRM] price */}
+              <span style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 24, letterSpacing: "-0.02em", color: "var(--paper)" }}>
+                $29
+              </span>
+              <span style={{ fontSize: 10.5, color: "rgba(250,250,249,.45)", marginLeft: 2 }}>
+                /month
+              </span>
             </div>
-
-            <button
-              onClick={() => handleUpgrade(plan.id)}
-              className={plan.dark ? "upgrade-btn-dark" : "upgrade-btn-light"}
-              style={{
-                width: "100%", padding: "8px 14px", borderRadius: 999,
-                background: plan.dark ? "var(--clay)" : "transparent",
-                color: plan.dark ? "var(--paper)" : "var(--ink)",
-                border: `1px solid ${plan.dark ? "var(--clay)" : "var(--rule)"}`,
-                fontSize: 12, fontWeight: 500, fontFamily: "var(--f-sans)",
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                transition: "background .2s",
-              }}
-            >
-              Get {plan.name} <ArrowRight size={12} />
-            </button>
           </div>
-        ))}
 
-        {/* Early-adopter lifetime note */}
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "rgba(250,250,249,.35)", marginBottom: 12, letterSpacing: ".04em" }}>
+            or one-time Migration Pass · [OWNER TO CONFIRM price]
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
+            {PRO_FEATURES.map(f => (
+              <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 11.5, color: "rgba(250,250,249,.75)" }}>
+                <span style={{ color: "var(--clay)", fontFamily: "var(--f-mono)", fontSize: 10, flexShrink: 0, marginTop: 1 }}>✓</span>
+                {f}
+              </div>
+            ))}
+          </div>
+
+          <button
+            onClick={handleUpgrade}
+            className="upgrade-btn-dark"
+            style={{
+              width: "100%", padding: "9px 14px", borderRadius: 999,
+              background: "var(--clay)", color: "var(--paper)",
+              border: "1px solid var(--clay)",
+              fontSize: 12, fontWeight: 500, fontFamily: "var(--f-sans)",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              transition: "background .2s",
+            }}
+          >
+            Get Pro <ArrowRight size={12} />
+          </button>
+        </div>
+
+        {/* Lifetime footnote */}
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", textAlign: "center", lineHeight: 1.6 }}>
-          Lifetime deal also available on the website — [OWNER TO CONFIRM price &amp; end date]
+          Lifetime deal also available on the website ·{" "}
+          {/* [OWNER TO CONFIRM] lifetime price and end date */}
+          [OWNER TO CONFIRM price &amp; availability]
         </p>
 
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--ink-mute)", textAlign: "center" }}>
@@ -145,10 +114,7 @@ export default function UpgradeView() {
         </p>
       </div>
 
-      <style>{`
-        .upgrade-btn-dark:hover  { background: #c23d15 !important; }
-        .upgrade-btn-light:hover { background: var(--paper-warm) !important; }
-      `}</style>
+      <style>{`.upgrade-btn-dark:hover { background: #c23d15 !important; }`}</style>
     </div>
   )
 }

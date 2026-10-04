@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { convertScript } from "@/lib/conversion-engine/gemini"
+import { convertScript } from "@/lib/conversion-engine/engine"
 import { canConvert, canBatchConvert } from "@/lib/plans"
 import { getCorsHeaders, corsOptions } from "@/lib/cors"
 import type { Plan } from "@/types"
 
 export const dynamic = "force-dynamic"
 
-/** Authenticate via Bearer token (extension) or session cookie (website) */
+/** Authenticate via credentials:include cookie (extension + website) or Bearer token fallback */
 async function getUser(request: Request) {
   const admin = createAdminClient()
 
-  // Try Bearer token first (from extension)
+  // Try Bearer token first (legacy extension builds)
   const authHeader = request.headers.get("authorization")
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7)
@@ -19,7 +19,7 @@ async function getUser(request: Request) {
     if (!error && user) return user
   }
 
-  // Fallback to session cookie (from website)
+  // Session cookie (current extension + website — credentials:"include")
   const { createClient } = await import("@/lib/supabase/server")
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -35,67 +35,68 @@ export async function POST(request: Request) {
   const headers = getCorsHeaders(origin)
 
   try {
-    // ── Auth ────────────────────────────────────────────────────────
+    // ── Auth ─────────────────────────────────────────────────────────
     const user = await getUser(request)
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers })
     }
 
-    // ── Parse body ──────────────────────────────────────────────────
+    // ── Parse body ───────────────────────────────────────────────────
     const body = await request.json()
     const { code, scriptName, nsAccountId } = body
 
     if (!code || typeof code !== "string") {
       return NextResponse.json({ error: "code is required" }, { status: 400, headers })
     }
-    
-    // Size limits (Gemini 2.0 Flash: 1M token context, ~750k words, ~900k tokens safe limit)
-    const MAX_SIZE_BYTES = 500_000 // 500KB (~125k tokens)
-    const MAX_LINES = 10_000 // Reasonable limit for single script
-    
+
+    // Size limits
+    const MAX_SIZE_BYTES = 500_000
+    const MAX_LINES = 10_000
+
     if (code.length > MAX_SIZE_BYTES) {
-      return NextResponse.json({ 
-        error: `Script too large: ${Math.round(code.length / 1024)}KB (max 500KB). Consider breaking into smaller modules.`,
+      return NextResponse.json({
+        error: `Script too large: ${Math.round(code.length / 1024)}KB (max 500KB). Consider splitting into smaller modules.`,
         size: code.length,
-        maxSize: MAX_SIZE_BYTES
-      }, { status: 400, headers })
-    }
-    
-    const lineCount = code.split('\n').length
-    if (lineCount > MAX_LINES) {
-      return NextResponse.json({ 
-        error: `Script too large: ${lineCount.toLocaleString()} lines (max ${MAX_LINES.toLocaleString()}). Consider breaking into modules.`,
-        lines: lineCount,
-        maxLines: MAX_LINES
+        maxSize: MAX_SIZE_BYTES,
       }, { status: 400, headers })
     }
 
-    // ── Get user plan & usage ───────────────────────────────────────
+    const lineCount = code.split("\n").length
+    if (lineCount > MAX_LINES) {
+      return NextResponse.json({
+        error: `Script too large: ${lineCount.toLocaleString()} lines (max ${MAX_LINES.toLocaleString()}). Consider splitting into modules.`,
+        lines: lineCount,
+        maxLines: MAX_LINES,
+      }, { status: 400, headers })
+    }
+
+    // ── Get user plan & usage ────────────────────────────────────────
     const admin = createAdminClient()
     const { data: profile, error: profileError } = await admin
       .from("users")
       .select("plan, conversions_used, conversions_limit")
       .eq("id", user.id)
-      .single()
+      .maybeSingle()
 
     let userPlan: Plan = "free"
     let conversionsUsed = 0
 
     if (profileError || !profile) {
+      // Auto-create profile — correct limit is 5
       await admin.from("users").upsert({
         id: user.id,
         email: user.email,
         name: user.user_metadata?.name || null,
         plan: "free",
         conversions_used: 0,
-        conversions_limit: 2,
-      })
+        conversions_limit: 5,
+      }, { onConflict: "id", ignoreDuplicates: true })
     } else {
       userPlan = (profile.plan as Plan) || "free"
       conversionsUsed = profile.conversions_used || 0
     }
 
-    // ── Plan enforcement ────────────────────────────────────────────
+    // ── Conversion limit — SERVER enforces, popup count is UI hint only ──
     if (!canConvert(userPlan, conversionsUsed)) {
       return NextResponse.json(
         {
@@ -108,24 +109,23 @@ export async function POST(request: Request) {
       )
     }
 
-    // ── §12.2 Batch gating — server-side ───────────────────────────
-    // batch=true is only allowed on Pro, Lifetime, and Team plans.
+    // ── Batch gating — Pro/Lifetime/Team only ────────────────────────
     const isBatch = body.batch === true
     if (isBatch && !canBatchConvert(userPlan)) {
       return NextResponse.json(
         {
           error: "feature_not_available",
-          message: "Batch conversion is available on Pro and Team plans. Upgrade to convert your whole account.",
+          message: "Batch conversion is available on Pro and Team plans.",
           plan: userPlan,
         },
         { status: 402, headers }
       )
     }
 
-    // ── Run conversion ──────────────────────────────────────────────
+    // ── Run conversion ───────────────────────────────────────────────
     const result = await convertScript({ code, scriptName })
 
-    // ── Save to DB ──────────────────────────────────────────────────
+    // ── Persist ──────────────────────────────────────────────────────
     const { data: savedConversion } = await admin
       .from("conversions")
       .insert({
@@ -143,12 +143,13 @@ export async function POST(request: Request) {
       .select("id")
       .single()
 
-    // ── Increment usage ─────────────────────────────────────────────
+    // ── Increment usage ──────────────────────────────────────────────
     await admin
       .from("users")
       .update({ conversions_used: conversionsUsed + 1 })
       .eq("id", user.id)
 
+    // D12: never return model/provider/engine fields in the response
     return NextResponse.json({
       success: true,
       conversionId: savedConversion?.id,
@@ -166,44 +167,37 @@ export async function POST(request: Request) {
     }, { headers })
 
   } catch (err: unknown) {
-    console.error("[/api/convert]", err)
-    const message = err instanceof Error ? err.message : "Conversion failed"
-    
-    // Handle specific error types with helpful messages
-    if (message.includes("API key")) {
-      return NextResponse.json(
-        { error: "AI service configuration error. Please contact support." },
-        { status: 500, headers }
-      )
+    // D12: map ALL upstream errors to generic messages — log real error server-side only
+    const raw = err instanceof Error ? err.message : String(err)
+    console.error("[/api/convert] internal error:", raw)
+
+    // Caller-visible error — no provider name, no internal detail
+    if (raw.includes("Script too large") || raw.includes("tokens")) {
+      return NextResponse.json({ error: raw }, { status: 400, headers })
     }
-    
-    if (message.includes("503") || message.includes("high demand")) {
+
+    if (raw.includes("conversion_limit_reached")) {
+      return NextResponse.json({ error: "conversion_limit_reached" }, { status: 402, headers })
+    }
+
+    // 503 / high demand / rate limit / quota / API key → all become the same generic message
+    if (
+      raw.includes("503") ||
+      raw.includes("high demand") ||
+      raw.includes("rate limit") ||
+      raw.includes("quota") ||
+      raw.includes("API key") ||
+      raw.includes("429")
+    ) {
       return NextResponse.json(
-        { 
-          error: "AI service is temporarily overloaded. Please try again in 30 seconds.",
-          retryable: true 
-        },
+        { error: "Conversion service is busy. Please try again in a moment.", retryable: true },
         { status: 503, headers }
       )
     }
-    
-    if (message.includes("quota") || message.includes("rate limit")) {
-      return NextResponse.json(
-        { 
-          error: "AI service rate limit reached. Please try again in a few minutes.",
-          retryable: true 
-        },
-        { status: 429, headers }
-      )
-    }
-    
-    if (message.includes("Script too large")) {
-      return NextResponse.json(
-        { error: message },
-        { status: 400, headers }
-      )
-    }
-    
-    return NextResponse.json({ error: message }, { status: 500, headers })
+
+    return NextResponse.json(
+      { error: "Conversion service is busy. Please try again in a moment.", retryable: true },
+      { status: 500, headers }
+    )
   }
 }

@@ -12,7 +12,7 @@ export default function LoginRequiredView() {
   const openSignup    = () => chrome.tabs.create({ url: getSignupUrl() })
   const openLogin     = () => chrome.tabs.create({ url: getLoginUrl() })
   const openDashboard = () => {
-    const url = import.meta.env.VITE_APP_URL || "http://localhost:3000"
+    const url = import.meta.env.VITE_APP_URL || "https://suitemigrate.vercel.app"
     chrome.tabs.create({ url: `${url}/dashboard` })
   }
 

@@ -1,6 +1,6 @@
 /**
  * Rule-based preprocessor
- * Runs BEFORE Gemini — handles known mechanical transforms
+ * Runs BEFORE the AI engine — handles known mechanical transforms
  * so the AI only needs to handle context-aware logic
  */
 

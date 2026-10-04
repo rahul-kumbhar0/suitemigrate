@@ -26,7 +26,7 @@ export default function ConvertingView() {
       )}
 
       <p style={{ fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.65, maxWidth: 260 }}>
-        Gemini AI is analyzing your script and converting it to SuiteScript 2.1...
+        SuiteMigrate AI is converting your script to SuiteScript 2.1…
       </p>
 
       {/* Steps */}

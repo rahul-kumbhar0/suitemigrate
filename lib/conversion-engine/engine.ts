@@ -1,6 +1,9 @@
 /**
- * Gemini 2.0 Flash conversion engine
+ * SuiteMigrate AI conversion engine
  * Core IP: engineered system prompt + conversion logic
+ *
+ * Provider details are intentionally kept server-side only.
+ * No provider name is returned to clients in any response field.
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai"
@@ -26,16 +29,13 @@ export interface ConversionResult {
   detectedApiCalls: string[]
 }
 
-/**
- * Sleep for specified milliseconds
- */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
- * Retry Gemini API call with exponential backoff
- * Handles 503 "high demand" errors
+ * Retry with exponential backoff — handles transient upstream failures.
+ * Logs server-side only; callers receive a generic error.
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
@@ -43,32 +43,29 @@ async function retryWithBackoff<T>(
   baseDelay = 2000
 ): Promise<T> {
   let lastError: Error | null = null
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn()
     } catch (error: unknown) {
       lastError = error as Error
-      const errorMsg = error instanceof Error ? error.message : String(error)
-      
-      // Only retry on 503 or rate limit errors
-      const shouldRetry = 
-        errorMsg.includes("503") ||
-        errorMsg.includes("high demand") ||
-        errorMsg.includes("rate limit") ||
-        errorMsg.includes("quota")
-      
-      if (!shouldRetry || attempt === maxRetries - 1) {
-        throw error
-      }
-      
-      // Exponential backoff: 2s, 4s, 8s
+      const msg = error instanceof Error ? error.message : String(error)
+
+      const shouldRetry =
+        msg.includes("503") ||
+        msg.includes("high demand") ||
+        msg.includes("rate limit") ||
+        msg.includes("quota")
+
+      if (!shouldRetry || attempt === maxRetries - 1) throw error
+
       const delay = baseDelay * Math.pow(2, attempt)
-      console.warn(`[Gemini] Attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
+      // Server-side log only — never surfaced to clients
+      console.warn(`[engine] attempt ${attempt + 1} failed, retrying in ${delay}ms`)
       await sleep(delay)
     }
   }
-  
+
   throw lastError
 }
 
@@ -148,7 +145,7 @@ If a conversion is ambiguous or complex, add this comment:
 \`\`\`
 
 ## CRITICAL RULES
-1. NEVER remove or alter business logic — only modernize the syntax and API calls
+1. NEVER remove or alter business logic — only modernise the syntax and API calls
 2. NEVER add features that weren't in the original
 3. ALWAYS preserve all original comments
 4. ALWAYS output ONLY valid JavaScript — no markdown, no explanations outside comments
@@ -160,52 +157,48 @@ Output ONLY the converted JavaScript code. No markdown code fences. No explanati
 }
 
 export async function convertScript(input: ConversionInput): Promise<ConversionResult> {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY is not configured")
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    // Server log only — client gets the generic busy message
+    console.error("[engine] AI_API_KEY not configured")
+    throw new Error("AI service configuration error")
   }
 
-  // Validate input size (rough estimate: 1 char ≈ 1 token for code)
-  const estimatedTokens = input.code.length + 2000 // +2000 for system prompt
-  const MAX_TOKENS = 900000 // Leave buffer from 1M limit
+  const estimatedTokens = input.code.length + 2000
+  const MAX_TOKENS = 900_000
 
   if (estimatedTokens > MAX_TOKENS) {
     throw new Error(
       `Script too large: ~${Math.round(estimatedTokens / 1000)}K tokens ` +
-      `(max ${Math.round(MAX_TOKENS / 1000)}K). ` +
-      `Try breaking it into smaller modules.`
+      `(max ${Math.round(MAX_TOKENS / 1000)}K). Try splitting into smaller modules.`
     )
   }
 
-  // Step 1: Preprocess
   const preprocessResult = preprocess(input.code)
-
-  // Step 2: Build Gemini prompt
   const systemPrompt = buildSystemPrompt(preprocessResult)
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
-  // Step 3: Call Gemini with generation config and retry logic
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
+  // Provider/model details stay server-side; never sent to clients
+  const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-3.5-flash", // Default to stable model
+    model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
     systemInstruction: systemPrompt,
     generationConfig: {
-      temperature: 0.2, // Lower temperature for more consistent code generation
+      temperature: 0.2,
       topP: 0.8,
       topK: 40,
-      maxOutputTokens: 64000, // Gemini 2.0+ Flash max output
+      maxOutputTokens: 64000,
     },
   })
 
-  // Retry with exponential backoff to handle 503 errors
   const result = await retryWithBackoff(
     () => model.generateContent(userPrompt),
-    3, // Max 3 retries
-    2000 // Start with 2 second delay
+    3,
+    2000
   )
-  
+
   const rawOutput = result.response.text()
 
-  // Step 4: Postprocess
   const postResult = postprocess(
     rawOutput,
     preprocessResult.detectedApiCalls.length,

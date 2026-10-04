@@ -5,5 +5,5 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const APP_URL = import.meta.env.VITE_APP_URL || "http://localhost:3000"
+export const APP_URL = import.meta.env.VITE_APP_URL || "https://suitemigrate.vercel.app"
 export const API_BASE = `${APP_URL}/api`

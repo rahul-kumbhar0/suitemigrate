@@ -1,5 +1,5 @@
 /**
- * Postprocessor — runs AFTER Gemini conversion
+ * Postprocessor — runs AFTER AI conversion
  * Validates output, calculates confidence score, extracts change log
  */
 
@@ -89,13 +89,13 @@ function calculateConfidence(
   return Math.max(0, Math.min(100, score))
 }
 
-/** Extract change log from Gemini output (looks for comment markers) */
+/** Extract change log from AI output (looks for comment markers) */
 function extractChangeLog(code: string): string[] {
   const changes: string[] = []
   const lines = code.split("\n")
 
   for (const line of lines) {
-    // Gemini adds inline comments like: // MIGRATED: ...
+    // AI adds inline comments like: // MIGRATED: ...
     const migratedMatch = line.match(/\/\/\s*MIGRATED:\s*(.+)/)
     if (migratedMatch) changes.push(migratedMatch[1].trim())
 
@@ -107,7 +107,7 @@ function extractChangeLog(code: string): string[] {
   return changes
 }
 
-/** Strip any markdown code fences Gemini might add */
+/** Strip any markdown code fences the AI engine might add */
 function stripMarkdown(code: string): string {
   return code
     .replace(/^```(?:javascript|typescript|js|ts)?\s*\n?/gm, "")
@@ -117,11 +117,11 @@ function stripMarkdown(code: string): string {
 
 /** Main postprocessor entry point */
 export function postprocess(
-  rawGeminiOutput: string,
+  rawAIOutput: string,
   originalApiCallCount: number,
   preprocessChangeLog: string[]
 ): PostprocessResult {
-  const code = stripMarkdown(rawGeminiOutput)
+  const code = stripMarkdown(rawAIOutput)
   const validationErrors = validateStructure(code)
   const manualReviewLines = findManualReviewLines(code)
   const inlineChanges = extractChangeLog(code)
