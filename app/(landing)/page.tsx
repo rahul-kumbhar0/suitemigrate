@@ -15,7 +15,7 @@ const faqs = [
   // ── Core product ──────────────────────────────────────────────
   {
     q: "Why not just paste my script into ChatGPT?",
-    a: "Pasting one script is straightforward. SuiteMigrate does the parts that don't scale: it scans your whole account, risk-scores every script, checks for known SuiteScript 2.1 behaviour differences, and produces a report you can hand to a client or manager. One-off pastes don't give you the inventory, the risk prioritisation, or the audit trail.",
+    a: "Pasting one script is straightforward. SuiteMigrate adds the migration workflow around it: scan active script records visible to your current NetSuite role, identify legacy API versions, convert a selected script, review the changes, and export an HTML migration inventory on a paid plan.",
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     q: "What happens to my scripts if I cancel?",
-    a: "Any scripts you have already downloaded are yours — they are standard JavaScript files on your machine. Conversion history stored in your account is accessible until your subscription ends. We do not delete your data immediately on cancellation; see the Terms of Service for the retention period.",
+    a: "Any scripts you download are standard JavaScript files on your machine. Converted-result history stored in your SuiteMigrate account remains available while the account remains active, subject to the Terms and Privacy Policy.",
   },
   {
     q: "Do you offer refunds?",
@@ -105,7 +105,7 @@ export default function LandingPage() {
           maxWidth: 560, lineHeight: 1.65, marginBottom: 36,
         }}>
           Scan your NetSuite account, see which scripts will break, and convert
-          SuiteScript 1.0 / 2.0 / 2.x to 2.1 with a risk score on every script.
+          SuiteScript 1.0 / 2.0 / 2.x to 2.1 with version-based migration priority and review flags.
         </p>
 
         {/* §2.3 CTAs + §2.4 trust line */}
@@ -152,7 +152,7 @@ export default function LandingPage() {
         }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
             <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
-            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that script&apos;s code is sent to our servers and processed by a third-party AI service. Converted scripts are stored on our servers for re-download.
+            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that selected source code is sent to the SuiteMigrate backend and Google Gemini API for the requested conversion. SuiteMigrate does not retain the original source in its conversion database; converted results may be stored in your account for re-download.
             {" "}·{" "}
             <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
           </p>
