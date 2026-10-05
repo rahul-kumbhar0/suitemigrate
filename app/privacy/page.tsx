@@ -8,7 +8,7 @@ const sections = [
   { title: "4. Chrome Extension Permissions", content: `The SuiteMigrate Chrome extension requires access to NetSuite domains to:\n— Read the current page URL to detect the active account\n— Make SuiteQL API calls using your active browser session\n— Display the extension popup\n\nThe extension does NOT read or transmit your NetSuite password, access data outside NetSuite domains, or store data outside Chrome's local extension storage and our secure backend.` },
   { title: "5. Data Storage & Security", content: `Your data is stored securely using Supabase (PostgreSQL) with encryption at rest and in transit. Payment processing is handled entirely by Razorpay — we never store your payment card details on our servers.\n\nWe implement industry-standard security measures including HTTPS encryption, secure authentication tokens, and regular security reviews.` },
   { title: "6. Third-Party Services", content: `We use the following third-party services:\n— Supabase — authentication and database\n— Third-party AI service — processes submitted script code for conversion (provider name available on request; see legal@suitemigrate.com) \n— Razorpay — payment processing\n— Resend — transactional email delivery` },
-  { title: "7. Data Retention", content: `We retain your account data for as long as your account is active. Conversion history is retained to allow you to re-download converted scripts. You may delete your account at any time from Account Settings, which permanently deletes all your data.` },
+  { title: "7. Data Retention", content: `We retain your account profile and converted-result history while your account remains active. Original script source is not retained in the SuiteMigrate conversion database after processing. You can request account deletion from Account Settings; deleting the account removes the associated SuiteMigrate profile and conversion records.` },
   { title: "8. Your Rights", content: `You have the right to access your personal data, correct inaccurate data, delete your account and all associated data, export your conversion history, and opt out of non-transactional communications.\n\nTo exercise these rights, use account settings or contact privacy@suitemigrate.com.` },
   { title: "9. Cookies", content: `We use essential cookies to maintain your authentication session. We do not use tracking cookies for advertising.` },
   { title: "10. Changes to This Policy", content: `We may update this Privacy Policy from time to time. We will notify you of significant changes by email or through the application.` },
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
               Privacy Policy
             </h1>
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-mute)", letterSpacing: ".08em" }}>
-              Last updated: September 2026
+              Last updated: October 2026
             </p>
           </div>
 
