@@ -19,6 +19,9 @@ export default function ConversionResultView() {
         <div>
           <p style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 6 }}>Conversion Error</p>
           <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>{conversionError}</p>
+          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", lineHeight: 1.55, marginTop: 8 }}>
+            No conversion is charged when the source cannot be read or processing does not start.
+          </p>
         </div>
         <button onClick={() => setView("script_list")} className="btn-outline">← Back to Scripts</button>
       </div>
