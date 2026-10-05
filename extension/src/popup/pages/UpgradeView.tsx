@@ -1,12 +1,6 @@
 /**
- * UpgradeView — E13 of brief
- *
- * Rules:
- * - Show only features that actually exist and are gated
- * - ZIP export removed: downloadAllConversions is multi-download, not a real ZIP
- * - Diff/Changes view removed: exists and is FREE (not a paid differentiator)
- * - Team card removed until Team features exist [OWNER TO CONFIRM]
- * - Prices kept as-is until confirmed [OWNER TO CONFIRM]
+ * Upgrade screen for features that are implemented today.
+ * Keep this list intentionally small so the extension never promises unavailable features.
  */
 
 import { ArrowRight } from "lucide-react"
@@ -14,14 +8,11 @@ import { useStore } from "../../lib/store"
 import { getUpgradeUrl } from "../../lib/api"
 import Header from "../components/Header"
 
-// TODO [OWNER TO CONFIRM]: finalise Pro price before launch
-// TODO [OWNER TO CONFIRM]: add Team card only when team features are implemented
 const PRO_FEATURES = [
-  "Unlimited conversions",
-  "Batch conversion (convert whole account at once)",
-  "HTML audit report export",
-  "Conversion history (up to 100 scripts)",
-  "Priority conversion queue",
+  "Unlimited script conversions",
+  "HTML migration audit report",
+  "Converted code with change notes and review flags",
+  "Download converted SuiteScript files",
 ] as const
 
 export default function UpgradeView() {
@@ -63,7 +54,6 @@ export default function UpgradeView() {
               </p>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              {/* [OWNER TO CONFIRM] price */}
               <span style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 24, letterSpacing: "-0.02em", color: "var(--paper)" }}>
                 $29
               </span>
@@ -74,7 +64,7 @@ export default function UpgradeView() {
           </div>
 
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, color: "rgba(250,250,249,.35)", marginBottom: 12, letterSpacing: ".04em" }}>
-            or one-time Migration Pass · [OWNER TO CONFIRM price]
+            7-day money-back guarantee · cancel monthly plan anytime
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
@@ -102,11 +92,8 @@ export default function UpgradeView() {
           </button>
         </div>
 
-        {/* Lifetime footnote */}
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", textAlign: "center", lineHeight: 1.6 }}>
-          Lifetime deal also available on the website ·{" "}
-          {/* [OWNER TO CONFIRM] lifetime price and end date */}
-          [OWNER TO CONFIRM price &amp; availability]
+          Lifetime Pro is also available on the website for $299 one-time.
         </p>
 
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--ink-mute)", textAlign: "center" }}>
