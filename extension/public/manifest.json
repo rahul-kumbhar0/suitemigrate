@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SuiteMigrate — SuiteScript 2.1 Migrator",
   "short_name": "SuiteMigrate",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Scan active NetSuite scripts, identify legacy SuiteScript, and convert selected 1.0/2.0 scripts to SuiteScript 2.1.",
 
   "icons": {
