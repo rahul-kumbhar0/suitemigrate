@@ -1,8 +1,6 @@
 /* SuiteMigrate Extension — SuiteDiff editorial style
-   Fonts: Plus Jakarta Sans · Inter · DM Mono
+   Uses local/system fonts only. No remote font or stylesheet requests.
    Palette: paper #fafaf9 · ink #0f172a · clay #d94a1f · rule rgba(15,23,42,.10) */
-
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -17,9 +15,9 @@
   --ink-mute:   #94a3b8;
   --clay:       #d94a1f;
   --rule:       rgba(15,23,42,0.10);
-  --f-head:     'Plus Jakarta Sans', system-ui, sans-serif;
-  --f-sans:     'Inter', system-ui, sans-serif;
-  --f-mono:     'DM Mono', ui-monospace, monospace;
+  --f-head:     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-sans:     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-mono:     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 /* ── Reset ── */
