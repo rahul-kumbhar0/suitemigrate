@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { History, Chrome, ArrowRight, Clock, Download } from "lucide-react"
+import { History, Chrome, ArrowRight, Clock } from "lucide-react"
 import ConversionDetailModal from "@/components/dashboard/conversion-detail-modal"
 import { createClient } from "@/lib/supabase/client"
 
@@ -10,7 +10,7 @@ interface Conversion {
   script_name: string
   original_version: string
   script_type: string
-  original_code: string
+  original_code: string | null
   converted_code: string
   confidence_score: number
   changes_log: string[]
