@@ -199,7 +199,46 @@ export async function fetchScriptCode(scriptId: string): Promise<{ code: string;
       }
     }
 
-    // 2) Same-origin fallback for accounts where media.nl works without a hash.
+    // 2) Resolve the authenticated File Cabinet record page. NetSuite often
+    // renders the real media URL here with account/hash parameters.
+    try {
+      const recordPage = await fetch(
+        `${origin}/app/common/media/mediaitem.nl?id=${encodeURIComponent(String(fileId))}`,
+        { credentials: "include" }
+      )
+
+      if (recordPage.ok) {
+        const html = await recordPage.text()
+        const decodedHtml = html.replace(/&amp;/g, "&")
+        const match = decodedHtml.match(/(?:https?:\\/\\/[^"'<>\\s]+)?\\/core\\/media\\/media\\.nl\\?[^"'<>\\s]+/i)
+
+        if (match?.[0]) {
+          const resolvedMedia = new URL(match[0], origin)
+          if (resolvedMedia.hostname === hostname || resolvedMedia.hostname.endsWith(".netsuite.com")) {
+            const resolvedRes = await fetch(resolvedMedia.toString(), {
+              credentials: "include",
+              headers: { Accept: "text/plain, application/javascript, */*" },
+            })
+            const resolvedText = await resolvedRes.text()
+
+            if (resolvedRes.ok && resolvedText.trim() && !looksLikeLoginOrErrorHtml(resolvedText)) {
+              return { code: resolvedText }
+            }
+
+            if (resolvedRes.status === 401 || resolvedRes.status === 403) {
+              return {
+                code: "",
+                error: `NetSuite denied access to source file ${fileId} (HTTP ${resolvedRes.status}). Use a role with access to the script's File Cabinet folder.`,
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Continue to the simple same-origin fallback below.
+    }
+
+    // 3) Same-origin fallback for accounts where media.nl works without a hash.
     const mediaUrl = `${origin}/core/media/media.nl?id=${encodeURIComponent(String(fileId))}`
     const mediaRes = await fetch(mediaUrl, {
       credentials: "include",
