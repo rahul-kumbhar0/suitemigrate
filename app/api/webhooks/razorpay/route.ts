@@ -5,21 +5,28 @@ import type { Plan } from "@/types"
 
 export const dynamic = "force-dynamic"
 
+function signaturesMatch(expected: string, actual: string): boolean {
+  const a = Buffer.from(expected, "utf8")
+  const b = Buffer.from(actual || "", "utf8")
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
+}
+
+function validPaidPlan(value: unknown): value is Plan {
+  return value === "pro" || value === "lifetime"
+}
+
 export async function POST(request: Request) {
   try {
-    const rawBody = await request.text()
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET
     const signature = request.headers.get("x-razorpay-signature")
+    if (!secret || !signature) {
+      return NextResponse.json({ error: "Webhook verification unavailable" }, { status: 503 })
+    }
 
-    // Verify webhook signature
-    if (process.env.RAZORPAY_WEBHOOK_SECRET && signature) {
-      const expectedSig = crypto
-        .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET)
-        .update(rawBody)
-        .digest("hex")
-
-      if (expectedSig !== signature) {
-        return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
-      }
+    const rawBody = await request.text()
+    const expectedSig = crypto.createHmac("sha256", secret).update(rawBody).digest("hex")
+    if (!signaturesMatch(expectedSig, signature)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
     }
 
     const event = JSON.parse(rawBody)
@@ -27,80 +34,80 @@ export async function POST(request: Request) {
 
     switch (event.event) {
       case "payment.captured": {
-        // One-time payment confirmed
-        const payment = event.payload.payment.entity
-        const userId = payment.notes?.user_id
-        const plan = payment.notes?.plan as Plan
+        const payment = event.payload?.payment?.entity
+        const userId = String(payment?.notes?.user_id || "")
+        const plan = payment?.notes?.plan
 
-        if (userId && plan) {
-          await admin
-            .from("users")
-            .update({ plan, conversions_limit: null })
-            .eq("id", userId)
+        if (userId && validPaidPlan(plan)) {
+          await admin.from("users").update({
+            plan,
+            conversions_limit: null,
+            entitlement_expires_at: null,
+          }).eq("id", userId)
 
-          await admin.from("payments").insert({
+          await admin.from("payments").upsert({
             user_id: userId,
             razorpay_payment_id: payment.id,
             plan,
-            amount: payment.amount,
-            currency: payment.currency,
+            amount: Number(payment.amount || 0),
+            currency: String(payment.currency || "USD").toUpperCase(),
             status: "paid",
-          })
+          }, { onConflict: "razorpay_payment_id" })
         }
         break
       }
 
       case "subscription.activated": {
-        // Subscription started
-        const subscription = event.payload.subscription.entity
-        const userId = subscription.notes?.user_id
-        const plan = subscription.notes?.plan as Plan
+        const subscription = event.payload?.subscription?.entity
+        const userId = String(subscription?.notes?.user_id || "")
+        const plan = subscription?.notes?.plan
 
-        if (userId && plan) {
-          await admin
-            .from("users")
-            .update({ plan, conversions_limit: null })
-            .eq("id", userId)
+        if (
+          userId &&
+          plan === "pro" &&
+          String(subscription?.plan_id || "") === String(process.env.RAZORPAY_PLAN_PRO_MONTHLY || "")
+        ) {
+          await admin.from("users").update({
+            plan: "pro",
+            conversions_limit: null,
+            entitlement_expires_at: null,
+          }).eq("id", userId)
         }
         break
       }
 
       case "subscription.cancelled":
       case "subscription.expired": {
-        // Subscription ended — downgrade to free
-        const subscription = event.payload.subscription.entity
-        const userId = subscription.notes?.user_id
-
+        const subscription = event.payload?.subscription?.entity
+        const userId = String(subscription?.notes?.user_id || "")
         if (userId) {
-          await admin
-            .from("users")
-            .update({ plan: "free", conversions_limit: 2 })
-            .eq("id", userId)
+          await admin.from("users").update({
+            plan: "free",
+            conversions_limit: 5,
+            entitlement_expires_at: null,
+          }).eq("id", userId)
         }
         break
       }
 
       case "subscription.charged": {
-        // Recurring payment succeeded — keep plan active
-        const payment = event.payload.payment.entity
-        const userId = payment.notes?.user_id
-        const plan = payment.notes?.plan as Plan
-
-        if (userId) {
-          await admin.from("payments").insert({
+        const payment = event.payload?.payment?.entity
+        const userId = String(payment?.notes?.user_id || "")
+        const plan = payment?.notes?.plan
+        if (userId && plan === "pro") {
+          await admin.from("payments").upsert({
             user_id: userId,
             razorpay_payment_id: payment.id,
-            plan: plan || "pro",
-            amount: payment.amount,
-            currency: payment.currency,
+            plan: "pro",
+            amount: Number(payment.amount || 0),
+            currency: String(payment.currency || "USD").toUpperCase(),
             status: "paid",
-          })
+          }, { onConflict: "razorpay_payment_id" })
         }
         break
       }
 
       default:
-        // Unknown event — ignore
         break
     }
 
