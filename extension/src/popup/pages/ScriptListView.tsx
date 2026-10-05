@@ -18,11 +18,11 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
         </p>
         <p style={{ fontSize: 12.5, color: "var(--ink)", lineHeight: 1.65, marginBottom: 12 }}>
           The script code you choose to convert is sent to{" "}
-          <strong>our server</strong> and then to{" "}
-          <strong>SuiteMigrate AI</strong> for processing.
+          <strong>SuiteMigrate&apos;s server</strong> and then to{" "}
+          <strong>Google Gemini API</strong> to perform the requested conversion.
         </p>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: 14 }}>
-          Your selected source code is transmitted for conversion but is not retained by SuiteMigrate after processing. The converted result is stored in your account for re-download.
+          SuiteMigrate does not retain the original source code in its conversion database after processing. The converted result may be stored in your account for review and re-download.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onAccept} className="btn-primary" style={{ flex: 1, justifyContent: "center", fontSize: 12 }}>
