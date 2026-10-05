@@ -1,10 +1,8 @@
 /**
  * SuiteQL scanner — reads scripts from active NetSuite session
  *
- * Item 3 fix: fetchScriptCode now uses scripting.executeScript pattern
- *   (called from popup/DashboardView via inlined function, not content.js)
- *   and fetches file content via /core/media/media.nl?id=<fileId>
- *   with a REST fallback. [OWNER TO CONFIRM: test against real account — see E-1]
+ * fetchScriptCode runs inside the active NetSuite tab and prefers the
+ * authenticated File Cabinet URL returned by NetSuite itself.
  *
  * Item 4 fix: runSuiteQL now paginates with offset until no more rows.
  *
@@ -96,13 +94,11 @@ async function runSuiteQL(baseQuery: string): Promise<Record<string, string>[]> 
  * Item 3 fix: fetch the source code for a script record.
  *
  * Strategy:
- *   1. SuiteQL: get the file internal ID from script.scriptfile
- *   2. Try /core/media/media.nl?id=<fileId>  (works with browser session)
- *   3. Fallback: /services/rest/platform/v1/record/file/<fileId>
+ *   1. SuiteQL: read scriptfile and the File Cabinet URL returned by NetSuite
+ *   2. Fetch NetSuite's own authenticated file URL in the active NetSuite tab
+ *   3. Fall back to the same-origin media.nl route only when necessary
  *
- * This function runs inside the NetSuite tab via scripting.executeScript,
- * so window.location is the active NetSuite page.
- * [OWNER TO CONFIRM] — see E-1 in CONTENT-TODO.md
+ * This avoids constructing the REST document-service URL on the UI host.
  */
 export async function fetchScriptCode(scriptId: string): Promise<{ code: string; error?: string }> {
   // IMPORTANT: this function is passed to chrome.scripting.executeScript.
@@ -110,60 +106,127 @@ export async function fetchScriptCode(scriptId: string): Promise<{ code: string;
   try {
     const numericId = Number(scriptId)
     if (!Number.isFinite(numericId)) {
-      return { code: "", error: "Invalid script id" }
+      return { code: "", error: "Invalid script id." }
     }
 
-    const { protocol, hostname } = window.location
+    const { protocol, hostname, origin } = window.location
     const restBase = `${protocol}//${hostname}/services/rest`
+
+    // Prefer the File Cabinet URL NetSuite returns for the attached script file.
+    // This avoids guessing a REST document-service URL on the UI host.
+    const metadataQuery = `
+      SELECT
+        s.scriptfile AS fileid,
+        f.name AS filename,
+        f.url AS fileurl
+      FROM script s
+      LEFT JOIN File f ON f.id = s.scriptfile
+      WHERE s.id = ${numericId}
+    `
+
+    let fileId: string | number | null = null
+    let fileUrl = ""
+    let metadataStatus = 0
 
     const queryRes = await fetch(`${restBase}/query/v1/suiteql?limit=1&offset=0`, {
       method: "POST",
       headers: { "Content-Type": "application/json", prefer: "transient" },
       credentials: "include",
-      body: JSON.stringify({
-        q: `SELECT scriptfile FROM script WHERE id = ${numericId}`,
-      }),
+      body: JSON.stringify({ q: metadataQuery }),
     })
 
-    if (!queryRes.ok) {
-      return { code: "", error: `Could not read script metadata (HTTP ${queryRes.status})` }
+    metadataStatus = queryRes.status
+
+    if (queryRes.ok) {
+      const queryData = await queryRes.json()
+      const row = queryData?.items?.[0]
+      fileId = row?.fileid ?? row?.scriptfile ?? null
+      fileUrl = typeof row?.fileurl === "string" ? row.fileurl.trim() : ""
+    } else {
+      // Some roles may not expose the File join. Fall back to scriptfile only.
+      const fallbackQuery = await fetch(`${restBase}/query/v1/suiteql?limit=1&offset=0`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", prefer: "transient" },
+        credentials: "include",
+        body: JSON.stringify({
+          q: `SELECT scriptfile FROM script WHERE id = ${numericId}`,
+        }),
+      })
+
+      metadataStatus = fallbackQuery.status
+      if (!fallbackQuery.ok) {
+        return {
+          code: "",
+          error: `NetSuite could not read script metadata (HTTP ${fallbackQuery.status}). Check SuiteAnalytics/SuiteQL access for the current role.`,
+        }
+      }
+
+      const data = await fallbackQuery.json()
+      fileId = data?.items?.[0]?.scriptfile ?? null
     }
 
-    const queryData = await queryRes.json()
-    const fileId = queryData?.items?.[0]?.scriptfile
     if (!fileId) {
       return { code: "", error: "This script has no attached source file." }
     }
 
-    // First try the authenticated File Cabinet media route used by the NetSuite UI.
-    try {
-      const mediaRes = await fetch(
-        `${protocol}//${hostname}/core/media/media.nl?id=${encodeURIComponent(String(fileId))}`,
-        { credentials: "include" }
-      )
-      if (mediaRes.ok) {
-        const text = await mediaRes.text()
-        const looksLikeHtml = /^\s*<!doctype html|^\s*<html/i.test(text)
-        if (text.trim() && !looksLikeHtml) return { code: text }
+    const looksLikeLoginOrErrorHtml = (text: string) =>
+      /^\s*<!doctype html|^\s*<html/i.test(text) ||
+      /page not found|login|session timed out/i.test(text.slice(0, 1200))
+
+    // 1) Best path: use the URL NetSuite itself provides for the File Cabinet item.
+    if (fileUrl) {
+      try {
+        const resolved = new URL(fileUrl, origin)
+        if (resolved.hostname === hostname || resolved.hostname.endsWith(".netsuite.com")) {
+          const fileRes = await fetch(resolved.toString(), {
+            credentials: "include",
+            headers: { Accept: "text/plain, application/javascript, */*" },
+          })
+          const text = await fileRes.text()
+          if (fileRes.ok && text.trim() && !looksLikeLoginOrErrorHtml(text)) {
+            return { code: text }
+          }
+
+          if (fileRes.status === 401 || fileRes.status === 403) {
+            return {
+              code: "",
+              error: `NetSuite denied access to source file ${fileId} (HTTP ${fileRes.status}). Use a role with access to the script\'s File Cabinet folder.`,
+            }
+          }
+        }
+      } catch {
+        // Continue to the same-origin media fallback below.
       }
-    } catch {
-      // Continue to the documented File Cabinet REST fallback.
     }
 
-    // Oracle File Cabinet REST Web Services content endpoint.
-    const fileRes = await fetch(
-      `${restBase}/document/v1/file/${encodeURIComponent(String(fileId))}/content`,
-      { credentials: "include", headers: { Accept: "text/plain, application/javascript, */*" } }
-    )
+    // 2) Same-origin fallback for accounts where media.nl works without a hash.
+    const mediaUrl = `${origin}/core/media/media.nl?id=${encodeURIComponent(String(fileId))}`
+    const mediaRes = await fetch(mediaUrl, {
+      credentials: "include",
+      headers: { Accept: "text/plain, application/javascript, */*" },
+    })
+    const mediaText = await mediaRes.text()
 
-    if (fileRes.ok) {
-      const text = await fileRes.text()
-      if (text.trim()) return { code: text }
+    if (mediaRes.ok && mediaText.trim() && !looksLikeLoginOrErrorHtml(mediaText)) {
+      return { code: mediaText }
+    }
+
+    if (mediaRes.status === 404) {
+      return {
+        code: "",
+        error:
+          `NetSuite returned HTTP 404 for source file ${fileId}. ` +
+          "The script record points to a file, but the current role/account did not provide a usable authenticated File Cabinet URL. " +
+          "Open the script file in NetSuite with the same role to confirm access, then try again.",
+      }
     }
 
     return {
       code: "",
-      error: `Could not retrieve source file ${fileId}. Check the current NetSuite role's File Cabinet permissions and try again.`,
+      error:
+        `Could not retrieve NetSuite source file ${fileId} ` +
+        `(metadata HTTP ${metadataStatus}, file HTTP ${mediaRes.status}). ` +
+        "Check the current role\'s File Cabinet access and try again.",
     }
   } catch (err) {
     return {
