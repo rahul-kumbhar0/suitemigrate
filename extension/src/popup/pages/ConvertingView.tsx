@@ -46,7 +46,7 @@ export default function ConvertingView() {
       </div>
 
       <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--ink-mute)" }}>
-        Usually 5–15 seconds
+        Keep this popup open while conversion finishes
       </p>
 
       <style>{`
