@@ -122,10 +122,13 @@ export default function ScriptListView() {
         fetchError = err instanceof Error ? err.message : String(err)
       }
 
-      // Fallback: if we couldn't get the code, send a placeholder so the
-      // conversion still runs and the user sees what happens.
+      // Never send placeholder text to the conversion service.
+      // A source-fetch failure must not consume one of the user's conversions.
       if (!code) {
-        code = `// Script: ${script.name}\n// SuiteMigrate could not automatically fetch the source code.\n// Paste your script here and click Convert again.\n// Fetch error: ${fetchError || "unknown"}`
+        throw new Error(
+          fetchError ||
+          "Could not retrieve this script's source file. Check your NetSuite role permissions and try again."
+        )
       }
 
       // ── Convert ──────────────────────────────────────────────────────────
@@ -227,7 +230,7 @@ export default function ScriptListView() {
             onClick={() => setView("upgrade")}
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11, opacity: 0.6, cursor: "pointer" }}
-            title="HTML audit report is available on Pro and Team plans"
+            title="HTML audit report is available on paid plans"
           >
             <Download size={11} /> HTML Audit Report (Pro)
           </button>
@@ -266,10 +269,12 @@ export default function ScriptListView() {
               {script.needsMigration ? (
                 <button
                   onClick={() => handleConvert(script)}
+                  disabled={script.hasFile === false}
                   className="btn-primary"
+                  title={script.hasFile === false ? "No source file is attached to this script" : "Convert this script"}
                   style={{ fontSize: 10, padding: "4px 10px" }}
                 >
-                  Convert
+                  {script.hasFile === false ? "No file" : "Convert"}
                 </button>
               ) : (
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "#15803d" }}>✓ 2.1</span>
