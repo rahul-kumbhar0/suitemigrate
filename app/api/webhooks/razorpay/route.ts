@@ -38,7 +38,13 @@ export async function POST(request: Request) {
         const userId = String(payment?.notes?.user_id || "")
         const plan = payment?.notes?.plan
 
-        if (userId && validPaidPlan(plan)) {
+        const amount = Number(payment?.amount || 0)
+        const currency = String(payment?.currency || "").toUpperCase()
+        const matchesPrice =
+          (plan === "lifetime" && amount === 29900 && currency === "USD") ||
+          (plan === "pro" && amount === 2900 && currency === "USD")
+
+        if (userId && validPaidPlan(plan) && matchesPrice) {
           await admin.from("users").update({
             plan,
             conversions_limit: null,
@@ -94,7 +100,9 @@ export async function POST(request: Request) {
         const payment = event.payload?.payment?.entity
         const userId = String(payment?.notes?.user_id || "")
         const plan = payment?.notes?.plan
-        if (userId && plan === "pro") {
+        const amount = Number(payment?.amount || 0)
+        const currency = String(payment?.currency || "").toUpperCase()
+        if (userId && plan === "pro" && amount === 2900 && currency === "USD") {
           await admin.from("payments").upsert({
             user_id: userId,
             razorpay_payment_id: payment.id,
