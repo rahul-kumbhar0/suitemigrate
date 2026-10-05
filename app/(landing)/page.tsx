@@ -832,8 +832,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          {/* §9.3 BYOK / redaction TODO placeholder — visible only in code */}
-          }
         </div>
       </section>
 
