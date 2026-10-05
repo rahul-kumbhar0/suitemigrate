@@ -1,4 +1,4 @@
-# SuiteMigrate Chrome Web Store Submission — v1.1.1
+# SuiteMigrate Chrome Web Store Submission — v1.1.2
 
 ## Do not submit an older ZIP
 
@@ -88,7 +88,7 @@ Provide Google reviewers with test credentials and exact steps in the Web Store 
 
 ## 8. Submit only when
 
-- v1.1.1 version is consistent
+- v1.1.2 version is consistent
 - release guard passes
 - production CORS knows the store extension ID
 - privacy page matches backend behavior
