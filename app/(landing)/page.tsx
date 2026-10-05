@@ -19,11 +19,11 @@ const faqs = [
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
-    a: "Yes. SuiteScript 2.0 and 2.x scripts are in scope for the 2028.2 deadline. From 2028.1, NetSuite will run them under the 2.1 engine by default. Oracle documents engine differences (ES2023 vs ES5.1) that can silently change results — decimal handling, date operations, RESTlet responses.",
+    a: "Yes. Oracle's transition guidance says SuiteScript 2.0 and 2.x scripts are in scope for the 2028.2 transition. From 2028.1, 2.0/2.x server scripts run under the 2.1 runtime by default, so they should be tested for compatibility before the annotation is updated.",
   },
   {
     q: "Can I use NetSuite's own preference to run 2.0 scripts as 2.1?",
-    a: "Yes, that setting exists. But it doesn't tell you which of your scripts will behave differently once the engine changes — it just flips the switch. SuiteMigrate's scan and behaviour-difference checks show you exactly which scripts are at risk before anything breaks.",
+    a: "Yes. NetSuite provides account-level preferences that let you test 2.0/2.x server scripts in the 2.1 runtime. SuiteMigrate complements that testing by giving you an active-script inventory, version-based migration priority, and a reviewable conversion workflow.",
   },
   {
     q: "Is my code safe?",
@@ -348,12 +348,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          01 — FEATURES  (§6 of brief)
-          — Row 1: scan, risk score, 2.1 behaviour checks, batch conversion
-          — Row 2: diff, MIGRATED comments, PDF report, ZIP export
-          — Known limits note added
-          — "Everything free. Really." removed
-          — "Local-first / never leave" feature removed (§2.5)
+          01 — FEATURES
+          Current release capabilities only
       ═══════════════════════════════════════════ */}
       <section id="features" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -610,14 +606,14 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {[
-                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  team: "Unlimited" },
-                  { f: "Active-script scan",       free: "✓",          pro: "✓",          team: "✓" },
-                  { f: "Change review + JS download", free: "✓",       pro: "✓",          team: "✓" },
-                  { f: "HTML migration audit report", free: "—",       pro: "✓",          team: "✓" },
+                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  lifetime: "Unlimited" },
+                  { f: "Active-script scan",       free: "✓",          pro: "✓",          lifetime: "✓" },
+                  { f: "Change review + JS download", free: "✓",       pro: "✓",          lifetime: "✓" },
+                  { f: "HTML migration audit report", free: "—",       pro: "✓",          lifetime: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
-                    {[row.free, row.pro, row.team].map((v, j) => (
+                    {[row.free, row.pro, row.lifetime].map((v, j) => (
                       <td key={j} style={{
                         padding: "11px 16px", textAlign: "center", fontSize: 13,
                         color: v === "✓" ? "var(--clay)" : v === "—" ? "var(--ink-mute)" : "var(--ink)",
@@ -636,9 +632,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          04 — PRICING  (§7 of brief)
-          Three full cards: Free / Pro (highlighted) / Team
-          Lifetime repositioned as early-adopter footnote
+          04 — PRICING
+          Free / Pro / Lifetime
       ═══════════════════════════════════════════ */}
       <section id="pricing" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -778,7 +773,7 @@ export default function LandingPage() {
                    "Script records via SuiteQL (/services/rest/query/v1/suiteql)",
                    "Script file content via your active NetSuite session",
                    "Current page URL to detect the active account and environment",
-                   "Your active NetSuite browser session cookie (your credentials are never read)",
+                   "Requests run inside the active NetSuite session; the extension does not read the session token value",
                  ],
                  footer: null,
               },
