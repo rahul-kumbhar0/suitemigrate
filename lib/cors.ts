@@ -23,7 +23,7 @@ function isAllowed(origin: string | null): boolean {
   // Chrome extension — only allow if EXTENSION_ID is configured; otherwise reject
   if (origin.startsWith("chrome-extension://")) {
     if (!EXTENSION_ID) {
-      // TODO: Set EXTENSION_ID env var on Vercel once extension is published
+      // Set EXTENSION_ID from the Chrome Web Store draft before reviewer testing
       // In dev, allow any chrome-extension origin so testing works
       return !IS_PROD
     }
