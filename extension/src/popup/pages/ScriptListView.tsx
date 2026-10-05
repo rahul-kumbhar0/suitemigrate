@@ -22,8 +22,7 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
           <strong>SuiteMigrate AI</strong> for processing.
         </p>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: 14 }}>
-          Converted scripts are stored in your account for re-download.
-          {/* TODO (E-3): Add "Not used for AI training" only after confirming paid API tier — see CONTENT-TODO.md */}
+          Your selected source code is transmitted for conversion but is not retained by SuiteMigrate after processing. The converted result is stored in your account for re-download.
         </p>
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onAccept} className="btn-primary" style={{ flex: 1, justifyContent: "center", fontSize: 12 }}>
