@@ -1,21 +1,7 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import { resolve } from "path"
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, statSync } from "fs"
-
-// ── Copy public/ files into dist/ after build ─────────────────────────────
-function copyPublicFiles() {
-  return {
-    name: "copy-public-files",
-    closeBundle() {
-      copyFileSync("public/manifest.json", "dist/manifest.json")
-      mkdirSync("dist/icons", { recursive: true })
-      readdirSync("public/icons").forEach((f) => {
-        copyFileSync(`public/icons/${f}`, `dist/icons/${f}`)
-      })
-    },
-  }
-}
+import { readdirSync, readFileSync, statSync } from "fs"
 
 // ── Chrome Web Store release guard ─────────────────────────────────────────
 function storeReleaseGuard() {
@@ -58,7 +44,7 @@ function storeReleaseGuard() {
 }
 
 export default defineConfig({
-  plugins: [react(), copyPublicFiles(), storeReleaseGuard()],
+  plugins: [react(), storeReleaseGuard()],
   define: {
     // Expose the build-time APP_URL so background.ts / auth.ts can import.meta.env.VITE_APP_URL
     // Falls back to production URL — never localhost in production builds
