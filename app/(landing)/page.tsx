@@ -798,8 +798,8 @@ export default function LandingPage() {
                 items: [
                   "The script code you explicitly choose to convert",
                   "Sent to a third-party AI service for that conversion only",
-                  "Converted scripts are stored on our servers for re-download",
-                  "Not used by our AI provider to train its models",
+                  "Original source is not retained by SuiteMigrate after processing",
+                  "Converted results may be stored in your account for re-download",
                 ],
                 footer: null,
               },
