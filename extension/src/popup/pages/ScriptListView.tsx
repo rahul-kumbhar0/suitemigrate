@@ -221,9 +221,8 @@ export default function ScriptListView() {
           ))}
         </div>
 
-        {/* E14: Audit report — HTML download, gated to paid plans
-            Server-side gate is in /api/export/pdf. This client gate is a UI hint only;
-            the server enforces the restriction independently. */}
+        {/* HTML audit report is generated locally from scanned account metadata.
+            Paid-plan status is checked from the signed-in SuiteMigrate account. */}
         {user && !user.unlimited ? (
           <button
             onClick={() => setView("upgrade")}
