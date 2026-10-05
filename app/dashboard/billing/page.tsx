@@ -4,7 +4,6 @@ import Link from "next/link"
 
 // Confirmed prices — Pro $29/mo, Lifetime $299
 // Team = waitlist only (no price)
-// Migration Pass = removed
 const plans = [
   {
     id: "pro",
