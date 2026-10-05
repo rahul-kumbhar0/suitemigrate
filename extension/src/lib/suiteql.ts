@@ -209,11 +209,13 @@ export async function fetchScriptCode(scriptId: string): Promise<{ code: string;
 
       if (recordPage.ok) {
         const html = await recordPage.text()
-        const decodedHtml = html.replace(/&amp;/g, "&")
-        const match = decodedHtml.match(/(?:https?:\\/\\/[^"'<>\\s]+)?\\/core\\/media\\/media\\.nl\\?[^"'<>\\s]+/i)
+        const doc = new DOMParser().parseFromString(html, "text/html")
+        const mediaLink = Array.from(doc.querySelectorAll<HTMLElement>("[href], [src]"))
+          .map((el) => el.getAttribute("href") || el.getAttribute("src") || "")
+          .find((value) => value.includes("/core/media/media.nl?"))
 
-        if (match?.[0]) {
-          const resolvedMedia = new URL(match[0], origin)
+        if (mediaLink) {
+          const resolvedMedia = new URL(mediaLink, origin)
           if (resolvedMedia.hostname === hostname || resolvedMedia.hostname.endsWith(".netsuite.com")) {
             const resolvedRes = await fetch(resolvedMedia.toString(), {
               credentials: "include",
