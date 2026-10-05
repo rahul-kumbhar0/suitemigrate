@@ -105,47 +105,71 @@ async function runSuiteQL(baseQuery: string): Promise<Record<string, string>[]> 
  * [OWNER TO CONFIRM] — see E-1 in CONTENT-TODO.md
  */
 export async function fetchScriptCode(scriptId: string): Promise<{ code: string; error?: string }> {
+  // IMPORTANT: this function is passed to chrome.scripting.executeScript.
+  // It must remain completely self-contained: no imports or outer-scope helpers.
   try {
-    // Step 1: get file ID
-    const rows = await runSuiteQL(
-      `SELECT scriptfile FROM script WHERE id = ${Number(scriptId)}`
-    )
-    if (!rows.length || !rows[0].scriptfile) {
-      return { code: "", error: "Script has no file attached (scriptfile is null)" }
+    const numericId = Number(scriptId)
+    if (!Number.isFinite(numericId)) {
+      return { code: "", error: "Invalid script id" }
     }
 
-    const fileId = rows[0].scriptfile
     const { protocol, hostname } = window.location
+    const restBase = `${protocol}//${hostname}/services/rest`
 
-    // Step 2: try media.nl (standard file cabinet download — works with cookie session)
+    const queryRes = await fetch(`${restBase}/query/v1/suiteql?limit=1&offset=0`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", prefer: "transient" },
+      credentials: "include",
+      body: JSON.stringify({
+        q: `SELECT scriptfile FROM script WHERE id = ${numericId}`,
+      }),
+    })
+
+    if (!queryRes.ok) {
+      return { code: "", error: `Could not read script metadata (HTTP ${queryRes.status})` }
+    }
+
+    const queryData = await queryRes.json()
+    const fileId = queryData?.items?.[0]?.scriptfile
+    if (!fileId) {
+      return { code: "", error: "This script has no attached source file." }
+    }
+
+    // First try the authenticated File Cabinet media route used by the NetSuite UI.
     try {
-      const mediaUrl = `${protocol}//${hostname}/core/media/media.nl?id=${fileId}&c=${detectAccountId()}&h=`
-      const mediaRes = await fetch(mediaUrl, { credentials: "include" })
+      const mediaRes = await fetch(
+        `${protocol}//${hostname}/core/media/media.nl?id=${encodeURIComponent(String(fileId))}`,
+        { credentials: "include" }
+      )
       if (mediaRes.ok) {
         const text = await mediaRes.text()
-        if (text && !text.includes("<html")) {
-          return { code: text }
-        }
+        const looksLikeHtml = /^\s*<!doctype html|^\s*<html/i.test(text)
+        if (text.trim() && !looksLikeHtml) return { code: text }
       }
     } catch {
-      // Fall through to REST endpoint
+      // Continue to the documented File Cabinet REST fallback.
     }
 
-    // Step 3: REST record API fallback
-    // [OWNER TO CONFIRM] this endpoint requires SuiteScript 2.1 record access
-    const restUrl = `${getRestBase()}/platform/v1/record/file/${fileId}/content`
-    const restRes = await fetch(restUrl, {
-      credentials: "include",
-      headers: { Accept: "text/plain, application/json" },
-    })
-    if (restRes.ok) {
-      const text = await restRes.text()
-      return { code: text }
+    // Oracle File Cabinet REST Web Services content endpoint.
+    const fileRes = await fetch(
+      `${restBase}/document/v1/file/${encodeURIComponent(String(fileId))}/content`,
+      { credentials: "include", headers: { Accept: "text/plain, application/javascript, */*" } }
+    )
+
+    if (fileRes.ok) {
+      const text = await fileRes.text()
+      if (text.trim()) return { code: text }
     }
 
-    return { code: "", error: `Could not fetch file ${fileId}: HTTP ${restRes.status}` }
+    return {
+      code: "",
+      error: `Could not retrieve source file ${fileId}. Check the current NetSuite role's File Cabinet permissions and try again.`,
+    }
   } catch (err) {
-    return { code: "", error: String(err) }
+    return {
+      code: "",
+      error: err instanceof Error ? err.message : "Could not retrieve script source.",
+    }
   }
 }
 
@@ -163,7 +187,7 @@ export async function scanScripts(): Promise<NSScript[]> {
       s.scriptfile
     FROM script s
     WHERE s.isinactive = 'F'
-    ORDER BY s.name
+    ORDER BY s.name, s.id
   `
 
   const rows = await runSuiteQL(query)
