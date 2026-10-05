@@ -10,6 +10,7 @@ export default function SettingsPage() {
   const [promoCode, setPromoCode]   = useState("")
   const [promoLoading, setPromoLoading] = useState(false)
   const [promoMessage, setPromoMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -49,6 +50,37 @@ export default function SettingsPage() {
       setPromoMessage({ type: "error", text: "Failed to redeem promo code" })
     } finally {
       setPromoLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleting) return
+    const confirmed = window.confirm(
+      "Delete your SuiteMigrate account and conversion history? This cannot be undone."
+    )
+    if (!confirmed) return
+
+    setDeleting(true)
+    try {
+      const res = await fetch("/api/account/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "DELETE" }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        window.alert(data.error || "Could not delete account.")
+        return
+      }
+
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      window.location.href = "/"
+    } catch {
+      window.alert("Could not delete account.")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -222,16 +254,19 @@ export default function SettingsPage() {
               <p style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 3 }}>Delete account</p>
               <p style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>Permanently deletes your account and all data. Cannot be undone.</p>
             </div>
-            <button style={{
-              padding: "9px 18px", borderRadius: 4, background: "transparent",
-              border: "1px solid rgba(220,38,38,.3)", color: "#dc2626",
-              fontSize: 13, fontFamily: "var(--f-sans)", cursor: "pointer",
-              transition: "background .15s",
-            }}
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              style={{
+                padding: "9px 18px", borderRadius: 4, background: "transparent",
+                border: "1px solid rgba(220,38,38,.3)", color: "#dc2626",
+                fontSize: 13, fontFamily: "var(--f-sans)", cursor: deleting ? "not-allowed" : "pointer",
+                transition: "background .15s", opacity: deleting ? .6 : 1,
+              }}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(220,38,38,.07)")}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "transparent")}
             >
-              Delete Account
+              {deleting ? "Deleting…" : "Delete Account"}
             </button>
           </div>
         </div>
