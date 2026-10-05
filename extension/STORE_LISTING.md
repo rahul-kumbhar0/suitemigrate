@@ -3,7 +3,7 @@
 ## Product
 
 **Name:** SuiteMigrate — SuiteScript 2.1 Migrator  
-**Version:** 1.1.1  
+**Version:** 1.1.2  
 **Category:** Developer Tools  
 **Website:** https://suitemigrate.vercel.app  
 **Privacy policy:** https://suitemigrate.vercel.app/privacy
@@ -106,5 +106,5 @@ Provide working reviewer credentials in the Chrome Web Store test-instructions f
 - Set that ID as `EXTENSION_ID` in the production backend environment.
 - Verify authentication/conversion using the exact store package.
 - Confirm the production Privacy Policy matches actual backend retention behavior.
-- Capture screenshots from the real v1.1.1 build.
+- Capture screenshots from the real v1.1.2 build.
 - Run `npm run build:store` from `extension/`; the release guard must pass.
