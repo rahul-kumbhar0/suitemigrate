@@ -11,7 +11,7 @@ const sections = [
   { title: "7. Intellectual Property", content: `SuiteMigrate and its original content are owned by the service provider and protected by applicable intellectual property laws.\n\nThe converted script output you generate is yours. You retain all rights to your original script code and the converted output. We claim no ownership over your NetSuite scripts or converted code.` },
   { title: "8. Disclaimer of Warranties", content: `The service is provided "as is" without warranties of any kind. AI-generated code conversions are provided as a starting point and may require manual review. We do not guarantee that converted scripts will be error-free or production-ready without testing. You are responsible for validating converted code before deploying to any NetSuite environment.` },
   { title: "9. Limitation of Liability", content: `To the maximum extent permitted by law, SuiteMigrate shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the service.\n\nOur total liability shall not exceed the amount you paid for the service in the 12 months preceding the claim.` },
-  { title: "10. Termination", content: `We may suspend or terminate your account for violations of these Terms. You may terminate your account at any time from Account Settings. Upon termination, your data will be deleted within 30 days.` },
+  { title: "10. Termination", content: `We may suspend or terminate your account for violations of these Terms. You may terminate your account at any time from Account Settings. When you delete your account through the supported account-deletion flow, associated SuiteMigrate profile and conversion records are scheduled for deletion as part of that action.` },
   { title: "11. Changes to Terms", content: `We may update these Terms from time to time. We will notify you of material changes via email or in-app notification at least 14 days before they take effect.` },
   { title: "12. Governing Law", content: `These Terms are governed by the laws of India. Any disputes shall be resolved in the courts of the applicable jurisdiction in India.` },
   { title: "13. Contact", content: `For questions about these Terms, contact support@suitemigrate.com.` },
@@ -28,7 +28,7 @@ export default function TermsPage() {
             <h1 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,5vw,52px)", letterSpacing: "-0.025em", color: "var(--ink)", marginBottom: 10, lineHeight: 1.08 }}>
               Terms of Service
             </h1>
-            <p style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-mute)", letterSpacing: ".08em" }}>Last updated: September 2026</p>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 11, color: "var(--ink-mute)", letterSpacing: ".08em" }}>Last updated: October 2026</p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)" }}>
             {sections.map(s => (
