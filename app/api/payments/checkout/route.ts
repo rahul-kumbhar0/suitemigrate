@@ -6,25 +6,18 @@ export const dynamic = "force-dynamic"
 
 const PLAN_CONFIG = {
   pro: {
-    amount: 400,       // $4.00 in cents
+    amount: 2900,
     currency: "USD",
     description: "SuiteMigrate Pro — Monthly",
     planId: process.env.RAZORPAY_PLAN_PRO_MONTHLY,
-    type: "subscription",
+    type: "subscription" as const,
   },
   lifetime: {
-    amount: 1000,      // $10.00 in cents
+    amount: 29900,
     currency: "USD",
     description: "SuiteMigrate Lifetime Pro",
     planId: null,
-    type: "one_time",
-  },
-  team: {
-    amount: 1500,      // $15.00 in cents
-    currency: "USD",
-    description: "SuiteMigrate Team — Monthly",
-    planId: process.env.RAZORPAY_PLAN_TEAM_MONTHLY,
-    type: "subscription",
+    type: "one_time" as const,
   },
 }
 
@@ -44,23 +37,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
-    const config = PLAN_CONFIG[plan]
-
-    // Check Razorpay keys are configured
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      // During dev without Razorpay, redirect to billing page with message
       return NextResponse.redirect(
         new URL("/dashboard/billing?error=payment_not_configured", request.url)
       )
     }
 
+    const config = PLAN_CONFIG[plan]
     const razorpay = new Razorpay({
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     })
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://suitemigrate.vercel.app"
+
     if (config.type === "one_time") {
-      // Create a Razorpay order for one-time payment
       const order = await razorpay.orders.create({
         amount: config.amount,
         currency: config.currency,
@@ -71,9 +62,7 @@ export async function GET(request: Request) {
         },
       })
 
-      // Return HTML page with Razorpay checkout
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      const html = buildCheckoutHtml({
+      return new Response(buildCheckoutHtml({
         orderId: order.id,
         amount: config.amount,
         currency: config.currency,
@@ -81,48 +70,41 @@ export async function GET(request: Request) {
         keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         userName: user.user_metadata?.name || user.email || "User",
         userEmail: user.email || "",
-        plan,
         callbackUrl: `${appUrl}/api/payments/verify`,
-      })
-
-      return new Response(html, { headers: { "Content-Type": "text/html" } })
-    } else {
-      // Subscription — create via Razorpay subscriptions API
-      if (!config.planId || config.planId === "plan_placeholder") {
-        return NextResponse.redirect(
-          new URL("/dashboard/billing?error=subscription_not_configured", request.url)
-        )
-      }
-
-      const subscription = await razorpay.subscriptions.create({
-        plan_id: config.planId,
-        total_count: 12,
-        notes: {
-          user_id: user.id,
-          plan,
-          email: user.email || "",
-        },
-      })
-
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-      const html = buildCheckoutHtml({
-        subscriptionId: (subscription as { id: string }).id,
-        amount: config.amount,
-        currency: config.currency,
-        description: config.description,
-        keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        userName: user.user_metadata?.name || user.email || "User",
-        userEmail: user.email || "",
-        plan,
-        callbackUrl: `${appUrl}/api/payments/verify`,
-      })
-
-      return new Response(html, { headers: { "Content-Type": "text/html" } })
+      }), { headers: { "Content-Type": "text/html; charset=utf-8" } })
     }
+
+    if (!config.planId || config.planId === "plan_placeholder") {
+      return NextResponse.redirect(
+        new URL("/dashboard/billing?error=subscription_not_configured", request.url)
+      )
+    }
+
+    const subscription = await razorpay.subscriptions.create({
+      plan_id: config.planId,
+      total_count: 12,
+      notes: {
+        user_id: user.id,
+        plan,
+        email: user.email || "",
+      },
+    })
+
+    return new Response(buildCheckoutHtml({
+      subscriptionId: (subscription as { id: string }).id,
+      amount: config.amount,
+      currency: config.currency,
+      description: config.description,
+      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      userName: user.user_metadata?.name || user.email || "User",
+      userEmail: user.email || "",
+      callbackUrl: `${appUrl}/api/payments/verify`,
+    }), { headers: { "Content-Type": "text/html; charset=utf-8" } })
+
   } catch (err: unknown) {
     console.error("[/api/payments/checkout]", err)
     return NextResponse.redirect(
-      new URL("/dashboard/billing?error=checkout_failed", new URL(request.url))
+      new URL("/dashboard/billing?error=checkout_failed", request.url)
     )
   }
 }
@@ -136,12 +118,11 @@ function buildCheckoutHtml(params: {
   keyId: string
   userName: string
   userEmail: string
-  plan: string
   callbackUrl: string
 }): string {
-  const rzpOptions = params.orderId
-    ? `order_id: "${params.orderId}"`
-    : `subscription_id: "${params.subscriptionId}"`
+  const idOption = params.orderId
+    ? `order_id: ${JSON.stringify(params.orderId)},`
+    : `subscription_id: ${JSON.stringify(params.subscriptionId)},`
 
   return `<!DOCTYPE html>
 <html>
@@ -152,60 +133,52 @@ function buildCheckoutHtml(params: {
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #050d1a; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; }
-    .loader { text-align: center; color: #94a3b8; }
-    .loader h2 { color: #fff; font-size: 1.25rem; margin-bottom: 8px; }
-    .spinner { width: 40px; height: 40px; border: 3px solid #1e3a5f; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 24px auto; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    body { background: #fafaf9; color: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, sans-serif; }
+    .loader { text-align: center; }
+    .loader h2 { font-size: 1.25rem; margin-bottom: 8px; }
+    .loader p { color: #64748b; }
   </style>
 </head>
 <body>
   <div class="loader">
-    <h2>Opening secure checkout...</h2>
-    <div class="spinner"></div>
-    <p>You will be redirected to your dashboard after payment</p>
+    <h2>Opening secure checkout…</h2>
+    <p>You will return to billing after payment verification.</p>
   </div>
   <script>
-    window.onload = function() {
+    window.onload = function () {
       const options = {
-        key: "${params.keyId}",
+        key: ${JSON.stringify(params.keyId)},
         amount: ${params.amount},
-        currency: "${params.currency}",
+        currency: ${JSON.stringify(params.currency)},
         name: "SuiteMigrate",
-        description: "${params.description}",
-        ${rzpOptions},
+        description: ${JSON.stringify(params.description)},
+        ${idOption}
         prefill: {
-          name: "${params.userName}",
-          email: "${params.userEmail}",
+          name: ${JSON.stringify(params.userName)},
+          email: ${JSON.stringify(params.userEmail)}
         },
-        theme: { color: "#10b981" },
-        handler: function(response) {
-          fetch("${params.callbackUrl}", {
+        handler: async function (response) {
+          const res = await fetch(${JSON.stringify(params.callbackUrl)}, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...response,
-              plan: "${params.plan}",
-            }),
-          }).then(function(res) {
-            return res.json();
-          }).then(function(data) {
-            if (data.success) {
-              window.location.href = "/dashboard/billing?success=true&plan=${params.plan}";
-            } else {
-              window.location.href = "/dashboard/billing?error=verification_failed";
-            }
-          });
+            body: JSON.stringify(response)
+          })
+          const data = await res.json()
+          if (data.success) {
+            window.location.href = "/dashboard/billing?success=true"
+          } else {
+            window.location.href = "/dashboard/billing?error=verification_failed"
+          }
         },
         modal: {
-          ondismiss: function() {
-            window.location.href = "/dashboard/billing?cancelled=true";
+          ondismiss: function () {
+            window.location.href = "/dashboard/billing?cancelled=true"
           }
         }
-      };
-      const rzp = new Razorpay(options);
-      rzp.open();
-    };
+      }
+      const rzp = new Razorpay(options)
+      rzp.open()
+    }
   </script>
 </body>
 </html>`
