@@ -6,7 +6,8 @@ export interface User {
   name: string | null
   plan: Plan
   conversions_used: number
-  conversions_limit: number
+  conversions_limit: number | null
+  entitlement_expires_at?: string | null
   team_id: string | null
   created_at: string
 }
@@ -27,9 +28,9 @@ export interface Conversion {
   ns_account_id: string
   script_id: string
   script_name: string
-  original_version: "1.0" | "2.0"
+  original_version: "1.0" | "2.0" | "2.x" | "unknown"
   script_type: string
-  original_code: string
+  original_code: string | null
   converted_code: string
   confidence_score: number
   changes_log: string[]
