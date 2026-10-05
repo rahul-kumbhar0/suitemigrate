@@ -172,6 +172,8 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
       ? fallbackModel
       : requestedModel
   const MAX_TOKENS = 900_000
+  // Conservative character-based estimate used only as an early size guard.
+  const estimatedTokens = Math.ceil(input.code.length / 4)
 
   if (estimatedTokens > MAX_TOKENS) {
     throw new Error(
