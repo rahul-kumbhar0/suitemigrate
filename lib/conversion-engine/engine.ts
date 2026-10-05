@@ -6,7 +6,7 @@
  * No provider name is returned to clients in any response field.
  */
 
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 import { preprocess, type PreprocessResult } from "./preprocessor"
 import { postprocess } from "./postprocessor"
 import { SS1_TO_21_MAPPINGS } from "./api-mappings"
@@ -185,31 +185,33 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
   // Provider/model details stay server-side; never returned to clients.
-  const ai = new GoogleGenAI({ apiKey })
+  // Keep the legacy SDK for this release; migrate SDK + lockfile together later.
+  const genAI = new GoogleGenerativeAI(apiKey)
 
-  const generate = (model: string) =>
-    ai.models.generateContent({
-      model,
-      contents: userPrompt,
-      config: {
-        systemInstruction: systemPrompt,
+  const generate = async (modelName: string) => {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: systemPrompt,
+      generationConfig: {
         temperature: 0.2,
         topP: 0.8,
         topK: 40,
         maxOutputTokens: 64000,
       },
     })
+    return model.generateContent(userPrompt)
+  }
 
   let result
   try {
     result = await retryWithBackoff(() => generate(useModel), 3, 2000)
   } catch (primaryError) {
     if (fallbackModel === useModel) throw primaryError
-    console.error(`[engine] Primary model unavailable; trying configured fallback.`)
+    console.error("[engine] Primary model unavailable; trying configured fallback.")
     result = await retryWithBackoff(() => generate(fallbackModel), 2, 2000)
   }
 
-  const rawOutput = result.text || ""
+  const rawOutput = result.response.text()
 
   const postResult = postprocess(
     rawOutput,
