@@ -7,7 +7,7 @@ import { readdirSync, readFileSync, statSync } from "fs"
 function storeReleaseGuard() {
   return {
     name: "store-release-guard",
-    closeBundle() {
+    writeBundle() {
       const mode = process.env.NODE_ENV || "production"
       if (mode !== "production") return
 
