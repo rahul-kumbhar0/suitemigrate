@@ -28,7 +28,7 @@ function inlineScanner() {
       headers: { "Content-Type": "application/json", prefer: "transient" },
       credentials: "include",
       body: JSON.stringify({
-        q: `SELECT s.id, s.name, s.scripttype, s.apiversion, s.description, s.scriptfile FROM script s WHERE s.isinactive = 'F' ORDER BY s.name`,
+        q: `SELECT s.id, s.name, s.scripttype, s.apiversion, s.description, s.scriptfile FROM script s WHERE s.isinactive = 'F' ORDER BY s.name, s.id`,
       }),
     })
     if (!r.ok) throw new Error(`SuiteQL failed: ${r.status} ${r.statusText}`)
@@ -40,7 +40,8 @@ function inlineScanner() {
     const typeMap: Record<string, string> = {
       USEREVENT: "UserEvent", SUITELET: "Suitelet", SCHEDULED: "ScheduledScript",
       MAPREDUCE: "MapReduce", CLIENT: "ClientScript", RESTLET: "RESTlet",
-      PORTLET: "Portlet", MASSUPDATE: "MassUpdate",
+      PORTLET: "Portlet", MASSUPDATE: "MassUpdate", CUSTOMGLLINES: "GL Lines",
+      WORKFLOW: "Workflow Action", BUNDLEINSTALLATION: "Bundle Install",
     }
 
     const all: Record<string, string>[] = []
@@ -234,7 +235,7 @@ export default function DashboardView() {
             <FileSearch size={24} style={{ color: "var(--ink-mute)", margin: "0 auto 10px" }} />
             <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 4 }}>No scripts scanned yet</p>
             <p style={{ fontSize: 11, color: "var(--ink-mute)", lineHeight: 1.55 }}>
-              {isNS ? "Click Scan to discover all scripts in this account" : "Open NetSuite, then click Scan"}
+              {isNS ? "Click Scan to discover active scripts in this account" : "Open NetSuite, then click Scan"}
             </p>
           </div>
         )}

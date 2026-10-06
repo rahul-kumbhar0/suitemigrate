@@ -59,6 +59,15 @@ export async function GET(request: Request) {
       profile = newProfile
     }
 
+    if (profile?.entitlement_expires_at && new Date(profile.entitlement_expires_at).getTime() <= Date.now()) {
+      await admin.from("users").update({
+        plan: "free",
+        conversions_limit: 5,
+        entitlement_expires_at: null,
+      }).eq("id", user.id)
+      profile = { ...profile, plan: "free", conversions_limit: 5, entitlement_expires_at: null }
+    }
+
     const plan = (profile?.plan as Plan) || "free"
     const used = profile?.conversions_used || 0
     const remaining = getRemainingConversions(plan, used)

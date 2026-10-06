@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - "fix/**"
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_APP_URL: https://suitemigrate.vercel.app
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+      SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
+      GEMINI_API_KEY: test-gemini-key
+      GEMINI_MODEL: gemini-3.8-flash
+      GEMINI_FALLBACK_MODEL: gemini-3.5-flash
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: rzp_test_placeholder
+      RAZORPAY_KEY_SECRET: test-secret
+      RAZORPAY_WEBHOOK_SECRET: test-webhook-secret
+      RAZORPAY_PLAN_PRO_MONTHLY: plan_placeholder
+      EXTENSION_ID: abcdefghijklmnopqrstuvwxyzabcdef
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  extension:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - run: npm ci
+      - run: npm run build:store
+      - name: Upload Chrome test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: SuiteMigrate-v1.1.2-extension
+          path: extension/dist/
+          if-no-files-found: error

@@ -8,7 +8,7 @@ interface Conversion {
   script_name: string
   original_version: string
   script_type: string
-  original_code: string
+  original_code: string | null
   converted_code: string
   confidence_score: number
   changes_log: string[]

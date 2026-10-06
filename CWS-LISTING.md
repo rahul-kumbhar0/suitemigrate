@@ -1,87 +1,110 @@
 # Chrome Web Store Listing — SuiteMigrate
 
-## (a) Single-Purpose Description
+## Product
 
-SuiteMigrate has a single purpose: helping NetSuite developers migrate SuiteScript
-1.0 / 2.0 / 2.x scripts to SuiteScript 2.1 before Oracle's 2028.2 deadline.
+**Name:** SuiteMigrate — SuiteScript 2.1 Migrator  
+**Version:** 1.1.2  
+**Category:** Developer Tools  
+**Website:** https://suitemigrate.vercel.app  
+**Privacy policy:** https://suitemigrate.vercel.app/privacy
 
-The extension does this by:
-1. Reading the user's NetSuite script records via the SuiteQL REST API using
-   their existing browser session.
-2. Displaying a risk-scored inventory of scripts that need migration.
-3. Sending a script the user explicitly selects to the SuiteMigrate backend for
-   conversion by an AI service.
-4. Displaying the converted code with inline change comments and a confidence score.
+## Single purpose
 
-No other functionality is present. The extension does not read, modify or transmit
-any other data from the user's browser or NetSuite account.
+SuiteMigrate helps NetSuite developers identify active legacy SuiteScript and migrate selected SuiteScript 1.0 / 2.0 scripts to SuiteScript 2.1.
 
----
+The extension:
+1. Scans active script records in the NetSuite tab the user explicitly opens.
+2. Shows which scripts are already on 2.1 and which need migration.
+3. Retrieves the source file only after the user chooses a script to convert.
+4. Sends that selected source to SuiteMigrate for conversion.
+5. Shows converted code, change notes, manual-review flags and download actions.
 
-## (b) Permission Justifications
+It does not write to NetSuite or automatically deploy converted code.
 
-### Manifest Permissions
+## Store summary
 
-| Permission | Why it is needed |
-|------------|-----------------|
-| `storage`  | Stores the user's authentication state (session cache) and local conversion history in `chrome.storage.local`. This is required so the popup shows the user's status without a round-trip on every open. |
-| `scripting` | Used to inject the SuiteQL scan function directly into the active NetSuite tab. This is the only way to make SuiteQL REST API calls authenticated with the user's existing NetSuite session cookie. The injected function is defined inline in the extension source and does not load remote code. |
-| `activeTab` | Required to get the tab ID of the currently open NetSuite page so the `scripting` injection targets the correct tab. No other tabs are accessed. |
+Scan active NetSuite scripts, identify legacy SuiteScript, and convert selected 1.0/2.0 scripts to SuiteScript 2.1.
 
-### Host Permissions
+## Current features
 
-| Host | Why it is needed |
-|------|-----------------|
-| `https://*.app.netsuite.com/*` | SuiteQL API calls and script file fetches against the user's NetSuite account. |
-| `https://*.netsuite.com/*` | Same — covers both the legacy and current NetSuite URL patterns. |
-| `https://*.suitetapp.com/*` | NetSuite sandbox environments use this domain. |
-| `https://suitemigrate.vercel.app/*` | The SuiteMigrate backend API (authentication, conversion endpoint). |
+- Read-only active-script inventory
+- SuiteScript version detection
+- Version-based migration risk indicator
+- Search and filters
+- Five free script conversions
+- Converted SuiteScript 2.1 output
+- Change log and manual-review markers
+- Download converted JavaScript
+- HTML migration audit report for paid plans
+- Local scan/history cache with clear-cache action
 
----
+Do not advertise batch conversion, ZIP export, PDF export, priority queue, Team collaboration or automatic deployment until those features are implemented end-to-end.
 
-## (c) Data-Use Disclosure
+## Permissions
 
-### Data the extension handles
+### storage
 
-| Data type | How it is used | Stored? | Shared? |
-|-----------|---------------|---------|---------|
-| **Account email address** | Identifies the signed-in user. Read from the SuiteMigrate session API. | Yes — in SuiteMigrate database (Supabase). | No. |
-| **Authentication / session info** | The user's SuiteMigrate session cookie is sent with API calls to authenticate. The user's NetSuite session cookie is used locally within the browser tab to make SuiteQL calls; it is never transmitted to SuiteMigrate servers. | Session cookie: browser-managed. SuiteMigrate session: server-managed (Supabase). | No. |
-| **Website content (script code)** | When the user clicks Convert on a specific script, that script's source code is sent to SuiteMigrate's servers and processed by a third-party AI service for conversion. The converted result is stored in the user's SuiteMigrate account for re-download. | Yes — converted scripts stored in SuiteMigrate database per user account. Original code: TODO (confirm). | Sent to third-party AI service for the conversion only. |
-| **Script metadata** | Script name, type, and API version from the SuiteQL scan. Used to display the inventory and risk score. | Stored locally in `chrome.storage.local` (cleared by "Clear history" button). Not sent to SuiteMigrate servers unless a conversion is requested. | No. |
+Stores local extension state such as the signed-in user cache, scanned account metadata, local conversion history and privacy-consent state.
 
-### What is NOT collected
+### scripting
 
-- No browsing history outside NetSuite domains.
-- No NetSuite passwords or credential tokens.
-- No NetSuite business data (records, transactions, contacts).
-- No keyboard input, mouse events or screen captures.
+Runs the packaged SuiteMigrate scan/source-read functions in the active NetSuite tab after explicit user interaction. No remote executable code is loaded.
 
----
+### activeTab
 
-## (d) "Does not collect user data" selection
+Grants temporary access to the NetSuite tab the user is actively using. SuiteMigrate does not request persistent access to all NetSuite pages.
 
-**Do NOT select "Does not collect user data".**
+### Host permission: https://suitemigrate.vercel.app/*
 
-The extension handles:
-- User email (account identification)
-- Authentication / session information (sign-in)
-- Website content: the script code the user explicitly chooses to convert
+Required for SuiteMigrate authentication, account status and conversion API calls.
 
-All three categories must be disclosed in the CWS data-use declaration.
+## Data-use disclosure
 
----
+| Data | Use | Storage |
+|---|---|---|
+| Account email | Identify signed-in SuiteMigrate account | SuiteMigrate account database |
+| Authentication/session | Authenticate SuiteMigrate API calls | Browser/server session mechanisms |
+| NetSuite script metadata | Build the migration inventory | Local Chrome storage |
+| Selected script source | Perform the user-requested conversion | Transmitted for processing; not retained by SuiteMigrate after processing |
+| Converted result | Review and re-download converted code | User's SuiteMigrate account |
 
-## TODO — before submission
+The NetSuite session cookie remains in the user's browser and is not sent to SuiteMigrate servers.
 
-- [ ] Replace `EXTENSION_ID` placeholder in `EXTENSION_ID` env var on Vercel once
-      the extension is published and a stable ID is assigned.
-- [ ] Confirm original script code retention policy (stored or discarded after conversion).
-- [ ] Confirm whether the AI provider's paid-tier terms allow "not used for training"
-      claim; only add that to the store listing if confirmed.
-- [ ] Add the Privacy Policy URL to the store listing:
-      `https://suitemigrate.vercel.app/privacy`
-- [ ] Ensure Privacy Policy covers the data types above and names the AI subprocessor
-      (or states it is available on request).
-- [ ] Review manifest `host_permissions` before submission — remove any permission
-      that is no longer needed after testing.
+## Chrome privacy selections
+
+Do **not** select “Does not collect user data.”
+
+Disclose:
+- Personally identifiable information / account email where required by the form
+- Authentication information
+- Website content (the selected SuiteScript source code)
+
+Purpose:
+- App functionality only
+
+No advertising, selling of user data, browsing-history collection, keystroke capture or screen capture.
+
+## Reviewer test instructions
+
+1. Sign in to the supplied SuiteMigrate reviewer account.
+2. Open the supplied NetSuite sandbox/test account.
+3. Navigate to a normal NetSuite application tab.
+4. Open SuiteMigrate.
+5. Click **Scan**.
+6. Open the list of active scripts.
+7. Choose a legacy script with an attached file and click **Convert**.
+8. Accept the first-conversion privacy notice.
+9. Review the converted result and download the JavaScript file.
+10. Confirm that SuiteMigrate never modifies or deploys anything in NetSuite.
+
+Provide working reviewer credentials in the Chrome Web Store test-instructions field. Never place credentials in this repository.
+
+## Before submission
+
+- Build only from the final reviewed branch.
+- Upload a draft item first and obtain the stable Chrome extension ID.
+- Set that ID as `EXTENSION_ID` in the production backend environment.
+- Verify authentication/conversion using the exact store package.
+- Confirm the production Privacy Policy matches actual backend retention behavior.
+- Capture screenshots from the real v1.1.2 build.
+- Run `npm run build:store` from `extension/`; the release guard must pass.

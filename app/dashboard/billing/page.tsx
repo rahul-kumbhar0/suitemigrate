@@ -4,7 +4,6 @@ import Link from "next/link"
 
 // Confirmed prices — Pro $29/mo, Lifetime $299
 // Team = waitlist only (no price)
-// Migration Pass = removed
 const plans = [
   {
     id: "pro",
@@ -16,10 +15,10 @@ const plans = [
     desc: "One developer, one migration. Unlimited conversions.",
     features: [
       "Unlimited script conversions",
-      "Batch conversion (whole account at once)",
-      "HTML audit report export",
-      "Conversion history",
-      "Priority conversion queue",
+      "HTML migration audit report",
+      "Code, Changes & Inline review views",
+      "Manual-review flags",
+      "Converted JavaScript downloads",
     ],
     cta: "Get Pro",
     dark: false,
@@ -31,12 +30,12 @@ const plans = [
     period: "one time",
     alt: "Pro access for the life of the product",
     altClay: false,
-    desc: "Every Pro feature, no renewals, no subscription.",
+    desc: "The current Pro feature set with no monthly renewal.",
     features: [
-      "Everything in Pro",
+      "Everything currently included in Pro",
       "Lifetime access — no renewals",
-      "All future features included",
-      "Priority conversion queue",
+      "HTML migration audit report",
+      "Converted JavaScript downloads",
     ],
     cta: "Get Lifetime",
     dark: true,

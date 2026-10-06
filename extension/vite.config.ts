@@ -1,43 +1,42 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import { resolve } from "path"
-import { copyFileSync, mkdirSync, readdirSync, readFileSync } from "fs"
+import { readdirSync, readFileSync, statSync } from "fs"
 
-// ── Copy public/ files into dist/ after build ─────────────────────────────
-function copyPublicFiles() {
+// ── Chrome Web Store release guard ─────────────────────────────────────────
+function storeReleaseGuard() {
   return {
-    name: "copy-public-files",
-    closeBundle() {
-      copyFileSync("public/manifest.json", "dist/manifest.json")
-      mkdirSync("dist/icons", { recursive: true })
-      readdirSync("public/icons").forEach((f) => {
-        copyFileSync(`public/icons/${f}`, `dist/icons/${f}`)
-      })
-    },
-  }
-}
-
-// ── Item 1: Fail the production build if localhost appears in the bundle ──
-function failOnLocalhost() {
-  return {
-    name: "fail-on-localhost",
-    closeBundle() {
+    name: "store-release-guard",
+    writeBundle() {
       const mode = process.env.NODE_ENV || "production"
       if (mode !== "production") return
 
-      const bundleFiles = ["dist/popup.js", "dist/background.js"]
-      for (const file of bundleFiles) {
-        try {
-          const content = readFileSync(file, "utf-8")
-          if (content.includes("localhost")) {
-            throw new Error(
-              `[fail-on-localhost] Production bundle "${file}" contains "localhost". ` +
-              `Remove all hardcoded localhost references before building for production.`
-            )
+      const banned = [
+        "localhost",
+        "[OWNER TO CONFIRM]",
+        "Migration Pass",
+        "TESTPRO",
+        "gemini-1.5-flash",
+        "Priority conversion queue",
+        "convert whole account at once",
+      ]
+
+      const files: string[] = []
+      const walk = (dir: string) => {
+        for (const name of readdirSync(dir)) {
+          const path = `${dir}/${name}`
+          if (statSync(path).isDirectory()) walk(path)
+          else if (/\.(js|css|html|json)$/i.test(path)) files.push(path)
+        }
+      }
+      walk("dist")
+
+      for (const file of files) {
+        const content = readFileSync(file, "utf-8")
+        for (const token of banned) {
+          if (content.includes(token)) {
+            throw new Error(`[store-release-guard] "${file}" contains banned release text: ${token}`)
           }
-        } catch (e: unknown) {
-          if (e instanceof Error && e.message.includes("fail-on-localhost")) throw e
-          // File doesn't exist yet — skip
         }
       }
     },
@@ -45,7 +44,7 @@ function failOnLocalhost() {
 }
 
 export default defineConfig({
-  plugins: [react(), copyPublicFiles(), failOnLocalhost()],
+  plugins: [react(), storeReleaseGuard()],
   define: {
     // Expose the build-time APP_URL so background.ts / auth.ts can import.meta.env.VITE_APP_URL
     // Falls back to production URL — never localhost in production builds

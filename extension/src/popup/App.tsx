@@ -49,10 +49,10 @@ export default function App() {
     // Initial auth check
     tryAuth()
 
-    // Poll /api/auth/session every 2 seconds
+    // Light fallback polling; focus/visibility changes trigger immediate refresh.
     pollIntervalRef.current = setInterval(() => {
       tryAuth()
-    }, 2000)
+    }, 30000)
 
     // Re-check when popup regains focus (user comes back from website)
     const handleVisibility = () => {

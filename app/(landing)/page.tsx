@@ -15,15 +15,15 @@ const faqs = [
   // ── Core product ──────────────────────────────────────────────
   {
     q: "Why not just paste my script into ChatGPT?",
-    a: "Pasting one script is straightforward. SuiteMigrate does the parts that don't scale: it scans your whole account, risk-scores every script, checks for known SuiteScript 2.1 behaviour differences, and produces a report you can hand to a client or manager. One-off pastes don't give you the inventory, the risk prioritisation, or the audit trail.",
+    a: "Pasting one script is straightforward. SuiteMigrate adds the migration workflow around it: scan active script records visible to your current NetSuite role, identify legacy API versions, convert a selected script, review the changes, and export an HTML migration inventory on a paid plan.",
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
-    a: "Yes. SuiteScript 2.0 and 2.x scripts are in scope for the 2028.2 deadline. From 2028.1, NetSuite will run them under the 2.1 engine by default. Oracle documents engine differences (ES2023 vs ES5.1) that can silently change results — decimal handling, date operations, RESTlet responses.",
+    a: "Yes. Oracle's transition guidance says SuiteScript 2.0 and 2.x scripts are in scope for the 2028.2 transition. From 2028.1, 2.0/2.x server scripts run under the 2.1 runtime by default, so they should be tested for compatibility before the annotation is updated.",
   },
   {
     q: "Can I use NetSuite's own preference to run 2.0 scripts as 2.1?",
-    a: "Yes, that setting exists. But it doesn't tell you which of your scripts will behave differently once the engine changes — it just flips the switch. SuiteMigrate's scan and behaviour-difference checks show you exactly which scripts are at risk before anything breaks.",
+    a: "Yes. NetSuite provides account-level preferences that let you test 2.0/2.x server scripts in the 2.1 runtime. SuiteMigrate complements that testing by giving you an active-script inventory, version-based migration priority, and a reviewable conversion workflow.",
   },
   {
     q: "Is my code safe?",
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     q: "What happens to my scripts if I cancel?",
-    a: "Any scripts you have already downloaded are yours — they are standard JavaScript files on your machine. Conversion history stored in your account is accessible until your subscription ends. We do not delete your data immediately on cancellation; see the Terms of Service for the retention period.",
+    a: "Any scripts you download are standard JavaScript files on your machine. Converted-result history stored in your SuiteMigrate account remains available while the account remains active, subject to the Terms and Privacy Policy.",
   },
   {
     q: "Do you offer refunds?",
@@ -58,7 +58,7 @@ const faqs = [
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited account scanning and risk scoring, plus 5 complete AI conversions with confidence scoring, inline comments, and diff view. PDF audit report, batch conversion, and ZIP export are included on Pro and Team plans.",
+    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro and Lifetime add unlimited conversions and the HTML migration audit report.",
   },
 ]
 
@@ -105,7 +105,7 @@ export default function LandingPage() {
           maxWidth: 560, lineHeight: 1.65, marginBottom: 36,
         }}>
           Scan your NetSuite account, see which scripts will break, and convert
-          SuiteScript 1.0 / 2.0 / 2.x to 2.1 with a risk score on every script.
+          SuiteScript 1.0 / 2.0 / 2.x to 2.1 with version-based migration priority and review flags.
         </p>
 
         {/* §2.3 CTAs + §2.4 trust line */}
@@ -152,7 +152,7 @@ export default function LandingPage() {
         }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
             <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
-            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that script&apos;s code is sent to our servers and processed by a third-party AI service. Converted scripts are stored on our servers for re-download.
+            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that selected source code is sent to the SuiteMigrate backend and Google Gemini API for the requested conversion. SuiteMigrate does not retain the original source in its conversion database; converted results may be stored in your account for re-download.
             {" "}·{" "}
             <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
           </p>
@@ -295,18 +295,18 @@ export default function LandingPage() {
             {[
               {
                 title: "NetSuite Consultants &amp; Partners",
-                desc: "Managing migrations across multiple client accounts on a hard deadline. Get a complete inventory, risk-scored output, and professionally documented conversion reports you can deliver to clients.",
-                tags: ["Multi-account scan","Client-ready PDF report","Batch conversion"],
+                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and an HTML audit report for project handoff.",
+                tags: ["Account inventory","Migration priority","HTML audit report"],
               },
               {
                 title: "NetSuite Admins",
-                desc: "Responsible for your organisation's scripts but not sure where to start. Scan your entire account  — every script is risk-scored and prioritised so you know exactly what to fix first.",
-                tags: ["Full account inventory","Risk prioritisation","Audit report"],
+                desc: "Responsible for your organisation's scripts but not sure where to start. Scan active scripts and see which API versions still need migration before converting anything.",
+                tags: ["Active-script inventory","Version risk","Audit report"],
               },
               {
                 title: "NetSuite Developers",
-                desc: "Need to convert scripts quickly without losing the ability to review and understand every change. Get an accurate structural conversion with inline comments on every modified line.",
-                tags: ["Structural conversion","Inline diff","Deploy-ready export"],
+                desc: "Need to convert scripts without losing the ability to review what changed. Get SuiteScript 2.1 output with change notes, manual-review flags, and downloadable JavaScript.",
+                tags: ["2.1 conversion","Change review","JS download"],
               },
             ].map(p => (
               <div key={p.title} className="hover-warm" style={{ background: "var(--paper)", padding: "32px 26px", transition: "background .14s" }}>
@@ -348,12 +348,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          01 — FEATURES  (§6 of brief)
-          — Row 1: scan, risk score, 2.1 behaviour checks, batch conversion
-          — Row 2: diff, MIGRATED comments, PDF report, ZIP export
-          — Known limits note added
-          — "Everything free. Really." removed
-          — "Local-first / never leave" feature removed (§2.5)
+          01 — FEATURES
+          Current release capabilities only
       ═══════════════════════════════════════════ */}
       <section id="features" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -370,27 +366,27 @@ export default function LandingPage() {
             {[
               {
                 icon: Search,
-                title: "Account-wide script scan & inventory",
-                desc: "Scans every script in your NetSuite account . See the full inventory — name, type, API version, deployment status — across all script types. No API keys required; reads your existing session.",
-                admin: "Gives admins and consultants a complete picture before any migration work starts.",
+                title: "Active-script scan & inventory",
+                desc: "Scans active script records visible to your current NetSuite role. See script name, type, API version and whether a source file is attached. No NetSuite API key is required.",
+                admin: "Gives admins and consultants a practical starting inventory before conversion work begins.",
               },
               {
                 icon: BarChart3,
-                title: "Risk score and review flags per script",
-                desc: "Every script gets a HIGH / MED / LOW risk score based on API version, script type, and detected complexity. High-risk scripts are surfaced first so migration effort is prioritised correctly.",
-                admin: "Consultants can use the risk report to scope migration projects and set client expectations.",
+                title: "Version-based migration priority",
+                desc: "Legacy scripts are labelled HIGH or MEDIUM priority primarily from their SuiteScript API version, while 2.1 scripts are marked current. Conversion results separately show confidence and manual-review flags.",
+                admin: "Use the version-risk inventory to identify the oldest scripts first without presenting it as a full code-risk assessment.",
               },
               {
                 icon: AlertTriangle,
-                title: "SuiteScript 2.1 behaviour-difference checks",
-                desc: "Flags patterns known to behave differently under the 2.1 engine — decimal handling, date operations, RESTlet response formats, and other ES2023 vs ES5.1 differences documented by Oracle.",
-                admin: "Admins running 2.0 scripts need to know about silent behaviour changes, not just syntax issues.",
+                title: "Search and filter the migration inventory",
+                desc: "Search scripts by name or type and filter between scripts that need an update, all active scripts, and scripts already on SuiteScript 2.1.",
+                admin: "Keeps large inventories manageable without claiming unverified behaviour analysis.",
               },
               {
                 icon: Zap,
-                title: "Batch conversion",
-                desc: "Convert multiple scripts in sequence from the script list. Each conversion runs independently so you can review, approve, and download at your own pace without losing previous results.",
-                admin: "Partners migrating a full client account can work through a prioritised list without context switching.",
+                title: "Read-only NetSuite workflow",
+                desc: "SuiteMigrate reads script metadata and selected source files but does not create, modify, deploy, or delete anything inside NetSuite.",
+                admin: "Converted code stays under the user's control and should be tested in NetSuite Sandbox before production deployment.",
               },
             ].map(f => (
               <div key={f.title} className="hover-warm" style={{ background: "var(--paper)", padding: "34px 26px", transition: "background .14s" }}>
@@ -407,9 +403,9 @@ export default function LandingPage() {
             {[
               {
                 icon: GitCompare,
-                title: "Side-by-side diff view",
-                desc: "Every conversion shows original and converted code side by side. Three review tabs: Code (clean output), Changes (what was modified and why), Inline (every changed line annotated in place).",
-                admin: "Makes code review tractable for admins and QA teams who need to sign off on changes before deployment.",
+                title: "Three review views",
+                desc: "Review the converted code, a structured change list, and highlighted inline migration comments from the same conversion result.",
+                admin: "Makes generated changes easier to inspect before sandbox testing.",
               },
               {
                 icon: Sparkles,
@@ -419,15 +415,15 @@ export default function LandingPage() {
               },
               {
                 icon: FileText,
-                title: "PDF audit report",
-                desc: "Export a complete migration audit report: full script inventory, risk scores, conversion status, manual review flags, and confidence scores. Formatted for stakeholder review and project documentation.",
-                admin: "Consultants can deliver a professional audit report to clients as part of the migration engagement.",
+                title: "HTML migration audit report",
+                desc: "Paid plans can export a portable HTML report of the scanned active-script inventory, API versions, migration status, and version-risk labels.",
+                admin: "Useful for migration scoping and stakeholder handoff without requiring a proprietary report viewer.",
               },
               {
                 icon: Download,
-                title: "ZIP export of converted scripts",
-                desc: "Download all converted scripts as a ZIP archive, each file including a conversion header: date, confidence score, change summary, and pre-flight deployment checklist.",
-                admin: "Saves time when handing off multiple converted scripts to a NetSuite admin for sandbox testing.",
+                title: "Download converted JavaScript",
+                desc: "Download each converted script as a standard JavaScript file with a conversion header, change summary, and reminders to review and test in Sandbox.",
+                admin: "Keeps output portable and easy to review in an editor or source-control workflow.",
               },
             ].map(f => (
               <div key={f.title} className="hover-warm" style={{ background: "var(--paper)", padding: "34px 26px", transition: "background .14s" }}>
@@ -589,7 +585,7 @@ export default function LandingPage() {
               What changes between plans.
             </h2>
             <p style={{ fontSize: 14, color: "var(--ink-soft)", marginTop: 10, maxWidth: 480, marginLeft: "auto", marginRight: "auto", lineHeight: 1.65 }}>
-              Account scan, risk scoring, AI conversion, confidence score, inline comments, and diff view are included on all plans.
+              Active-script scanning, version-risk inventory, AI conversion, change review, confidence score, and JavaScript downloads are included on all plans.
             </p>
           </div>
 
@@ -601,7 +597,7 @@ export default function LandingPage() {
                   <th style={{ textAlign: "left", padding: "12px 20px", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", fontWeight: 500, width: "44%" }}>
                     Feature
                   </th>
-                  {["Free", "Pro", "Team"].map(h => (
+                  {["Free", "Pro", "Lifetime"].map(h => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink)", fontWeight: 600 }}>
                       {h}
                     </th>
@@ -610,18 +606,14 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {[
-                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  team: "Unlimited" },
-                  { f: "Batch conversion",         free: "—",          pro: "✓",          team: "✓" },
-                  { f: "ZIP export",               free: "—",          pro: "✓",          team: "✓" },
-                  { f: "PDF audit report",         free: "—",          pro: "✓",          team: "✓" },
-                  { f: "Conversion history",       free: "—",          pro: "✓",          team: "Shared" },
-                  { f: "Multiple accounts",        free: "—",          pro: "—",          team: "✓" },
-                  { f: "Client-branded reports",   free: "—",          pro: "—",          team: "✓" },
-                  { f: "Seats",                    free: "1",          pro: "1",          team: "Multiple" },
+                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  lifetime: "Unlimited" },
+                  { f: "Active-script scan",       free: "✓",          pro: "✓",          lifetime: "✓" },
+                  { f: "Change review + JS download", free: "✓",       pro: "✓",          lifetime: "✓" },
+                  { f: "HTML migration audit report", free: "—",       pro: "✓",          lifetime: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
-                    {[row.free, row.pro, row.team].map((v, j) => (
+                    {[row.free, row.pro, row.lifetime].map((v, j) => (
                       <td key={j} style={{
                         padding: "11px 16px", textAlign: "center", fontSize: 13,
                         color: v === "✓" ? "var(--clay)" : v === "—" ? "var(--ink-mute)" : "var(--ink)",
@@ -640,9 +632,8 @@ export default function LandingPage() {
       </section>
 
       {/* ═══════════════════════════════════════════
-          04 — PRICING  (§7 of brief)
-          Three full cards: Free / Pro (highlighted) / Team
-          Lifetime repositioned as early-adopter footnote
+          04 — PRICING
+          Free / Pro / Lifetime
       ═══════════════════════════════════════════ */}
       <section id="pricing" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -667,10 +658,10 @@ export default function LandingPage() {
               <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>No credit card required</div>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
-                  "Account scan — full inventory",
-                  "Risk score per script",
+                  "Active-script scan & inventory",
+                  "Version-risk label per script",
                   "5 AI conversions",
-                  "Side-by-side diff view",
+                  "Code, Changes & Inline review tabs",
                   "Inline // MIGRATED: comments",
                   "Confidence score",
                 ].map(f => (
@@ -678,12 +669,9 @@ export default function LandingPage() {
                     <span style={{ color: "var(--ink-mute)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>{f}
                   </li>
                 ))}
-                {/* §7.3 NOT included */}
-                {["PDF audit report","Batch conversion","ZIP export"].map(f => (
-                  <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)", textDecoration: "line-through", opacity: .7 }}>
-                    <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>{f}
-                  </li>
-                ))}
+                <li style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)", opacity: .8 }}>
+                  <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>HTML audit report requires a paid plan
+                </li>
               </ul>
               <Link href="/signup" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
                 Start free
@@ -711,12 +699,11 @@ export default function LandingPage() {
               {/* §7.4 feature order */}
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
-                  "Unlimited conversions",
-                  "Batch conversion (whole account)",
-                  "ZIP export of all scripts",
-                  "PDF audit report",
-                  "Conversion history",
-                  "Priority queue",
+                  "Unlimited script conversions",
+                  "HTML migration audit report",
+                  "Code, Changes & Inline review tabs",
+                  "Manual-review flags",
+                  "Converted JavaScript downloads",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "rgba(250,250,249,.75)" }}>
                     <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>{f}
@@ -728,53 +715,29 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* §7.6 TEAM — full card, not a footnote */}
+            {/* LIFETIME */}
             <div style={{ padding: "32px 28px", border: "1px solid var(--rule)", borderRadius: 5, background: "var(--paper)", display: "flex", flexDirection: "column" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Team</div>
-              {/* §7.2 audience line */}
-              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>Consultants managing multiple clients</div>
-              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$99</div>
-              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>per month</div>
-              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Multiple seats included</div>
-              {/* §7.6 features */}
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Lifetime</div>
+              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>One payment, same Pro access</div>
+              <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$299</div>
+              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>one time</div>
+              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Pro access for the life of the product</div>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
-                  "Everything in Pro",
-                  "Multiple NetSuite accounts",
-                  "Shared conversion history",
-                  "Client-branded PDF reports",
-                  "Multiple seats",
+                  "Unlimited script conversions",
+                  "HTML migration audit report",
+                  "Code review and JavaScript downloads",
+                  "No monthly renewal",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
                     <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=team" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginBottom: 10 }}>
-                Get Team
+              <Link href="/signup?plan=lifetime" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
+                Get Lifetime
               </Link>
-              {/* §7.6 invoice / custom quote link */}
-              <a href="mailto:support@suitemigrate.com" style={{ display: "block", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", textDecoration: "none", letterSpacing: ".04em" }}
-                className="team-contact-link">
-                Need an invoice or custom quote? Contact us →
-              </a>
             </div>
-          </div>
-
-          {/* §7.7 Early-adopter lifetime deal — footnote, not main card */}
-          <div style={{ maxWidth: 560, margin: "0 auto 28px", padding: "14px 20px", border: "1px solid var(--rule)", borderRadius: 4, background: "rgba(217,74,31,.03)", textAlign: "center" }}>
-            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--clay)", marginBottom: 6 }}>
-              Early-adopter lifetime deal
-            </p>
-            <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.65 }}>
-              
-              One-time payment — Pro access forever, all future features included.
-              Limited availability or end date: . Price: .
-            </p>
-            <Link href="/signup?plan=lifetime" style={{ display: "inline-block", marginTop: 10, fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--clay)", textDecoration: "none", letterSpacing: ".04em" }}
-              className="lifetime-link">
-              Get the lifetime deal →
-            </Link>
           </div>
 
           {/* §7.9 small print */}
@@ -810,7 +773,7 @@ export default function LandingPage() {
                    "Script records via SuiteQL (/services/rest/query/v1/suiteql)",
                    "Script file content via your active NetSuite session",
                    "Current page URL to detect the active account and environment",
-                   "Your active NetSuite browser session cookie (your credentials are never read)",
+                   "Requests run inside the active NetSuite session; the extension does not read the session token value",
                  ],
                  footer: null,
               },
@@ -830,8 +793,8 @@ export default function LandingPage() {
                 items: [
                   "The script code you explicitly choose to convert",
                   "Sent to a third-party AI service for that conversion only",
-                  "Converted scripts are stored on our servers for re-download",
-                  "Not used by our AI provider to train its models",
+                  "Original source is not retained by SuiteMigrate after processing",
+                  "Converted results may be stored in your account for re-download",
                 ],
                 footer: null,
               },
@@ -864,8 +827,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          {/* §9.3 BYOK / redaction TODO placeholder — visible only in code */}
-          }
         </div>
       </section>
 

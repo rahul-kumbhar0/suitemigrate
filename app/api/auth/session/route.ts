@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const admin = createAdminClient()
     let { data: profile } = await admin
       .from("users")
-      .select("plan, conversions_used, conversions_limit, name")
+      .select("plan, conversions_used, conversions_limit, entitlement_expires_at, name")
       .eq("id", user.id)
       .maybeSingle()
 
@@ -35,11 +35,19 @@ export async function GET(request: Request) {
         name: user.user_metadata?.name || null,
         plan: "free", conversions_used: 0, conversions_limit: 5,
       }, { onConflict: "id", ignoreDuplicates: true })
-      profile = { plan: "free", conversions_used: 0, conversions_limit: 5, name: user.user_metadata?.name || null }
+      profile = { plan: "free", conversions_used: 0, conversions_limit: 5, entitlement_expires_at: null, name: user.user_metadata?.name || null }
     } else if (profile.plan === "free" && profile.conversions_limit === 2) {
-      // Auto-heal stale limit from before the 2→5 fix
       await admin.from("users").update({ conversions_limit: 5 }).eq("id", user.id)
       profile = { ...profile, conversions_limit: 5 }
+    }
+
+    if (profile.entitlement_expires_at && new Date(profile.entitlement_expires_at).getTime() <= Date.now()) {
+      await admin.from("users").update({
+        plan: "free",
+        conversions_limit: 5,
+        entitlement_expires_at: null,
+      }).eq("id", user.id)
+      profile = { ...profile, plan: "free", conversions_limit: 5, entitlement_expires_at: null }
     }
 
     const plan      = (profile.plan as Plan) || "free"

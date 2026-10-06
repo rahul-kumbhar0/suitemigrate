@@ -163,19 +163,17 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     throw new Error("AI service configuration error")
   }
 
-  // Task 3: reject experimental models in production
-  const requestedModel = process.env.GEMINI_MODEL || "gemini-1.5-flash"
-  const fallbackModel  = process.env.GEMINI_FALLBACK_MODEL || "gemini-1.5-flash"
+  const requestedModel = process.env.GEMINI_MODEL || "gemini-3.8-flash"
+  const fallbackModel  = process.env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash"
   const isProduction   = process.env.NODE_ENV === "production"
 
-  if (isProduction && requestedModel.includes("-exp")) {
-    // TODO: operator must set GEMINI_MODEL to a non-experimental model in prod
-    console.error(`[engine] Experimental model "${requestedModel}" is not allowed in production. Falling back to ${fallbackModel}.`)
-    // Fall through and use fallbackModel
-  }
-
-  const useModel = (isProduction && requestedModel.includes("-exp")) ? fallbackModel : requestedModel
+  const useModel =
+    isProduction && /(preview|exp)/i.test(requestedModel)
+      ? fallbackModel
+      : requestedModel
   const MAX_TOKENS = 900_000
+  // Conservative character-based estimate used only as an early size guard.
+  const estimatedTokens = Math.ceil(input.code.length / 4)
 
   if (estimatedTokens > MAX_TOKENS) {
     throw new Error(
@@ -188,24 +186,32 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
   const systemPrompt = buildSystemPrompt(preprocessResult)
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
-  // Provider/model details stay server-side; never returned to clients
+  // Provider/model details stay server-side; never returned to clients.
+  // Keep the legacy SDK for this release; migrate SDK + lockfile together later.
   const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({
-    model: useModel,
-    systemInstruction: systemPrompt,
-    generationConfig: {
-      temperature: 0.2,
-      topP: 0.8,
-      topK: 40,
-      maxOutputTokens: 64000,
-    },
-  })
 
-  const result = await retryWithBackoff(
-    () => model.generateContent(userPrompt),
-    3,
-    2000
-  )
+  const generate = async (modelName: string) => {
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: systemPrompt,
+      generationConfig: {
+        temperature: 0.2,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 64000,
+      },
+    })
+    return model.generateContent(userPrompt)
+  }
+
+  let result
+  try {
+    result = await retryWithBackoff(() => generate(useModel), 3, 2000)
+  } catch (primaryError) {
+    if (fallbackModel === useModel) throw primaryError
+    console.error("[engine] Primary model unavailable; trying configured fallback.")
+    result = await retryWithBackoff(() => generate(fallbackModel), 2, 2000)
+  }
 
   const rawOutput = result.response.text()
 

@@ -38,13 +38,29 @@ export async function convertScript(req: ConvertRequest): Promise<ConvertRespons
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   })
-  const data = await res.json()
+  const contentType = res.headers.get("content-type") || ""
+  const data = contentType.includes("application/json")
+    ? await res.json()
+    : { error: (await res.text()).slice(0, 300) }
 
   if (!res.ok) {
-    // Propagate server error codes so the UI can handle them specifically
-    throw new Error(data.error || "Conversion failed")
+    if (res.status === 404) {
+      throw new Error(
+        "SuiteMigrate conversion API returned HTTP 404. The latest website/backend is not deployed at /api/convert yet."
+      )
+    }
+    if (res.status === 401) {
+      throw new Error("Your SuiteMigrate session expired. Sign in again, then retry the conversion.")
+    }
+    if (res.status === 403) {
+      throw new Error("SuiteMigrate blocked this extension request. Check the production EXTENSION_ID/CORS configuration.")
+    }
+    if (res.status >= 500) {
+      throw new Error(data.error || `SuiteMigrate server error (HTTP ${res.status}). Please retry.`)
+    }
+    throw new Error(data.error || `Conversion failed (HTTP ${res.status}).`)
   }
-  return data
+  return data as ConvertResponse
 }
 
 export async function getUserInfo() {
