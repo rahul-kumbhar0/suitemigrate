@@ -612,8 +612,8 @@ export default function LandingPage() {
                 {[
                   { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
                   { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
-                  { f: "Change review + JS download", free: "✓",       pro: "✓",          lifetime: "✓" },
-                  { f: "HTML migration audit report", free: "—",       pro: "✓",          lifetime: "✓" },
+                  { f: "Change review + JS download", free: "✓",       pro: "✓",          annual: "✓" },
+                  { f: "HTML migration audit report", free: "—",       pro: "✓",          annual: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
