@@ -1,13 +1,13 @@
 # SuiteMigrate — Chrome Web Store Final Review Checklist
 
-Release candidate: **v1.1.2**
+Release candidate: **v1.1.3**
 
 Do not submit until every **BLOCKER** item is checked.
 
 ## A. Extension functionality — BLOCKER
 
 - [ ] Install the exact CI artifact / store ZIP on a clean Chrome profile.
-- [ ] Manifest shows version 1.1.2.
+- [ ] Manifest shows version 1.1.3.
 - [ ] Extension opens normally from the toolbar.
 - [ ] Sign-up and sign-in work from the extension flow.
 - [ ] Returning to the extension after sign-in shows the authenticated account.
@@ -31,7 +31,6 @@ Do not submit until every **BLOCKER** item is checked.
 
 ## B. Production website/backend — BLOCKER
 
-- [ ] PR #1 is merged only after the production database migration is applied.
 - [ ] Run `supabase/review-ready-security.sql` in the production Supabase project.
 - [ ] Confirm users cannot directly change their own `plan`, `conversions_limit`, or `conversions_used`.
 - [ ] Confirm original source code is not persisted in `conversions.original_code` after new conversions.
@@ -45,7 +44,7 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] Confirm `/api/convert` exists in production and never returns a Vercel/Next.js 404.
 - [ ] Confirm `/api/auth/session` and `/api/user` work from the Store extension ID.
 - [ ] Configure Upstash rate limiting in production; do not intentionally ship production in fail-open mode.
-- [ ] Configure production `EXTENSION_ID` with the stable Chrome Web Store draft ID and redeploy.
+- [ ] Production accepts Store ID `ohdcofhfnjahaoblipdcpflainibhcld` and the deployed `/api/health` reports release 1.1.3.
 
 ## C. Payments — BLOCKER if payments are enabled at submission
 
@@ -86,7 +85,7 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] Store description contains no unsupported Batch, ZIP, PDF, Priority Queue, Team collaboration, automatic deployment or “production-ready” claims.
 - [ ] At least one real screenshot clearly shows the working scan flow.
 - [ ] At least one real screenshot shows the conversion result.
-- [ ] Screenshots come from the exact v1.1.2 release candidate, not mock UI.
+- [ ] Screenshots come from the exact v1.1.3 release candidate, not mock UI.
 - [ ] Promo images match the same logo/colors/UI and do not promise future features.
 - [ ] Listing has no placeholder copy, test codes, internal TODOs or owner-confirm text.
 - [ ] Support URL/email and Privacy Policy URL work publicly without login.
@@ -111,7 +110,6 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] No source maps, secrets, test credentials, private keys or `.env` files are present in the uploaded ZIP.
 - [ ] Inspect final ZIP manually before upload.
 - [ ] Upload the exact tested ZIP to the Chrome Web Store draft.
-- [ ] Set the resulting stable Store extension ID in production `EXTENSION_ID`.
 - [ ] Test the Store/draft-installed build again after the ID/CORS change.
 
 ## H. Final go / no-go
@@ -124,6 +122,6 @@ Submit only when all of these are true:
 - [ ] Website production backend is deployed and healthy.
 - [ ] Privacy/Terms/listing match behavior.
 - [ ] Reviewer credentials and steps are verified from a clean browser profile.
-- [ ] Final v1.1.2 ZIP is the same artifact that passed testing.
+- [ ] Final v1.1.3 ZIP is the same artifact that passed testing.
 
 If any item above is unchecked, treat the release as **NO-GO** for Chrome Web Store submission.
