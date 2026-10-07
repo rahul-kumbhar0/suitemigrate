@@ -100,20 +100,61 @@ async function runSuiteQL(baseQuery: string): Promise<Record<string, string>[]> 
  *
  * This avoids constructing the REST document-service URL on the UI host.
  */
-export async function fetchScriptCode(scriptId: string): Promise<{ code: string; error?: string }> {
-  // IMPORTANT: this function is passed to chrome.scripting.executeScript.
-  // It must remain completely self-contained: no imports or outer-scope helpers.
+export async function fetchScriptCode(scriptId: string): Promise<{
+  code: string
+  error?: string
+  access: "readable" | "no_file" | "restricted" | "protected"
+}> {
   try {
     const numericId = Number(scriptId)
-    if (!Number.isFinite(numericId)) {
-      return { code: "", error: "Invalid script id." }
-    }
+    if (!Number.isFinite(numericId)) return { code: "", error: "Invalid script id.", access: "restricted" }
 
     const { protocol, hostname, origin } = window.location
     const restBase = `${protocol}//${hostname}/services/rest`
 
-    // Prefer the File Cabinet URL NetSuite returns for the attached script file.
-    // This avoids guessing a REST document-service URL on the UI host.
+    const looksLikeSource = (text: string) => {
+      const sample = text.slice(0, 12000)
+      return (
+        /@NApiVersion|@NScriptType|\bnlapi[A-Z]|\bdefine\s*\(|\brequire\s*\(|\bfunction\s+[A-Za-z_$]/.test(sample) ||
+        (/\bconst\b|\blet\b|\bvar\b/.test(sample) && /[;{}]/.test(sample))
+      )
+    }
+
+    const extractSourceFromHtml = (html: string): string => {
+      try {
+        const doc = new DOMParser().parseFromString(html, "text/html")
+        const candidates = Array.from(doc.querySelectorAll("textarea, pre, code"))
+          .map((el) => (el.textContent || "").trim())
+          .filter((text) => text.length >= 30)
+          .sort((a, b) => b.length - a.length)
+        return candidates.find(looksLikeSource) || ""
+      } catch {
+        return ""
+      }
+    }
+
+    const classifyHtml = (html: string): "restricted" | "protected" => {
+      const sample = html.slice(0, 20000).toLowerCase()
+      if (/insufficient permission|permission violation|access denied|not authorized|not authorised|you do not have permission|privilege/.test(sample)) {
+        return "restricted"
+      }
+      return "protected"
+    }
+
+    const readResponse = async (res: Response) => {
+      const text = await res.text()
+      const contentType = (res.headers.get("content-type") || "").toLowerCase()
+      const isHtml = contentType.includes("text/html") || /^\s*<!doctype html|^\s*<html/i.test(text)
+      if (res.ok && text.trim() && !isHtml && looksLikeSource(text)) return { code: text, access: "readable" as const }
+      if (res.ok && isHtml) {
+        const embedded = extractSourceFromHtml(text)
+        if (embedded) return { code: embedded, access: "readable" as const }
+        return { code: "", access: classifyHtml(text) }
+      }
+      if (res.status === 401 || res.status === 403) return { code: "", access: "restricted" as const }
+      return { code: "", access: "protected" as const }
+    }
+
     const metadataQuery = `
       SELECT
         s.scriptfile AS fileid,
@@ -126,16 +167,11 @@ export async function fetchScriptCode(scriptId: string): Promise<{ code: string;
 
     let fileId: string | number | null = null
     let fileUrl = ""
-    let metadataStatus = 0
 
     const queryRes = await fetch(`${restBase}/query/v1/suiteql?limit=1&offset=0`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", prefer: "transient" },
-      credentials: "include",
+      method: "POST", headers: { "Content-Type": "application/json", prefer: "transient" }, credentials: "include",
       body: JSON.stringify({ q: metadataQuery }),
     })
-
-    metadataStatus = queryRes.status
 
     if (queryRes.ok) {
       const queryData = await queryRes.json()
@@ -143,137 +179,68 @@ export async function fetchScriptCode(scriptId: string): Promise<{ code: string;
       fileId = row?.fileid ?? row?.scriptfile ?? null
       fileUrl = typeof row?.fileurl === "string" ? row.fileurl.trim() : ""
     } else {
-      // Some roles may not expose the File join. Fall back to scriptfile only.
       const fallbackQuery = await fetch(`${restBase}/query/v1/suiteql?limit=1&offset=0`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", prefer: "transient" },
-        credentials: "include",
-        body: JSON.stringify({
-          q: `SELECT scriptfile FROM script WHERE id = ${numericId}`,
-        }),
+        method: "POST", headers: { "Content-Type": "application/json", prefer: "transient" }, credentials: "include",
+        body: JSON.stringify({ q: `SELECT scriptfile FROM script WHERE id = ${numericId}` }),
       })
-
-      metadataStatus = fallbackQuery.status
       if (!fallbackQuery.ok) {
-        return {
-          code: "",
-          error: `NetSuite could not read script metadata (HTTP ${fallbackQuery.status}). Check SuiteAnalytics/SuiteQL access for the current role.`,
-        }
+        return { code: "", access: fallbackQuery.status === 401 || fallbackQuery.status === 403 ? "restricted" : "protected", error: `NetSuite could not read script metadata (HTTP ${fallbackQuery.status}).` }
       }
-
       const data = await fallbackQuery.json()
       fileId = data?.items?.[0]?.scriptfile ?? null
     }
 
-    if (!fileId) {
-      return { code: "", error: "This script has no attached source file." }
-    }
+    if (!fileId) return { code: "", error: "This script has no attached source file.", access: "no_file" }
 
-    const looksLikeLoginOrErrorHtml = (text: string) =>
-      /^\s*<!doctype html|^\s*<html/i.test(text) ||
-      /page not found|login|session timed out/i.test(text.slice(0, 1200))
-
-    // 1) Best path: use the URL NetSuite itself provides for the File Cabinet item.
     if (fileUrl) {
       try {
         const resolved = new URL(fileUrl, origin)
         if (resolved.hostname === hostname || resolved.hostname.endsWith(".netsuite.com")) {
-          const fileRes = await fetch(resolved.toString(), {
-            credentials: "include",
-            headers: { Accept: "text/plain, application/javascript, */*" },
-          })
-          const text = await fileRes.text()
-          if (fileRes.ok && text.trim() && !looksLikeLoginOrErrorHtml(text)) {
-            return { code: text }
-          }
-
-          if (fileRes.status === 401 || fileRes.status === 403) {
-            return {
-              code: "",
-              error: `NetSuite denied access to source file ${fileId} (HTTP ${fileRes.status}). Use a role with access to the script\'s File Cabinet folder.`,
-            }
-          }
+          const fileRes = await fetch(resolved.toString(), { credentials: "include", headers: { Accept: "text/plain, application/javascript, */*" } })
+          const read = await readResponse(fileRes)
+          if (read.code) return read
+          if (read.access === "restricted") return { code: "", access: "restricted", error: `NetSuite denied access to source file ${fileId}. Try an authorized role or paste authorized source manually.` }
         }
-      } catch {
-        // Continue to the same-origin media fallback below.
-      }
+      } catch {}
     }
 
-    // 2) Resolve the authenticated File Cabinet record page. NetSuite often
-    // renders the real media URL here with account/hash parameters.
     try {
-      const recordPage = await fetch(
-        `${origin}/app/common/media/mediaitem.nl?id=${encodeURIComponent(String(fileId))}`,
-        { credentials: "include" }
-      )
-
+      const recordPage = await fetch(`${origin}/app/common/media/mediaitem.nl?id=${encodeURIComponent(String(fileId))}`, { credentials: "include" })
       if (recordPage.ok) {
         const html = await recordPage.text()
+        const embedded = extractSourceFromHtml(html)
+        if (embedded) return { code: embedded, access: "readable" }
         const doc = new DOMParser().parseFromString(html, "text/html")
         const mediaLink = Array.from(doc.querySelectorAll<HTMLElement>("[href], [src]"))
           .map((el) => el.getAttribute("href") || el.getAttribute("src") || "")
           .find((value) => value.includes("/core/media/media.nl?"))
-
         if (mediaLink) {
           const resolvedMedia = new URL(mediaLink, origin)
           if (resolvedMedia.hostname === hostname || resolvedMedia.hostname.endsWith(".netsuite.com")) {
-            const resolvedRes = await fetch(resolvedMedia.toString(), {
-              credentials: "include",
-              headers: { Accept: "text/plain, application/javascript, */*" },
-            })
-            const resolvedText = await resolvedRes.text()
-
-            if (resolvedRes.ok && resolvedText.trim() && !looksLikeLoginOrErrorHtml(resolvedText)) {
-              return { code: resolvedText }
-            }
-
-            if (resolvedRes.status === 401 || resolvedRes.status === 403) {
-              return {
-                code: "",
-                error: `NetSuite denied access to source file ${fileId} (HTTP ${resolvedRes.status}). Use a role with access to the script's File Cabinet folder.`,
-              }
-            }
+            const resolvedRes = await fetch(resolvedMedia.toString(), { credentials: "include", headers: { Accept: "text/plain, application/javascript, */*" } })
+            const read = await readResponse(resolvedRes)
+            if (read.code) return read
+            if (read.access === "restricted") return { code: "", access: "restricted", error: `NetSuite denied access to source file ${fileId}. Try an authorized role or paste authorized source manually.` }
           }
         }
+        if (classifyHtml(html) === "restricted") return { code: "", access: "restricted", error: `The current NetSuite role cannot read source file ${fileId}. Try an authorized role or paste authorized source manually.` }
       }
-    } catch {
-      // Continue to the simple same-origin fallback below.
-    }
+    } catch {}
 
-    // 3) Same-origin fallback for accounts where media.nl works without a hash.
-    const mediaUrl = `${origin}/core/media/media.nl?id=${encodeURIComponent(String(fileId))}`
-    const mediaRes = await fetch(mediaUrl, {
-      credentials: "include",
-      headers: { Accept: "text/plain, application/javascript, */*" },
+    const mediaRes = await fetch(`${origin}/core/media/media.nl?id=${encodeURIComponent(String(fileId))}`, {
+      credentials: "include", headers: { Accept: "text/plain, application/javascript, */*" },
     })
-    const mediaText = await mediaRes.text()
-
-    if (mediaRes.ok && mediaText.trim() && !looksLikeLoginOrErrorHtml(mediaText)) {
-      return { code: mediaText }
-    }
-
-    if (mediaRes.status === 404) {
-      return {
-        code: "",
-        error:
-          `NetSuite returned HTTP 404 for source file ${fileId}. ` +
-          "The script record points to a file, but the current role/account did not provide a usable authenticated File Cabinet URL. " +
-          "Open the script file in NetSuite with the same role to confirm access, then try again.",
-      }
-    }
+    const read = await readResponse(mediaRes)
+    if (read.code) return read
+    if (read.access === "restricted") return { code: "", access: "restricted", error: `The current NetSuite role cannot read source file ${fileId}. Try an authorized role or paste authorized source manually.` }
 
     return {
       code: "",
-      error:
-        `Could not retrieve NetSuite source file ${fileId} ` +
-        `(metadata HTTP ${metadataStatus}, file HTTP ${mediaRes.status}). ` +
-        "Check the current role\'s File Cabinet access and try again.",
+      access: "protected",
+      error: `Source file ${fileId} is present but NetSuite returned a protected/inaccessible page instead of JavaScript. This can happen with vendor-hidden SuiteBundle/SuiteApp source or other File Cabinet restrictions. SuiteMigrate will not bypass source protection. Use an authorized source copy, request a 2.1 update from the vendor, or keep this script as a migration blocker.`,
     }
   } catch (err) {
-    return {
-      code: "",
-      error: err instanceof Error ? err.message : "Could not retrieve script source.",
-    }
+    return { code: "", access: "protected", error: err instanceof Error ? err.message : "Could not retrieve script source." }
   }
 }
 
@@ -307,7 +274,7 @@ export async function scanScripts(): Promise<NSScript[]> {
       riskLevel: getRiskLevel(apiVersion),
       // Item 4: single consistent rule — only "2.1" is done
       needsMigration: isLegacyVersion(apiVersion),
-      hasFile: !!row.scriptfile,
+      hasFile: !!row.scriptfile,\n      sourceAccess: row.scriptfile ? "unknown" : "no_file",
     }
   })
 }
