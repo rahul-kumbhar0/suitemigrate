@@ -374,16 +374,16 @@ export default function ScriptListView() {
           ))}
         </div>
 
-        {/* HTML audit report is generated locally from scanned account metadata.
+        {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
         {user && !user.unlimited ? (
           <button
             onClick={() => setView("upgrade")}
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11, opacity: 0.6, cursor: "pointer" }}
-            title="HTML audit report is available on paid plans"
+            title="Migration Readiness Report is available on paid plans"
           >
-            <Download size={11} /> HTML Audit Report (Pro)
+            <Download size={11} /> Migration Readiness Report (Pro)
           </button>
         ) : (
           <button
@@ -391,7 +391,7 @@ export default function ScriptListView() {
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
           >
-            <Download size={11} /> HTML Audit Report
+            <Download size={11} /> Migration Readiness Report
           </button>
         )}
       </div>
