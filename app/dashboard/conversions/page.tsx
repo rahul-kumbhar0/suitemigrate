@@ -1,9 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { History, Chrome, ArrowRight, Clock } from "lucide-react"
+import { History, Chrome, ArrowRight, Clock, RefreshCw } from "lucide-react"
 import ConversionDetailModal from "@/components/dashboard/conversion-detail-modal"
-import { createClient } from "@/lib/supabase/client"
 
 interface Conversion {
   id: string
@@ -22,19 +21,41 @@ export default function ConversionsPage() {
   const [conversions, setConversions]               = useState<Conversion[]>([])
   const [selectedConversion, setSelectedConversion] = useState<Conversion | null>(null)
   const [loading, setLoading]                       = useState(true)
+  const [refreshing, setRefreshing]                 = useState(false)
+  const [totalConversions, setTotalConversions]     = useState(0)
+  const [loadError, setLoadError]                   = useState("")
+
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true)
+    else setRefreshing(true)
+    setLoadError("")
+    try {
+      const res = await fetch("/api/conversions", { cache: "no-store", credentials: "include" })
+      if (!res.ok) throw new Error("Could not load conversion history.")
+      const data = await res.json()
+      setConversions((data.conversions ?? []) as Conversion[])
+      setTotalConversions(data.totalConversions ?? data.conversions?.length ?? 0)
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Could not load conversion history.")
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setLoading(false); return }
-      const { data, error } = await supabase
-        .from("conversions").select("*").eq("user_id", user.id)
-        .order("created_at", { ascending: false }).limit(50)
-      if (!error && data) setConversions(data as Conversion[])
-      setLoading(false)
-    }
     load()
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") load(true)
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener("focus", onVisible)
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener("focus", onVisible)
+    }
   }, [])
 
   const confidenceColor = (s: number) =>
@@ -52,14 +73,31 @@ export default function ConversionsPage() {
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
 
         {/* Header */}
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 32, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
+          <div>
           <h1 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(24px,3.5vw,38px)", letterSpacing: "-0.025em", color: "var(--ink)", marginBottom: 6 }}>
             Conversion History
           </h1>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)" }}>
-            {conversions.length} script{conversions.length !== 1 ? "s" : ""} converted
+            {totalConversions} script{totalConversions !== 1 ? "s" : ""} converted
           </p>
+          </div>
+          <button
+            onClick={() => load(true)}
+            disabled={refreshing}
+            className="btn-outline"
+            style={{ fontSize: 11, padding: "7px 11px" }}
+          >
+            <RefreshCw size={12} style={{ animation: refreshing ? "spin .7s linear infinite" : undefined }} />
+            {refreshing ? "Refreshing" : "Refresh"}
+          </button>
         </div>
+
+        {loadError && (
+          <div style={{ marginBottom: 16, padding: "10px 12px", border: "1px solid rgba(220,38,38,.2)", background: "rgba(220,38,38,.05)", borderRadius: 4, color: "#b91c1c", fontSize: 12 }}>
+            {loadError}
+          </div>
+        )}
 
         {conversions.length === 0 ? (
           /* Empty state */
