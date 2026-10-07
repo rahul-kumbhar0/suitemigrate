@@ -1,4 +1,22 @@
 -- Review-ready production migration
+ALTER TABLE public.users
+  DROP CONSTRAINT IF EXISTS users_plan_check;
+ALTER TABLE public.users
+  ADD CONSTRAINT users_plan_check
+  CHECK (plan IN ('free', 'pro', 'annual', 'lifetime', 'team'));
+
+ALTER TABLE public.payments
+  DROP CONSTRAINT IF EXISTS payments_plan_check;
+ALTER TABLE public.payments
+  ADD CONSTRAINT payments_plan_check
+  CHECK (plan IN ('pro', 'annual', 'lifetime', 'team'));
+
+ALTER TABLE public.promo_codes
+  DROP CONSTRAINT IF EXISTS promo_codes_plan_check;
+ALTER TABLE public.promo_codes
+  ADD CONSTRAINT promo_codes_plan_check
+  CHECK (plan IN ('pro', 'annual', 'lifetime'));
+
 -- Apply this migration BEFORE deploying the corresponding API changes.
 
 ALTER TABLE public.users
