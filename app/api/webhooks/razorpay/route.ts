@@ -12,7 +12,7 @@ function signaturesMatch(expected: string, actual: string): boolean {
 }
 
 function validPaidPlan(value: unknown): value is Plan {
-  return value === "pro" || value === "lifetime"
+  return value === "pro" || value === "annual" || value === "lifetime"
 }
 
 export async function POST(request: Request) {
@@ -41,14 +41,17 @@ export async function POST(request: Request) {
         const amount = Number(payment?.amount || 0)
         const currency = String(payment?.currency || "").toUpperCase()
         const matchesPrice =
-          (plan === "lifetime" && amount === 29900 && currency === "USD") ||
+          ((plan === "annual" || plan === "lifetime") && amount === 29900 && currency === "USD") ||
           (plan === "pro" && amount === 2900 && currency === "USD")
 
         if (userId && validPaidPlan(plan) && matchesPrice) {
+          const entitlementExpiresAt =
+            plan === "annual" ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null
+
           await admin.from("users").update({
             plan,
             conversions_limit: null,
-            entitlement_expires_at: null,
+            entitlement_expires_at: entitlementExpiresAt,
           }).eq("id", userId)
 
           await admin.from("payments").upsert({
