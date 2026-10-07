@@ -23,7 +23,7 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] A successful conversion returns converted code, change log, confidence and manual-review flags.
 - [ ] Copy Code works.
 - [ ] Download JavaScript works.
-- [ ] HTML migration report works for the paid test account.
+- [ ] Migration Readiness Report works for the paid test account and shows blocker/source-access states accurately.
 - [ ] Clear scan history/cache works.
 - [ ] Sign out and sign back in works.
 - [ ] Test with a slow/unreliable network and confirm errors are readable.
