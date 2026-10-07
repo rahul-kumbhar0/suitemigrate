@@ -9,24 +9,46 @@ export default function ConversionResultView() {
   const [copied, setCopied] = useState(false)
   const [tab, setTab]       = useState<"converted" | "changes" | "comments">("converted")
 
-  if (conversionError) return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <Header showBack onBack={() => setView("script_list")} title="Conversion Failed" />
-      <div style={{ padding: "24px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, textAlign: "center" }}>
-        <div style={{ width: 44, height: 44, border: "1px solid rgba(217,74,31,.3)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <XCircle size={22} style={{ color: "var(--clay)" }} />
+  if (conversionError) {
+    const setupError = /DB_QUOTA_RPC_MISSING|AI_CONFIG|AI_MODEL/.test(conversionError)
+    const capacityError = /AI_CAPACITY/.test(conversionError)
+    const supportCode = conversionError.match(/\[([A-Z0-9_]+)\]/)?.[1]
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <Header showBack onBack={() => setView("script_list")} title="Conversion Failed" />
+        <div style={{ padding: "22px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 13, textAlign: "center" }}>
+          <div style={{ width: 44, height: 44, border: "1px solid rgba(217,74,31,.3)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <XCircle size={22} style={{ color: "var(--clay)" }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 6 }}>
+              {setupError ? "Service setup needs attention" : capacityError ? "Conversion capacity is busy" : "Conversion could not complete"}
+            </p>
+            <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>{conversionError.replace(/\s*\[[A-Z0-9_]+\]\s*$/, "")}</p>
+            {supportCode && (
+              <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--clay)", marginTop: 7 }}>
+                Support code: {supportCode}
+              </p>
+            )}
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", lineHeight: 1.55, marginTop: 8 }}>
+              No conversion is charged when processing does not complete. {capacityError ? "Retry in a moment." : "Your script stays unchanged in NetSuite."}
+            </p>
+          </div>
+          <button onClick={() => setView("script_list")} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+            Back to scripts
+          </button>
+          <button
+            onClick={() => window.open("https://suitemigrate.vercel.app/support", "_blank")}
+            className="btn-outline"
+            style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+          >
+            Open support
+          </button>
         </div>
-        <div>
-          <p style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 6 }}>Conversion Error</p>
-          <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>{conversionError}</p>
-          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", lineHeight: 1.55, marginTop: 8 }}>
-            No conversion is charged when the source cannot be read or processing does not start.
-          </p>
-        </div>
-        <button onClick={() => setView("script_list")} className="btn-outline">← Back to Scripts</button>
       </div>
-    </div>
-  )
+    )
+  }
 
   if (!conversionResult) { setView("script_list"); return null }
 
