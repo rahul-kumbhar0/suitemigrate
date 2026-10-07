@@ -3,7 +3,7 @@ import { CheckCircle, Shield, CreditCard } from "lucide-react"
 import Link from "next/link"
 
 // Confirmed prices — Pro $29/mo, Lifetime $299
-// Team = waitlist only (no price)
+// Legacy team values remain readable for old records, but Team is not a launch plan.
 const plans = [
   {
     id: "pro",
