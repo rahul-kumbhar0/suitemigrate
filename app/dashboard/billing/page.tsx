@@ -123,8 +123,8 @@ export default async function BillingPage() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8, flex: 1, marginBottom: 24 }}>
               {plan.features.map(f => (
                 <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9, fontSize: 13.5, color: plan.dark ? "rgba(250,250,249,.65)" : "var(--ink-soft)" }}>
-                  <span style={{ color: plan.dark ? "var(--clay)" : "var(--ink-mute)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>
-                    {plan.dark ? "✓" : "—"}
+                  <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>
+                    ✓
                   </span>
                   {f}
                 </li>
@@ -153,7 +153,7 @@ export default async function BillingPage() {
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 28, paddingTop: 20, borderTop: "1px solid var(--rule)" }}>
         {[
           { icon: Shield,      text: "Secured by Razorpay" },
-          { icon: CreditCard,  text: "Cards · UPI · Net Banking" },
+          { icon: CreditCard,  text: "Payments processed by Razorpay" },
           { icon: CheckCircle, text: "Cancel anytime (monthly plans)" },
         ].map(({ icon: Icon, text }) => (
           <div key={text} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink-soft)" }}>
