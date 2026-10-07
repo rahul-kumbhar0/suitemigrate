@@ -62,7 +62,7 @@ const faqs = [
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro Monthly and Annual Pro add unlimited conversions and the HTML migration audit report.",
+    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro Monthly and Annual Pro add unlimited conversions and the Migration Readiness Report.",
   },
 ]
 
@@ -299,8 +299,8 @@ export default function LandingPage() {
             {[
               {
                 title: "NetSuite Consultants &amp; Partners",
-                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and an HTML audit report for project handoff.",
-                tags: ["Account inventory","Migration priority","HTML audit report"],
+                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and an Migration Readiness Report for project handoff.",
+                tags: ["Account inventory","Migration priority","Migration Readiness Report"],
               },
               {
                 title: "NetSuite Admins",
@@ -419,7 +419,7 @@ export default function LandingPage() {
               },
               {
                 icon: FileText,
-                title: "HTML migration audit report",
+                title: "Migration Readiness Report",
                 desc: "Paid plans can export a portable HTML report of the scanned active-script inventory, API versions, migration status, and version-risk labels.",
                 admin: "Useful for migration scoping and stakeholder handoff without requiring a proprietary report viewer.",
               },
@@ -488,7 +488,7 @@ export default function LandingPage() {
                 {
                   n: "02",
                   title: "Review — version-based migration inventory",
-                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export an HTML migration audit report.",
+                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export an Migration Readiness Report.",
                 },
                 {
                   n: "03",
@@ -613,7 +613,7 @@ export default function LandingPage() {
                   { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
                   { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
                   { f: "Change review + JS download", free: "✓",       pro: "✓",          annual: "✓" },
-                  { f: "HTML migration audit report", free: "—",       pro: "✓",          annual: "✓" },
+                  { f: "Migration Readiness Report", free: "—",       pro: "✓",          annual: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
@@ -674,7 +674,7 @@ export default function LandingPage() {
                   </li>
                 ))}
                 <li style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)", opacity: .8 }}>
-                  <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>HTML audit report requires a paid plan
+                  <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>Migration Readiness Report requires a paid plan
                 </li>
               </ul>
               <Link href="/signup" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
@@ -704,7 +704,7 @@ export default function LandingPage() {
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
                   "Unlimited script conversions",
-                  "HTML migration audit report",
+                  "Migration Readiness Report",
                   "Code, Changes & Inline review tabs",
                   "Manual-review flags",
                   "Converted JavaScript downloads",
@@ -729,7 +729,7 @@ export default function LandingPage() {
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
                   "Unlimited script conversions",
-                  "HTML migration audit report",
+                  "Migration Readiness Report",
                   "Code review and JavaScript downloads",
                   "One annual payment",
                 ].map(f => (
