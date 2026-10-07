@@ -21,19 +21,33 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient()
-    const { data: conversions, error } = await admin
+    const [{ data: conversions, error }, { data: profile }] = await Promise.all([
+      admin
       .from("conversions")
       .select("id, script_name, original_version, script_type, converted_code, confidence_score, changes_log, manual_review_lines, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(50)
+      .limit(50),
+      admin
+        .from("users")
+        .select("conversions_used, plan")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ])
 
     if (error) {
       console.error("[/api/conversions]", error)
       return NextResponse.json({ error: "Failed to fetch conversions" }, { status: 500, headers })
     }
 
-    return NextResponse.json({ conversions: conversions ?? [] }, { headers })
+    return NextResponse.json(
+      {
+        conversions: conversions ?? [],
+        totalConversions: profile?.conversions_used ?? (conversions?.length ?? 0),
+        plan: profile?.plan ?? "free",
+      },
+      { headers: { ...headers, "Cache-Control": "no-store" } }
+    )
   } catch (err: unknown) {
     console.error("[/api/conversions]", err)
     return NextResponse.json({ error: "Failed to fetch conversions" }, { status: 500, headers })
