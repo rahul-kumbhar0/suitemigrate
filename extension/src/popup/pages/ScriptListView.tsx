@@ -274,6 +274,71 @@ export default function ScriptListView() {
         />
       )}
 
+      {sourceIssue && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.58)", zIndex: 110, display: "flex", alignItems: "flex-end" }}>
+          <div style={{ background: "var(--paper)", width: "100%", maxHeight: "88vh", overflowY: "auto", padding: "18px 16px 20px", borderTop: "2px solid var(--clay)" }}>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--clay)", marginBottom: 7 }}>
+              Migration blocker
+            </p>
+            <h3 style={{ fontFamily: "var(--f-head)", fontSize: 17, fontWeight: 500, color: "var(--ink)", marginBottom: 8 }}>
+              {sourceIssue.access === "protected" ? "Protected or hidden source" :
+               sourceIssue.access === "restricted" ? "Role cannot read source" :
+               sourceIssue.access === "no_file" ? "No source file attached" :
+               "Source unavailable"}
+            </h3>
+            <p style={{ fontSize: 11.5, color: "var(--ink-soft)", lineHeight: 1.6, marginBottom: 10 }}>
+              {sourceIssue.message}
+            </p>
+            <div style={{ background: "rgba(15,23,42,.035)", border: "1px solid var(--rule)", borderRadius: 4, padding: "9px 10px", marginBottom: 12 }}>
+              <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", lineHeight: 1.55 }}>
+                Recommended: use an authorized role, request a SuiteScript 2.1 update/source copy from the vendor or client, or paste source only if you are authorized to process it. SuiteMigrate does not bypass NetSuite or vendor source protection.
+              </p>
+            </div>
+
+            {showManualPaste ? (
+              <>
+                <textarea
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value)}
+                  placeholder="Paste authorized SuiteScript source here…"
+                  style={{ width: "100%", minHeight: 150, resize: "vertical", border: "1px solid var(--rule)", borderRadius: 4, padding: 9, fontFamily: "var(--f-mono)", fontSize: 10.5, background: "#fff", color: "var(--ink)", outline: "none", marginBottom: 10 }}
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={handleManualConvert} className="btn-primary" style={{ flex: 1, justifyContent: "center", fontSize: 11 }}>
+                    Convert pasted source
+                  </button>
+                  <button onClick={() => { setShowManualPaste(false); setManualCode("") }} className="btn-outline" style={{ fontSize: 11 }}>
+                    Cancel paste
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                <button onClick={() => setShowManualPaste(true)} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+                  Paste authorized source
+                </button>
+                {sourceIssue.access !== "no_file" && (
+                  <button
+                    onClick={async () => {
+                      const script = sourceIssue.script
+                      setSourceIssue(null)
+                      await doConvert({ ...script, sourceAccess: "unknown", sourceAccessNote: undefined })
+                    }}
+                    className="btn-outline"
+                    style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+                  >
+                    Retry automatic access
+                  </button>
+                )}
+                <button onClick={() => setSourceIssue(null)} className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+                  Keep as blocker
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         {/* Search */}
         <div style={{ position: "relative" }}>
