@@ -230,6 +230,7 @@ export default function ScriptListView() {
     }
     setManualError("")
 
+    await markSourceAccess(sourceIssue.script.id, "manual", "Authorized source copy supplied manually.")
     setSelectedScript(sourceIssue.script)
     setSourceIssue(null)
     setShowManualPaste(false)
@@ -414,6 +415,7 @@ export default function ScriptListView() {
                 {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
                 {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
                 {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
+                {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· authorized copy</span>}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
