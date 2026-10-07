@@ -71,6 +71,7 @@ function inlineScanner() {
         riskLevel,
         needsMigration,
         hasFile: !!row.scriptfile,
+        sourceAccess: row.scriptfile ? "unknown" : "no_file",
       }
     })
 
