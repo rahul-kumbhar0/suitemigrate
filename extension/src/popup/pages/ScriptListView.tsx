@@ -6,6 +6,7 @@ import { downloadAuditReport } from "../../lib/export"
 import { convertScript } from "../../lib/api"
 import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
+import { fetchCurrentUser } from "../../lib/auth"
 import type { NSScript } from "../../lib/types"
 
 // ── Privacy consent notice (Item 7) ──────────────────────────────────────────
@@ -39,7 +40,7 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
 
 export default function ScriptListView() {
   const {
-    activeAccount, user, setActiveAccount,
+    activeAccount, user, setUser, setActiveAccount,
     setView, setSelectedScript, setConverting,
     setConversionResult, setConversionError, addConversion,
     privacyAccepted, setPrivacyAccepted,
@@ -116,6 +117,21 @@ export default function ScriptListView() {
 
     addConversion(conversion)
     await saveConversion(conversion)
+
+    // Update usage immediately so the popup never shows a stale conversion count.
+    if (user) {
+      const used = result.usage?.used ?? (user.conversionsUsed + 1)
+      setUser({
+        ...user,
+        conversionsUsed: used,
+        conversionsRemaining: user.unlimited ? null : Math.max(0, 5 - used),
+      })
+    }
+
+    // Then reconcile against the backend profile in case the plan/quota changed.
+    const freshUser = await fetchCurrentUser()
+    if (freshUser) setUser(freshUser)
+
     setConversionResult(conversion)
     setView("conversion_result")
   }
