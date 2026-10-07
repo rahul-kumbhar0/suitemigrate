@@ -23,7 +23,7 @@ export function Footer() {
             </Link>
             {/* §11.1 Oracle disclaimer */}
             <p style={{ fontSize: 13, color: "var(--ink-soft)", maxWidth: 250, lineHeight: 1.65, marginBottom: 14 }}>
-              Find every legacy SuiteScript before the 2028.2 deadline.
+              Identify legacy SuiteScript and plan your 2.1 migration before the 2028.2 transition.
               Not affiliated with or endorsed by Oracle Corporation or NetSuite.
             </p>
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", lineHeight: 1.7 }}>
@@ -87,11 +87,8 @@ export function Footer() {
               {[
                 { label: "Privacy Policy",   href: "/privacy" },
                 { label: "Terms of Service", href: "/terms" },
-                {
-                  
-                  label: "Refund Policy",
-                  href: "/refund",
-                },
+                { label: "Refund Policy",    href: "/refund" },
+                { label: "Support",          href: "/support" },
               ].map((l) => (
                 <li key={l.label}>
                   <Link href={l.href} className="footer-link">{l.label}</Link>
@@ -108,7 +105,7 @@ export function Footer() {
         }}>
           <span>© {new Date().getFullYear()} SuiteMigrate</span>
           {/* §11.1 Oracle disclaimer */}
-          <span>Not affiliated with Oracle Corporation or NetSuite · v1.0</span>
+          <span>Not affiliated with Oracle Corporation or NetSuite · v1.1.3</span>
         </div>
       </div>
 

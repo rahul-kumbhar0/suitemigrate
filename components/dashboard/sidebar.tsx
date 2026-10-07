@@ -5,14 +5,13 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import {
   LayoutDashboard, History, CreditCard,
-  Users, Settings, Chrome, Menu, X, Zap,
+  Settings, Menu, X,
 } from "lucide-react"
 
 const navItems = [
   { label: "Overview",    href: "/dashboard",             icon: LayoutDashboard, exact: true },
   { label: "Conversions", href: "/dashboard/conversions", icon: History },
   { label: "Billing",     href: "/dashboard/billing",     icon: CreditCard },
-  { label: "Team",        href: "/dashboard/team",        icon: Users },
   { label: "Settings",    href: "/dashboard/settings",    icon: Settings },
 ]
 
@@ -64,32 +63,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      {/* Extension CTA */}
-      <div style={{ padding: "0 12px 20px" }}>
-        <div style={{ border: "1px solid var(--rule)", borderRadius: 4, padding: "12px 14px", background: "rgba(217,74,31,.03)" }}>
-          <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--ink-mute)", marginBottom: 5 }}>
-            Chrome Extension
-          </p>
-          <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.5, marginBottom: 10 }}>
-            Install to scan NetSuite scripts from your browser.
-          </p>
-          <a
-            href="#"
-            style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              width: "100%", padding: "7px 12px", borderRadius: 999,
-              background: "var(--ink)", color: "var(--paper)",
-              fontSize: 12, fontFamily: "var(--f-sans)", fontWeight: 500,
-              textDecoration: "none", transition: "background .2s",
-            }}
-            onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "var(--clay)")}
-            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "var(--ink)")}
-          >
-            <Chrome size={12} />
-            Install free
-          </a>
-        </div>
-      </div>
     </div>
   )
 }

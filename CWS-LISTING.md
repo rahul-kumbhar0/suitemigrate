@@ -3,10 +3,11 @@
 ## Product
 
 **Name:** SuiteMigrate — SuiteScript 2.1 Migrator  
-**Version:** 1.1.2  
+**Version:** 1.1.3  
 **Category:** Developer Tools  
 **Website:** https://suitemigrate.vercel.app  
-**Privacy policy:** https://suitemigrate.vercel.app/privacy
+**Privacy policy:** https://suitemigrate.vercel.app/privacy  
+**Support:** https://suitemigrate.vercel.app/support
 
 ## Single purpose
 
@@ -44,7 +45,7 @@ Do not advertise batch conversion, ZIP export, PDF export, priority queue, Team 
 
 ### storage
 
-Stores local extension state such as the signed-in user cache, scanned account metadata, local conversion history and privacy-consent state.
+Stores local extension state such as the signed-in user cache, scanned account metadata, converted-result metadata and privacy-consent state. Original NetSuite source code is not intentionally persisted in Chrome local storage.
 
 ### scripting
 
@@ -103,8 +104,8 @@ Provide working reviewer credentials in the Chrome Web Store test-instructions f
 
 - Build only from the final reviewed branch.
 - Upload a draft item first and obtain the stable Chrome extension ID.
-- Set that ID as `EXTENSION_ID` in the production backend environment.
+- Confirm the production backend allows the stable Store ID `ohdcofhfnjahaoblipdcpflainibhcld` (the code also has this public ID as a fallback).
 - Verify authentication/conversion using the exact store package.
 - Confirm the production Privacy Policy matches actual backend retention behavior.
-- Capture screenshots from the real v1.1.2 build.
+- Capture screenshots from the real v1.1.3 build.
 - Run `npm run build:store` from `extension/`; the release guard must pass.

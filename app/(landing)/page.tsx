@@ -50,11 +50,11 @@ const faqs = [
   },
   {
     q: "Which script types are supported?",
-    a: "UserEvent, Suitelet, Scheduled, Map/Reduce, ClientScript, RESTlet, Portlet, MassUpdate — all types are supported. Both SS 1.0 → 2.1 and SS 2.0 / 2.x → 2.1 conversion paths are covered.",
+    a: "SuiteMigrate recognizes common script types including UserEvent, Suitelet, Scheduled, Map/Reduce, ClientScript, RESTlet, Portlet, and MassUpdate. Complex or unusual patterns may be flagged for manual review.",
   },
   {
     q: "Does it work with multiple accounts or Sandbox environments?",
-    a: "Yes. The extension detects the current NetSuite environment automatically — Production, Sandbox, and Release Preview are all supported. Consultants and partners can scan multiple accounts by switching environments.",
+    a: "The extension works from the NetSuite environment currently open in your browser. Test the migration workflow in Sandbox first; access still depends on the permissions of the current NetSuite role.",
   },
   {
     q: "What does the free plan include?",
@@ -95,7 +95,7 @@ export default function LandingPage() {
           lineHeight: .97, letterSpacing: "-0.035em",
           maxWidth: 900, marginBottom: 28,
         }}>
-          Find every legacy SuiteScript<br />
+          Find legacy SuiteScript<br />
           before the <em style={{ fontStyle: "italic", color: "var(--clay)" }}>2028.2 deadline does.</em>
         </h1>
 
@@ -104,7 +104,7 @@ export default function LandingPage() {
           fontSize: "clamp(15px,2vw,18px)", color: "var(--ink-soft)",
           maxWidth: 560, lineHeight: 1.65, marginBottom: 36,
         }}>
-          Scan your NetSuite account, see which scripts will break, and convert
+          Scan active scripts visible to your current NetSuite role, identify which versions need migration, and convert
           SuiteScript 1.0 / 2.0 / 2.x to 2.1 with version-based migration priority and review flags.
         </p>
 
@@ -168,13 +168,13 @@ export default function LandingPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em", color: "rgba(250,250,249,.4)", marginBottom: 14 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-            Account scan · 67 scripts found
+            Active-script scan · 67 scripts found
           </div>
           <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 50, lineHeight: 1, letterSpacing: "-0.04em", marginBottom: 4 }}>
             43<span style={{ fontSize: 24, opacity: .4 }}> to migrate</span>
           </div>
           <div style={{ fontSize: 10, color: "rgba(250,250,249,.4)", letterSpacing: ".1em", marginBottom: 18 }}>
-            SuiteScript 1.0 / 2.0 · risk-scored
+            SuiteScript 1.0 / 2.0 · migration priority
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 3, marginBottom: 10 }}>
             {[
@@ -187,7 +187,7 @@ export default function LandingPage() {
             ))}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "rgba(250,250,249,.3)", borderTop: "1px solid rgba(250,250,249,.08)", paddingTop: 9 }}>
-            <span>12 HIGH · 18 MED · 13 LOW</span><span>scan complete →</span>
+            <span>12 HIGH · 18 MED · 37 CURRENT</span><span>scan complete →</span>
           </div>
         </div>
       </header>
@@ -476,20 +476,20 @@ export default function LandingPage() {
               {[
                 {
                   n: "01",
-                  title: "Scan — read-only inventory of every script",
+                  title: "Scan — read-only inventory of active scripts",
                   // §4.3 — states what is read and that it does not modify the account
                   //  exact API endpoints and permissions used
-                  desc: "Install the extension and open it on any logged-in NetSuite tab. SuiteMigrate reads script records via the SuiteQL REST API (/services/rest/query/v1/suiteql). It never creates, modifies or deletes any data in your NetSuite account.",
+                  desc: "Install the extension and open it on a logged-in NetSuite tab. SuiteMigrate reads active script records visible to your current role. It never creates, modifies, deploys, or deletes data in your NetSuite account.",
                 },
                 {
                   n: "02",
-                  title: "Review — risk report with every script prioritised",
-                  desc: "The scan produces a full inventory with a HIGH / MED / LOW risk score on every script. Filter by risk, type, or API version. Export the inventory as a PDF audit report before converting a single line of code.",
+                  title: "Review — version-based migration inventory",
+                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export an HTML migration audit report.",
                 },
                 {
                   n: "03",
                   title: "Convert — structural rewrite with full documentation",
-                  desc: "Click Convert on any script. SuiteMigrate AI runs mapping rules then SuiteMigrate AI for structural changes. Review the three-tab output — Code, Changes, Inline comments — before downloading.",
+                  desc: "Click Convert on a legacy script with an attached source file. SuiteMigrate applies migration rules and AI-assisted structural conversion. Review Code, Changes, and Inline views before downloading.",
                 },
                 {
                   n: "04",
@@ -859,11 +859,11 @@ export default function LandingPage() {
       <section style={{ padding: "120px 0", borderTop: "1px solid var(--rule)", textAlign: "center" }}>
         <div className="landing-section-padding">
           <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(28px,5vw,60px)", lineHeight: 1.04, letterSpacing: "-0.025em", marginBottom: 16 }}>
-            Find every legacy script.<br />
+            Find legacy scripts.<br />
             <em style={{ fontStyle: "italic", color: "var(--clay)" }}>Before 2028.2 does it for you.</em>
           </h2>
           <p style={{ fontSize: 16, color: "var(--ink-soft)", maxWidth: 420, margin: "0 auto 36px", lineHeight: 1.65 }}>
-            Scan your account, review the risk report, and start converting — 5 free conversions, no credit card.
+            Scan active scripts, review the migration inventory, and start converting — 5 free conversions, no credit card.
           </p>
           <Link href="/signup" className="btn-pill" style={{ fontSize: "clamp(14px,2vw,16px)", padding: "14px 30px" }}>
             Scan my account free

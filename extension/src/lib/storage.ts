@@ -46,7 +46,12 @@ export async function saveAccount(account: NSAccount): Promise<void> {
 
 export async function saveConversion(result: ConversionResult): Promise<void> {
   const existing = (await getStorage("conversions")) || []
-  const updated = [result, ...existing].slice(0, 100) // keep last 100
+
+  // Do not persist original NetSuite source code in chrome.storage.
+  // Keep it only in the current in-memory result so the user can compare
+  // during this popup session. Persist converted output + metadata only.
+  const persisted = { ...result, originalCode: "" }
+  const updated = [persisted, ...existing].slice(0, 50)
   await setStorage("conversions", updated)
 }
 
