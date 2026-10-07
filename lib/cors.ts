@@ -12,7 +12,7 @@
  */
 
 const PROD_ORIGIN  = "https://suitemigrate.vercel.app"
-const EXTENSION_ID = process.env.EXTENSION_ID          // e.g. "abcdefghijklmnopqrstuvwxyz123456"
+const EXTENSION_ID = process.env.EXTENSION_ID || "ohdcofhfnjahaoblipdcpflainibhcld" // public Chrome Web Store item ID
 const IS_PROD      = process.env.NODE_ENV === "production"
 
 function isAllowed(origin: string | null): boolean {
@@ -23,8 +23,7 @@ function isAllowed(origin: string | null): boolean {
   // Chrome extension — only allow if EXTENSION_ID is configured; otherwise reject
   if (origin.startsWith("chrome-extension://")) {
     if (!EXTENSION_ID) {
-      // Set EXTENSION_ID from the Chrome Web Store draft before reviewer testing
-      // In dev, allow any chrome-extension origin so testing works
+      // The Store ID has a safe public fallback above; this branch is dev-only.
       return !IS_PROD
     }
     return origin === `chrome-extension://${EXTENSION_ID}`
