@@ -4,7 +4,7 @@ import Header from "../components/Header"
 import { useStore } from "../../lib/store"
 import { downloadAuditReport } from "../../lib/export"
 import { convertScript } from "../../lib/api"
-import { saveConversion, getStorage, setStorage } from "../../lib/storage"
+import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
 import type { NSScript } from "../../lib/types"
 
@@ -46,9 +46,11 @@ export default function ScriptListView() {
   } = useStore()
 
   const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<"all" | "needs_update" | "done">("needs_update")
-  // Script waiting for privacy acceptance
+  const [filter, setFilter] = useState<"all" | "needs_update" | "blockers" | "done">("needs_update")
   const [pendingScript, setPendingScript] = useState<NSScript | null>(null)
+  const [sourceIssue, setSourceIssue] = useState<{ script: NSScript; message: string; access: NonNullable<NSScript["sourceAccess"]> } | null>(null)
+  const [manualCode, setManualCode] = useState("")
+  const [showManualPaste, setShowManualPaste] = useState(false)
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -70,9 +72,52 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "done")         return m && !s.needsMigration
+    if (filter === "blockers") return m && ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    if (filter === "done") return m && !s.needsMigration
     return m
   })
+
+  const markSourceAccess = async (
+    scriptId: string,
+    access: NonNullable<NSScript["sourceAccess"]>,
+    note?: string
+  ) => {
+    const next = {
+      ...activeAccount,
+      scripts: activeAccount.scripts.map((s) =>
+        s.id === scriptId ? { ...s, sourceAccess: access, sourceAccessNote: note } : s
+      ),
+    }
+    setActiveAccount(next)
+    await saveAccount(next)
+  }
+
+  const runConversionWithCode = async (script: NSScript, code: string) => {
+    const result = await convertScript({
+      code,
+      scriptName: script.name,
+      nsAccountId: activeAccount.accountId,
+    })
+
+    const conversion = {
+      conversionId: result.conversionId,
+      scriptName: script.name,
+      convertedCode: result.convertedCode,
+      originalCode: code,
+      confidenceScore: result.confidenceScore,
+      changeLog: result.changeLog,
+      manualReviewLines: result.manualReviewLines,
+      isValid: result.isValid,
+      validationErrors: result.validationErrors,
+      scriptType: result.scriptType,
+      originalVersion: result.originalVersion,
+    }
+
+    addConversion(conversion)
+    await saveConversion(conversion)
+    setConversionResult(conversion)
+    setView("conversion_result")
+  }
 
   const handleConvert = async (script: NSScript) => {
     // Item 7: show privacy notice before the very first conversion
