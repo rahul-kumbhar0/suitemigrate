@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { CheckCircle, Shield, CreditCard } from "lucide-react"
 import Link from "next/link"
 
-// Confirmed prices — Pro $29/mo, Lifetime $299
+// Launch prices — Pro $29/mo, Annual Pro $299/year
 // Legacy team values remain readable for old records, but Team is not a launch plan.
 const plans = [
   {
@@ -24,20 +24,20 @@ const plans = [
     dark: false,
   },
   {
-    id: "lifetime",
-    name: "Lifetime",
+    id: "annual",
+    name: "Annual Pro",
     price: "$299",
-    period: "one time",
-    alt: "Pro access for the life of the product",
+    period: "/ year",
+    alt: "12 months of Pro access · save $49 vs monthly",
     altClay: false,
     desc: "The current Pro feature set with no monthly renewal.",
     features: [
       "Everything currently included in Pro",
-      "Lifetime access — no renewals",
+      "12 months of Pro access",
       "HTML migration audit report",
       "Converted JavaScript downloads",
     ],
-    cta: "Get Lifetime",
+    cta: "Get Annual",
     dark: true,
   },
 ]
@@ -58,7 +58,7 @@ export default async function BillingPage() {
     } catch { /* use defaults */ }
   }
 
-  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", lifetime: "Lifetime", team: "Team" }
+  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", annual: "Annual Pro", lifetime: "Legacy Lifetime", team: "Legacy Team" }
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto" }}>
