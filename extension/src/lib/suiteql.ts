@@ -274,7 +274,8 @@ export async function scanScripts(): Promise<NSScript[]> {
       riskLevel: getRiskLevel(apiVersion),
       // Item 4: single consistent rule — only "2.1" is done
       needsMigration: isLegacyVersion(apiVersion),
-      hasFile: !!row.scriptfile,\n      sourceAccess: row.scriptfile ? "unknown" : "no_file",
+      hasFile: !!row.scriptfile,
+      sourceAccess: row.scriptfile ? "unknown" : "no_file",
     }
   })
 }
