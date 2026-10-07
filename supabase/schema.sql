@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   email                  TEXT UNIQUE NOT NULL,
   name                   TEXT,
   plan                   TEXT NOT NULL DEFAULT 'free'
-                           CHECK (plan IN ('free', 'pro', 'lifetime', 'team')),
+                           CHECK (plan IN ('free', 'pro', 'annual', 'lifetime', 'team')),
   conversions_used       INT NOT NULL DEFAULT 0 CHECK (conversions_used >= 0),
   conversions_limit      INT DEFAULT 5,
   entitlement_expires_at TIMESTAMPTZ,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS payments (
   id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id               UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   razorpay_payment_id   TEXT,
-  plan                  TEXT NOT NULL CHECK (plan IN ('pro', 'lifetime', 'team')),
+  plan                  TEXT NOT NULL CHECK (plan IN ('pro', 'annual', 'lifetime', 'team')),
   amount                INT NOT NULL DEFAULT 0,
   currency              TEXT NOT NULL DEFAULT 'USD',
   status                TEXT NOT NULL DEFAULT 'pending'
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS team_members (
 
 CREATE TABLE IF NOT EXISTS promo_codes (
   code            TEXT PRIMARY KEY,
-  plan            TEXT NOT NULL CHECK (plan IN ('pro', 'lifetime')),
+  plan            TEXT NOT NULL CHECK (plan IN ('pro', 'annual', 'lifetime')),
   conversions     INT,
   duration_days   INT,
   expires_at      TIMESTAMPTZ,

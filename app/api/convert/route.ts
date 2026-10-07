@@ -124,8 +124,23 @@ export async function POST(request: Request) {
 
     if (reserveError) {
       console.error("[/api/convert] reserve slot:", reserveError)
+      const reserveMessage = String(reserveError.message || "")
+      const missingRpc =
+        reserveError.code === "PGRST202" ||
+        /reserve_conversion_slot|function.*does not exist|schema cache/i.test(reserveMessage)
+
       return NextResponse.json(
-        { error: "Conversion service is temporarily unavailable." },
+        missingRpc
+          ? {
+              error: "backend_setup_incomplete",
+              message: "SuiteMigrate database setup is incomplete. Apply the production security migration and retry.",
+              supportCode: "DB_QUOTA_RPC_MISSING",
+            }
+          : {
+              error: "conversion_backend_unavailable",
+              message: "SuiteMigrate could not reserve a conversion slot. Please retry shortly.",
+              supportCode: "DB_QUOTA_UNAVAILABLE",
+            },
         { status: 503, headers }
       )
     }
@@ -208,8 +223,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: raw }, { status: 400, headers })
     }
 
+    if (/AI service configuration error|API_KEY|api key/i.test(raw)) {
+      return NextResponse.json(
+        {
+          error: "conversion_backend_not_ready",
+          message: "SuiteMigrate AI is not configured correctly in production.",
+          supportCode: "AI_CONFIG",
+        },
+        { status: 503, headers }
+      )
+    }
+
+    if (/404|model.*not found|not found.*model/i.test(raw)) {
+      return NextResponse.json(
+        {
+          error: "conversion_backend_not_ready",
+          message: "The configured AI model is unavailable. Please contact SuiteMigrate support.",
+          supportCode: "AI_MODEL",
+        },
+        { status: 503, headers }
+      )
+    }
+
+    if (/429|quota|rate limit|high demand/i.test(raw)) {
+      return NextResponse.json(
+        {
+          error: "conversion_capacity",
+          message: "The AI conversion service is at capacity. Please retry shortly.",
+          supportCode: "AI_CAPACITY",
+          retryable: true,
+        },
+        { status: 503, headers }
+      )
+    }
+
+    if (raw.includes("conversion_persistence_failed")) {
+      return NextResponse.json(
+        {
+          error: "conversion_save_failed",
+          message: "The conversion completed but could not be saved. Your conversion slot was released.",
+          supportCode: "DB_SAVE",
+          retryable: true,
+        },
+        { status: 503, headers }
+      )
+    }
+
     return NextResponse.json(
-      { error: "Conversion service is busy. Please try again.", retryable: true },
+      {
+        error: "conversion_service_unavailable",
+        message: "Conversion could not start or complete. Please retry and include support code CONVERSION_UNKNOWN if it continues.",
+        supportCode: "CONVERSION_UNKNOWN",
+        retryable: true,
+      },
       { status: 503, headers }
     )
   }

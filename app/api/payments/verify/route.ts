@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
       if (
         String(order?.notes?.user_id || "") !== user.id ||
-        String(order?.notes?.plan || "") !== "lifetime" ||
+        String(order?.notes?.plan || "") !== "annual" ||
         Number(order?.amount) !== 29900 ||
         String(order?.currency || "").toUpperCase() !== "USD" ||
         String(payment?.order_id || "") !== razorpay_order_id ||
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Payment details do not match the purchase" }, { status: 400 })
       }
 
-      plan = "lifetime"
+      plan = "annual"
       expectedAmount = 29900
     } else if (razorpay_subscription_id) {
       const payload = `${razorpay_payment_id}|${razorpay_subscription_id}`
@@ -103,12 +103,16 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient()
+    const entitlementExpiresAt = plan === "annual"
+      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+      : null
+
     const { error: planError } = await admin
       .from("users")
       .update({
         plan,
         conversions_limit: null,
-        entitlement_expires_at: null,
+        entitlement_expires_at: entitlementExpiresAt,
       })
       .eq("id", user.id)
 

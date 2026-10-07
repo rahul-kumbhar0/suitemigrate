@@ -1,6 +1,6 @@
-# Chrome Web Store Screenshot Guide — SuiteMigrate v1.1.3
+# Chrome Web Store Screenshot Guide — SuiteMigrate v1.1.4
 
-Use **real screenshots from the exact v1.1.3 release candidate**. Do not hardcode fake extension states, composite unsupported features, or use mock data that implies functionality the submitted package cannot perform.
+Use **real screenshots from the exact v1.1.4 release candidate**. Do not hardcode fake extension states, composite unsupported features, or use mock data that implies functionality the submitted package cannot perform.
 
 ## Required format
 
@@ -42,13 +42,13 @@ Use a test script created specifically for Store review. Do not expose confident
 
 Show the real Changes or Inline view from the same conversion, including manual-review markers when present.
 
-### 5. HTML migration audit report
+### 5. Migration Readiness Report
 
-Use only if the HTML audit report works correctly in the exact v1.1.3 paid reviewer account.
+Use only if the Migration Readiness Report works correctly in the exact v1.1.4 paid reviewer account.
 
 ## Before uploading
 
-- Screenshot comes from v1.1.3
+- Screenshot comes from v1.1.4
 - Feature shown exists in the submitted ZIP
 - No passwords, session tokens, API keys or private customer code
 - No Team, Batch, ZIP, PDF, Priority Queue or automatic deployment claims

@@ -4,7 +4,7 @@ import Header from "../components/Header"
 import { useStore } from "../../lib/store"
 import { downloadAuditReport } from "../../lib/export"
 import { convertScript } from "../../lib/api"
-import { saveConversion, getStorage, setStorage } from "../../lib/storage"
+import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
 import type { NSScript } from "../../lib/types"
 
@@ -39,16 +39,19 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
 
 export default function ScriptListView() {
   const {
-    activeAccount, user,
+    activeAccount, user, setActiveAccount,
     setView, setSelectedScript, setConverting,
     setConversionResult, setConversionError, addConversion,
     privacyAccepted, setPrivacyAccepted,
   } = useStore()
 
   const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<"all" | "needs_update" | "done">("needs_update")
-  // Script waiting for privacy acceptance
+  const [filter, setFilter] = useState<"all" | "needs_update" | "blockers" | "done">("needs_update")
   const [pendingScript, setPendingScript] = useState<NSScript | null>(null)
+  const [sourceIssue, setSourceIssue] = useState<{ script: NSScript; message: string; access: NonNullable<NSScript["sourceAccess"]> } | null>(null)
+  const [manualCode, setManualCode] = useState("")
+  const [manualError, setManualError] = useState("")
+  const [showManualPaste, setShowManualPaste] = useState(false)
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -70,16 +73,73 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "done")         return m && !s.needsMigration
+    if (filter === "blockers") return m && ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    if (filter === "done") return m && !s.needsMigration
     return m
   })
 
+  const markSourceAccess = async (
+    scriptId: string,
+    access: NonNullable<NSScript["sourceAccess"]>,
+    note?: string
+  ) => {
+    const next = {
+      ...activeAccount,
+      scripts: activeAccount.scripts.map((s) =>
+        s.id === scriptId ? { ...s, sourceAccess: access, sourceAccessNote: note } : s
+      ),
+    }
+    setActiveAccount(next)
+    await saveAccount(next)
+  }
+
+  const runConversionWithCode = async (script: NSScript, code: string) => {
+    const result = await convertScript({
+      code,
+      scriptName: script.name,
+      nsAccountId: activeAccount.accountId,
+    })
+
+    const conversion = {
+      conversionId: result.conversionId,
+      scriptName: script.name,
+      convertedCode: result.convertedCode,
+      originalCode: code,
+      confidenceScore: result.confidenceScore,
+      changeLog: result.changeLog,
+      manualReviewLines: result.manualReviewLines,
+      isValid: result.isValid,
+      validationErrors: result.validationErrors,
+      scriptType: result.scriptType,
+      originalVersion: result.originalVersion,
+    }
+
+    addConversion(conversion)
+    await saveConversion(conversion)
+    setConversionResult(conversion)
+    setView("conversion_result")
+  }
+
   const handleConvert = async (script: NSScript) => {
-    // Item 7: show privacy notice before the very first conversion
     if (!privacyAccepted) {
       setPendingScript(script)
       return
     }
+
+    if (["no_file", "restricted", "protected"].includes(script.sourceAccess || "")) {
+      setSourceIssue({
+        script,
+        access: script.sourceAccess as NonNullable<NSScript["sourceAccess"]>,
+        message: script.sourceAccessNote ||
+          (script.sourceAccess === "no_file"
+            ? "No source file is attached to this script record."
+            : "Automatic source access is unavailable for this script."),
+      })
+      setShowManualPaste(false)
+      setManualCode("")
+      return
+    }
+
     await doConvert(script)
   }
 
@@ -101,6 +161,7 @@ export default function ScriptListView() {
       // Instead we inject fetchScriptCode directly into the active NetSuite tab.
       let code = ""
       let fetchError = ""
+      let fetchAccess: NonNullable<NSScript["sourceAccess"]> = script.sourceAccess || "unknown"
 
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -110,51 +171,41 @@ export default function ScriptListView() {
             func: fetchScriptCode,           // serialised and injected
             args: [script.id],
           })
-          const result = results?.[0]?.result as { code: string; error?: string } | null
+          const result = results?.[0]?.result as {
+            code: string
+            error?: string
+            access: "readable" | "no_file" | "restricted" | "protected"
+          } | null
           if (result?.code) {
             code = result.code
-          } else if (result?.error) {
-            fetchError = result.error
+            fetchAccess = "readable"
+          } else if (result) {
+            fetchAccess = result.access
+            fetchError = result.error || "Could not read the selected source file."
           }
         }
       } catch (err) {
         fetchError = err instanceof Error ? err.message : String(err)
       }
 
-      // Never send placeholder text to the conversion service.
-      // A source-fetch failure must not consume one of the user's conversions.
+      // Never send placeholder/HTML content to the conversion service.
       if (!code) {
-        throw new Error(
-          fetchError ||
-          "Could not retrieve this script's source file. Check your NetSuite role permissions and try again."
-        )
+        const message = fetchError || "Could not retrieve the selected source file."
+        await markSourceAccess(script.id, fetchAccess === "unknown" ? "protected" : fetchAccess, message)
+        setSourceIssue({
+          script: { ...script, sourceAccess: fetchAccess === "unknown" ? "protected" : fetchAccess, sourceAccessNote: message },
+          message,
+          access: fetchAccess === "unknown" ? "protected" : fetchAccess,
+        })
+        setShowManualPaste(false)
+        setManualCode("")
+        setManualError("")
+        setView("script_list")
+        return
       }
 
-      // ── Convert ──────────────────────────────────────────────────────────
-      const result = await convertScript({
-        code,
-        scriptName: script.name,
-        nsAccountId: activeAccount.accountId,
-      })
-
-      const conversion = {
-        conversionId: result.conversionId,
-        scriptName: script.name,
-        convertedCode: result.convertedCode,
-        originalCode: code,
-        confidenceScore: result.confidenceScore,
-        changeLog: result.changeLog,
-        manualReviewLines: result.manualReviewLines,
-        isValid: result.isValid,
-        validationErrors: result.validationErrors,
-        scriptType: result.scriptType,
-        originalVersion: result.originalVersion,
-      }
-
-      addConversion(conversion)
-      await saveConversion(conversion)
-      setConversionResult(conversion)
-      setView("conversion_result")
+      await markSourceAccess(script.id, "readable")
+      await runConversionWithCode(script, code)
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Conversion failed"
@@ -170,8 +221,43 @@ export default function ScriptListView() {
     }
   }
 
+  const handleManualConvert = async () => {
+    if (!sourceIssue) return
+    const code = manualCode.trim()
+    if (code.length < 30) {
+      setManualError("Paste the complete authorized SuiteScript source before converting.")
+      return
+    }
+    setManualError("")
+
+    await markSourceAccess(sourceIssue.script.id, "manual", "Authorized source copy supplied manually.")
+    setSelectedScript(sourceIssue.script)
+    setSourceIssue(null)
+    setShowManualPaste(false)
+    setConverting(true)
+    setConversionError(null)
+    setView("converting")
+
+    try {
+      await runConversionWithCode(sourceIssue.script, code)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Conversion failed"
+      if (msg === "conversion_limit_reached") setView("upgrade")
+      else {
+        setConversionError(msg)
+        setView("conversion_result")
+      }
+    } finally {
+      setConverting(false)
+      setManualCode("")
+    }
+  }
+
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
+  const blockers = activeAccount.scripts.filter(s =>
+    ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+  ).length
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -192,6 +278,74 @@ export default function ScriptListView() {
         />
       )}
 
+      {sourceIssue && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.58)", zIndex: 110, display: "flex", alignItems: "flex-end" }}>
+          <div style={{ background: "var(--paper)", width: "100%", maxHeight: "88vh", overflowY: "auto", padding: "18px 16px 20px", borderTop: "2px solid var(--clay)" }}>
+            <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--clay)", marginBottom: 7 }}>
+              Migration blocker
+            </p>
+            <h3 style={{ fontFamily: "var(--f-head)", fontSize: 17, fontWeight: 500, color: "var(--ink)", marginBottom: 8 }}>
+              {sourceIssue.access === "protected" ? "Protected or hidden source" :
+               sourceIssue.access === "restricted" ? "Role cannot read source" :
+               sourceIssue.access === "no_file" ? "No source file attached" :
+               "Source unavailable"}
+            </h3>
+            <p style={{ fontSize: 11.5, color: "var(--ink-soft)", lineHeight: 1.6, marginBottom: 10 }}>
+              {sourceIssue.message}
+            </p>
+            <div style={{ background: "rgba(15,23,42,.035)", border: "1px solid var(--rule)", borderRadius: 4, padding: "9px 10px", marginBottom: 12 }}>
+              <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", lineHeight: 1.55 }}>
+                Recommended: use an authorized role, request a SuiteScript 2.1 update/source copy from the vendor or client, or paste source only if you are authorized to process it. SuiteMigrate does not bypass NetSuite or vendor source protection.
+              </p>
+            </div>
+
+            {showManualPaste ? (
+              <>
+                <textarea
+                  value={manualCode}
+                  onChange={(e) => { setManualCode(e.target.value); setManualError("") }}
+                  placeholder="Paste authorized SuiteScript source here…"
+                  style={{ width: "100%", minHeight: 150, resize: "vertical", border: "1px solid var(--rule)", borderRadius: 4, padding: 9, fontFamily: "var(--f-mono)", fontSize: 10.5, background: "#fff", color: "var(--ink)", outline: "none", marginBottom: 10 }}
+                />
+                {manualError && (
+                  <p style={{ fontSize: 10.5, color: "var(--clay)", marginBottom: 9, lineHeight: 1.5 }}>{manualError}</p>
+                )}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={handleManualConvert} className="btn-primary" style={{ flex: 1, justifyContent: "center", fontSize: 11 }}>
+                    Convert pasted source
+                  </button>
+                  <button onClick={() => { setShowManualPaste(false); setManualCode(""); setManualError("") }} className="btn-outline" style={{ fontSize: 11 }}>
+                    Cancel paste
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                <button onClick={() => { setShowManualPaste(true); setManualError("") }} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+                  Paste authorized source
+                </button>
+                {sourceIssue.access !== "no_file" && (
+                  <button
+                    onClick={async () => {
+                      const script = sourceIssue.script
+                      setSourceIssue(null)
+                      await doConvert({ ...script, sourceAccess: "unknown", sourceAccessNote: undefined })
+                    }}
+                    className="btn-outline"
+                    style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+                  >
+                    Retry automatic access
+                  </button>
+                )}
+                <button onClick={() => setSourceIssue(null)} className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+                  Keep as blocker
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
         {/* Search */}
         <div style={{ position: "relative" }}>
@@ -209,28 +363,28 @@ export default function ScriptListView() {
 
         {/* Filter tabs */}
         <div style={{ display: "flex", gap: 4 }}>
-          {(["needs_update", "all", "done"] as const).map(f => (
+          {(["needs_update", "blockers", "all", "done"] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={filter === f ? "tab-active" : "tab-inactive"}
               style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 10, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer", fontWeight: 500 }}
             >
-              {f === "needs_update" ? `Update (${needs})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
+              {f === "needs_update" ? `Update (${needs})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
             </button>
           ))}
         </div>
 
-        {/* HTML audit report is generated locally from scanned account metadata.
+        {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
         {user && !user.unlimited ? (
           <button
             onClick={() => setView("upgrade")}
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11, opacity: 0.6, cursor: "pointer" }}
-            title="HTML audit report is available on paid plans"
+            title="Migration Readiness Report is available on paid plans"
           >
-            <Download size={11} /> HTML Audit Report (Pro)
+            <Download size={11} /> Migration Readiness Report (Pro)
           </button>
         ) : (
           <button
@@ -238,7 +392,7 @@ export default function ScriptListView() {
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
           >
-            <Download size={11} /> HTML Audit Report
+            <Download size={11} /> Migration Readiness Report
           </button>
         )}
       </div>
@@ -257,9 +411,11 @@ export default function ScriptListView() {
               </p>
               <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", marginTop: 2 }}>
                 {script.scriptType} · SS {script.apiVersion}
-                {script.hasFile === false && (
-                  <span style={{ color: "var(--clay)", marginLeft: 4 }}>· no file</span>
-                )}
+                {script.sourceAccess === "no_file" && <span style={{ color: "var(--clay)", marginLeft: 4 }}>· no file</span>}
+                {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
+                {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
+                {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
+                {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· authorized copy</span>}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -267,12 +423,11 @@ export default function ScriptListView() {
               {script.needsMigration ? (
                 <button
                   onClick={() => handleConvert(script)}
-                  disabled={script.hasFile === false}
-                  className="btn-primary"
-                  title={script.hasFile === false ? "No source file is attached to this script" : "Convert this script"}
+                  className={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "btn-outline" : "btn-primary"}
+                  title={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "View migration options" : "Convert this script"}
                   style={{ fontSize: 10, padding: "4px 10px" }}
                 >
-                  {script.hasFile === false ? "No file" : "Convert"}
+                  {["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "Options" : "Convert"}
                 </button>
               ) : (
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "#15803d" }}>✓ 2.1</span>

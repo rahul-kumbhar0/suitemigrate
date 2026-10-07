@@ -49,6 +49,6 @@ jobs:
       - name: Upload Chrome test package
         uses: actions/upload-artifact@v4
         with:
-          name: SuiteMigrate-v1.1.3-extension
+          name: SuiteMigrate-v1.1.4-extension
           path: extension/dist/
           if-no-files-found: error

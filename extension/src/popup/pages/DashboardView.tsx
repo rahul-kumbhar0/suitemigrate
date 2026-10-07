@@ -71,6 +71,7 @@ function inlineScanner() {
         riskLevel,
         needsMigration,
         hasFile: !!row.scriptfile,
+        sourceAccess: row.scriptfile ? "unknown" : "no_file",
       }
     })
 
@@ -152,6 +153,7 @@ export default function DashboardView() {
 
   const display  = activeAccount || accounts[0]
   const needsUpd = display?.scripts.filter(s => s.needsMigration).length || 0
+  const blockers = display?.scripts.filter(s => ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")).length || 0
   const onLatest = display?.scripts.filter(s => !s.needsMigration).length || 0
 
   return (
@@ -218,11 +220,12 @@ export default function DashboardView() {
 
         {/* Stats */}
         {display ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)", borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)", borderRadius: 4, overflow: "hidden" }}>
             {[
-              { label: "Total",       value: display.scriptsTotal,  color: "var(--ink)" },
-              { label: "Need Update", value: needsUpd,              color: "var(--clay)" },
-              { label: "On 2.1",      value: onLatest,              color: "#15803d" },
+              { label: "Total",       value: display.scriptsTotal, color: "var(--ink)" },
+              { label: "Need Update", value: needsUpd,             color: "var(--clay)" },
+              { label: "Blockers",    value: blockers,             color: blockers > 0 ? "#b45309" : "var(--ink-mute)" },
+              { label: "On 2.1",      value: onLatest,             color: "#15803d" },
             ].map(s => (
               <div key={s.label} style={{ background: "var(--paper)", padding: "10px 0", textAlign: "center" }}>
                 <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 26, letterSpacing: "-0.02em", color: s.color, lineHeight: 1 }}>{s.value}</div>

@@ -15,7 +15,7 @@ const faqs = [
   // ── Core product ──────────────────────────────────────────────
   {
     q: "Why not just paste my script into ChatGPT?",
-    a: "Pasting one script is straightforward. SuiteMigrate adds the migration workflow around it: scan active script records visible to your current NetSuite role, identify legacy API versions, convert a selected script, review the changes, and export an HTML migration inventory on a paid plan.",
+    a: "Pasting one script is straightforward. SuiteMigrate adds the migration workflow around it: scan active script records visible to your current NetSuite role, identify legacy API versions, convert a selected script, review the changes, and export a Migration Readiness Report on a paid plan.",
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
@@ -24,6 +24,10 @@ const faqs = [
   {
     q: "Can I use NetSuite's own preference to run 2.0 scripts as 2.1?",
     a: "Yes. NetSuite provides account-level preferences that let you test 2.0/2.x server scripts in the 2.1 runtime. SuiteMigrate complements that testing by giving you an active-script inventory, version-based migration priority, and a reviewable conversion workflow.",
+  },
+  {
+    q: "What if a client or vendor script is locked or hidden?",
+    a: "SuiteMigrate does not bypass NetSuite or vendor source protection. A locked bundle file can still be readable, while vendor-hidden server source may be intentionally unavailable. SuiteMigrate marks missing, role-restricted, and protected source as migration blockers. If you already have an authorized source copy, you can paste it manually; otherwise request a SuiteScript 2.1-compatible release or source from the vendor/client.",
   },
   {
     q: "Is my code safe?",
@@ -58,7 +62,7 @@ const faqs = [
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro and Lifetime add unlimited conversions and the HTML migration audit report.",
+    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro Monthly and Annual Pro add unlimited conversions and the Migration Readiness Report.",
   },
 ]
 
@@ -104,8 +108,8 @@ export default function LandingPage() {
           fontSize: "clamp(15px,2vw,18px)", color: "var(--ink-soft)",
           maxWidth: 560, lineHeight: 1.65, marginBottom: 36,
         }}>
-          Scan active scripts visible to your current NetSuite role, identify which versions need migration, and convert
-          SuiteScript 1.0 / 2.0 / 2.x to 2.1 with version-based migration priority and review flags.
+          Scan active scripts visible to your current NetSuite role, identify migration blockers, and convert
+          readable SuiteScript 1.0 / 2.0 / 2.x source to 2.1 with version-based priority and review flags.
         </p>
 
         {/* §2.3 CTAs + §2.4 trust line */}
@@ -295,13 +299,13 @@ export default function LandingPage() {
             {[
               {
                 title: "NetSuite Consultants &amp; Partners",
-                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and an HTML audit report for project handoff.",
-                tags: ["Account inventory","Migration priority","HTML audit report"],
+                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and a Migration Readiness Report for project handoff.",
+                tags: ["Account inventory","Migration priority","Migration Readiness Report"],
               },
               {
                 title: "NetSuite Admins",
                 desc: "Responsible for your organisation's scripts but not sure where to start. Scan active scripts and see which API versions still need migration before converting anything.",
-                tags: ["Active-script inventory","Version risk","Audit report"],
+                tags: ["Active-script inventory","Version priority","Blocker visibility"],
               },
               {
                 title: "NetSuite Developers",
@@ -336,7 +340,7 @@ export default function LandingPage() {
               '"We have 200+ custom scripts and no clear picture of which are 1.0 vs 2.0 vs 2.1."',
               '"Manual conversion takes a full day per script — we can\'t do 200 scripts manually."',
               '"I assumed 2.0 scripts were fine. Now I hear they may break too in 2028.2."',
-              '"I converted a script and it broke in production — no visibility into what changed."',
+              '"Some client/vendor scripts are protected or missing — I need to know that before promising a migration timeline."',
             ].map(item => (
               <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "13px 14px", border: "1px solid rgba(250,250,249,.08)", borderRadius: 4, fontSize: 13.5, color: "rgba(250,250,249,.7)", lineHeight: 1.5 }}>
                 <span style={{ color: "var(--clay)", flexShrink: 0 }}>⚠</span>
@@ -378,9 +382,9 @@ export default function LandingPage() {
               },
               {
                 icon: AlertTriangle,
-                title: "Search and filter the migration inventory",
-                desc: "Search scripts by name or type and filter between scripts that need an update, all active scripts, and scripts already on SuiteScript 2.1.",
-                admin: "Keeps large inventories manageable without claiming unverified behaviour analysis.",
+                title: "Migration blocker detection",
+                desc: "Classifies source access as ready, missing, role-restricted, or protected/inaccessible after access is checked. Protected items stay visible in the migration plan instead of disappearing behind a generic error.",
+                admin: "Know what your team can migrate directly — and what needs an authorized source copy, a different role, or a vendor 2.1 release.",
               },
               {
                 icon: Zap,
@@ -415,7 +419,7 @@ export default function LandingPage() {
               },
               {
                 icon: FileText,
-                title: "HTML migration audit report",
+                title: "Migration Readiness Report",
                 desc: "Paid plans can export a portable HTML report of the scanned active-script inventory, API versions, migration status, and version-risk labels.",
                 admin: "Useful for migration scoping and stakeholder handoff without requiring a proprietary report viewer.",
               },
@@ -484,7 +488,7 @@ export default function LandingPage() {
                 {
                   n: "02",
                   title: "Review — version-based migration inventory",
-                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export an HTML migration audit report.",
+                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export a Migration Readiness Report.",
                 },
                 {
                   n: "03",
@@ -597,7 +601,7 @@ export default function LandingPage() {
                   <th style={{ textAlign: "left", padding: "12px 20px", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", fontWeight: 500, width: "44%" }}>
                     Feature
                   </th>
-                  {["Free", "Pro", "Lifetime"].map(h => (
+                  {["Free", "Pro", "Annual"].map(h => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink)", fontWeight: 600 }}>
                       {h}
                     </th>
@@ -606,14 +610,14 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {[
-                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  lifetime: "Unlimited" },
-                  { f: "Active-script scan",       free: "✓",          pro: "✓",          lifetime: "✓" },
-                  { f: "Change review + JS download", free: "✓",       pro: "✓",          lifetime: "✓" },
-                  { f: "HTML migration audit report", free: "—",       pro: "✓",          lifetime: "✓" },
+                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
+                  { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
+                  { f: "Change review + JS download", free: "✓",       pro: "✓",          annual: "✓" },
+                  { f: "Migration Readiness Report", free: "—",       pro: "✓",          annual: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
-                    {[row.free, row.pro, row.lifetime].map((v, j) => (
+                    {[row.free, row.pro, row.annual].map((v, j) => (
                       <td key={j} style={{
                         padding: "11px 16px", textAlign: "center", fontSize: 13,
                         color: v === "✓" ? "var(--clay)" : v === "—" ? "var(--ink-mute)" : "var(--ink)",
@@ -633,7 +637,7 @@ export default function LandingPage() {
 
       {/* ═══════════════════════════════════════════
           04 — PRICING
-          Free / Pro / Lifetime
+          Free / Pro / Annual
       ═══════════════════════════════════════════ */}
       <section id="pricing" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -670,7 +674,7 @@ export default function LandingPage() {
                   </li>
                 ))}
                 <li style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "var(--ink-mute)", opacity: .8 }}>
-                  <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>HTML audit report requires a paid plan
+                  <span style={{ flexShrink: 0, fontFamily: "var(--f-mono)" }}>—</span>Migration Readiness Report requires a paid plan
                 </li>
               </ul>
               <Link href="/signup" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
@@ -700,7 +704,7 @@ export default function LandingPage() {
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
                   "Unlimited script conversions",
-                  "HTML migration audit report",
+                  "Migration Readiness Report",
                   "Code, Changes & Inline review tabs",
                   "Manual-review flags",
                   "Converted JavaScript downloads",
@@ -715,27 +719,27 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* LIFETIME */}
+            {/* ANNUAL */}
             <div style={{ padding: "32px 28px", border: "1px solid var(--rule)", borderRadius: 5, background: "var(--paper)", display: "flex", flexDirection: "column" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Lifetime</div>
-              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>One payment, same Pro access</div>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Annual Pro</div>
+              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>12 months of Pro access</div>
               <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$299</div>
-              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>one time</div>
-              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Pro access for the life of the product</div>
+              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>per year</div>
+              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Save $49 vs 12 monthly payments</div>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
                   "Unlimited script conversions",
-                  "HTML migration audit report",
+                  "Migration Readiness Report",
                   "Code review and JavaScript downloads",
-                  "No monthly renewal",
+                  "One annual payment",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
                     <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=lifetime" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
-                Get Lifetime
+              <Link href="/signup?plan=annual" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
+                Get Annual
               </Link>
             </div>
           </div>
@@ -885,7 +889,7 @@ export default function LandingPage() {
         .free-plan-cta:hover    { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
         .pro-plan-cta:hover     { background: #c23d15 !important; }
         .team-contact-link:hover { color: var(--ink) !important; }
-        .lifetime-link:hover    { text-decoration: underline !important; }
+        .annual-link:hover    { text-decoration: underline !important; }
       `}</style>
     </div>
   )

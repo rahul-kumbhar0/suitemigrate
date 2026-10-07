@@ -3,7 +3,7 @@
 ## Product
 
 **Name:** SuiteMigrate — SuiteScript 2.1 Migrator  
-**Version:** 1.1.3  
+**Version:** 1.1.4  
 **Category:** Developer Tools  
 **Website:** https://suitemigrate.vercel.app  
 **Privacy policy:** https://suitemigrate.vercel.app/privacy  
@@ -36,7 +36,9 @@ Scan active NetSuite scripts, identify legacy SuiteScript, and convert selected 
 - Converted SuiteScript 2.1 output
 - Change log and manual-review markers
 - Download converted JavaScript
-- HTML migration audit report for paid plans
+- Source-access blocker states: ready, missing, role-restricted, protected/inaccessible
+- Authorized manual source paste when automatic access is unavailable
+- Migration Readiness Report for paid plans
 - Local scan/history cache with clear-cache action
 
 Do not advertise batch conversion, ZIP export, PDF export, priority queue, Team collaboration or automatic deployment until those features are implemented end-to-end.
@@ -107,5 +109,5 @@ Provide working reviewer credentials in the Chrome Web Store test-instructions f
 - Confirm the production backend allows the stable Store ID `ohdcofhfnjahaoblipdcpflainibhcld` (the code also has this public ID as a fallback).
 - Verify authentication/conversion using the exact store package.
 - Confirm the production Privacy Policy matches actual backend retention behavior.
-- Capture screenshots from the real v1.1.3 build.
+- Capture screenshots from the real v1.1.4 build.
 - Run `npm run build:store` from `extension/`; the release guard must pass.
