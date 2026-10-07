@@ -50,6 +50,7 @@ export default function ScriptListView() {
   const [pendingScript, setPendingScript] = useState<NSScript | null>(null)
   const [sourceIssue, setSourceIssue] = useState<{ script: NSScript; message: string; access: NonNullable<NSScript["sourceAccess"]> } | null>(null)
   const [manualCode, setManualCode] = useState("")
+  const [manualError, setManualError] = useState("")
   const [showManualPaste, setShowManualPaste] = useState(false)
 
   // Load persisted consent from chrome.storage on mount
@@ -198,6 +199,7 @@ export default function ScriptListView() {
         })
         setShowManualPaste(false)
         setManualCode("")
+        setManualError("")
         setView("script_list")
         return
       }
@@ -223,9 +225,10 @@ export default function ScriptListView() {
     if (!sourceIssue) return
     const code = manualCode.trim()
     if (code.length < 30) {
-      setConversionError("Paste the complete authorized SuiteScript source before converting.")
+      setManualError("Paste the complete authorized SuiteScript source before converting.")
       return
     }
+    setManualError("")
 
     setSelectedScript(sourceIssue.script)
     setSourceIssue(null)
@@ -299,22 +302,25 @@ export default function ScriptListView() {
               <>
                 <textarea
                   value={manualCode}
-                  onChange={(e) => setManualCode(e.target.value)}
+                  onChange={(e) => { setManualCode(e.target.value); setManualError("") }}
                   placeholder="Paste authorized SuiteScript source here…"
                   style={{ width: "100%", minHeight: 150, resize: "vertical", border: "1px solid var(--rule)", borderRadius: 4, padding: 9, fontFamily: "var(--f-mono)", fontSize: 10.5, background: "#fff", color: "var(--ink)", outline: "none", marginBottom: 10 }}
                 />
+                {manualError && (
+                  <p style={{ fontSize: 10.5, color: "var(--clay)", marginBottom: 9, lineHeight: 1.5 }}>{manualError}</p>
+                )}
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={handleManualConvert} className="btn-primary" style={{ flex: 1, justifyContent: "center", fontSize: 11 }}>
                     Convert pasted source
                   </button>
-                  <button onClick={() => { setShowManualPaste(false); setManualCode("") }} className="btn-outline" style={{ fontSize: 11 }}>
+                  <button onClick={() => { setShowManualPaste(false); setManualCode(""); setManualError("") }} className="btn-outline" style={{ fontSize: 11 }}>
                     Cancel paste
                   </button>
                 </div>
               </>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                <button onClick={() => setShowManualPaste(true)} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
+                <button onClick={() => { setShowManualPaste(true); setManualError("") }} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
                   Paste authorized source
                 </button>
                 {sourceIssue.access !== "no_file" && (
