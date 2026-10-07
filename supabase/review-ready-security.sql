@@ -4,6 +4,10 @@
 ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS entitlement_expires_at TIMESTAMPTZ;
 
+UPDATE public.users
+SET conversions_limit = 5
+WHERE plan = 'free' AND conversions_limit = 2;
+
 ALTER TABLE public.conversions
   ALTER COLUMN original_code DROP NOT NULL;
 
