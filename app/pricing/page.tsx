@@ -31,7 +31,7 @@ const plans = [
     features: [
       "Everything in Free",
       "Unlimited script conversions",
-      "HTML migration audit report",
+      "Migration Readiness Report",
       "Conversion history",
       "Manual-review flags",
     ],
@@ -48,7 +48,7 @@ const plans = [
     features: [
       "Everything currently in Pro",
       "Unlimited script conversions",
-      "HTML migration audit report",
+      "Migration Readiness Report",
       "One annual payment",
     ],
     cta: "Get Annual",
@@ -62,7 +62,7 @@ const compRows = [
   { f: "Script conversions", free: "5", pro: "Unlimited", lt: "Unlimited" },
   { f: "Code / Changes / Inline review", free: "✓", pro: "✓", lt: "✓" },
   { f: "Converted JavaScript download", free: "✓", pro: "✓", lt: "✓" },
-  { f: "HTML migration audit report", free: "—", pro: "✓", lt: "✓" },
+  { f: "Migration Readiness Report", free: "—", pro: "✓", lt: "✓" },
 ]
 
 export default function PricingPage() {
@@ -77,7 +77,7 @@ export default function PricingPage() {
               Simple migration pricing.
             </h1>
             <p style={{ fontSize: 17, color: "var(--ink-soft)", maxWidth: 560, margin: "0 auto", lineHeight: 1.65 }}>
-              Start free with 5 conversions. Upgrade only when you need unlimited migration work or the HTML audit report.
+              Start free with 5 conversions. Upgrade only when you need unlimited migration work or the Migration Readiness Report.
             </p>
           </div>
 
