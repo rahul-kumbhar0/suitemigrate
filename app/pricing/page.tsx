@@ -39,20 +39,20 @@ const plans = [
     href: "/signup?plan=pro",
   },
   {
-    id: "lifetime",
-    name: "Lifetime",
+    id: "annual",
+    name: "Annual Pro",
     price: "$299",
-    period: "one time",
+    period: "/ year",
     dark: false,
-    desc: "The current Pro feature set without a monthly renewal.",
+    desc: "Twelve months of Pro access at a lower annual price.",
     features: [
       "Everything currently in Pro",
       "Unlimited script conversions",
       "HTML migration audit report",
-      "No monthly renewal",
+      "One annual payment",
     ],
-    cta: "Get Lifetime",
-    href: "/signup?plan=lifetime",
+    cta: "Get Annual",
+    href: "/signup?plan=annual",
   },
 ]
 
@@ -111,7 +111,7 @@ export default function PricingPage() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--rule)", background: "rgba(15,23,42,.04)" }}>
                     <th style={{ textAlign: "left", padding: "12px 18px", fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", fontWeight: 500 }}>Feature</th>
-                    {["Free","Pro","Lifetime"].map(h => (
+                    {["Free","Pro","Annual"].map(h => (
                       <th key={h} style={{ padding: "12px 14px", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 10, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink)", fontWeight: 600 }}>{h}</th>
                     ))}
                   </tr>
@@ -136,7 +136,7 @@ export default function PricingPage() {
               {[
                 { q: "Do I need a credit card for Free?", a: "No. Create an account and use the five included conversions." },
                 { q: "Can I cancel Pro?", a: "Yes. You can cancel the monthly plan and keep access through the paid billing period." },
-                { q: "What does Lifetime mean?", a: "A $299 one-time purchase gives access to the current Pro feature set for the life of the SuiteMigrate product. It is not a guarantee that the service will operate indefinitely." },
+                { q: "What does Annual Pro mean?", a: "A $299 payment gives 12 months of Pro access. That is $49 less than paying $29 monthly for 12 months." },
                 { q: "What counts as one conversion?", a: "Each successful AI conversion request counts toward the Free plan usage. Failed requests that do not complete processing are released from the quota." },
               ].map(f => (
                 <div key={f.q} style={{ background: "var(--paper)", padding: "22px 24px" }}>
