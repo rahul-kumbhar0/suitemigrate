@@ -39,7 +39,7 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
 
 export default function ScriptListView() {
   const {
-    activeAccount, user,
+    activeAccount, user, setActiveAccount,
     setView, setSelectedScript, setConverting,
     setConversionResult, setConversionError, addConversion,
     privacyAccepted, setPrivacyAccepted,
@@ -146,6 +146,7 @@ export default function ScriptListView() {
       // Instead we inject fetchScriptCode directly into the active NetSuite tab.
       let code = ""
       let fetchError = ""
+      let fetchAccess: NonNullable<NSScript["sourceAccess"]> = script.sourceAccess || "unknown"
 
       try {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -155,51 +156,40 @@ export default function ScriptListView() {
             func: fetchScriptCode,           // serialised and injected
             args: [script.id],
           })
-          const result = results?.[0]?.result as { code: string; error?: string } | null
+          const result = results?.[0]?.result as {
+            code: string
+            error?: string
+            access: "readable" | "no_file" | "restricted" | "protected"
+          } | null
           if (result?.code) {
             code = result.code
-          } else if (result?.error) {
-            fetchError = result.error
+            fetchAccess = "readable"
+          } else if (result) {
+            fetchAccess = result.access
+            fetchError = result.error || "Could not read the selected source file."
           }
         }
       } catch (err) {
         fetchError = err instanceof Error ? err.message : String(err)
       }
 
-      // Never send placeholder text to the conversion service.
-      // A source-fetch failure must not consume one of the user's conversions.
+      // Never send placeholder/HTML content to the conversion service.
       if (!code) {
-        throw new Error(
-          fetchError ||
-          "Could not retrieve this script's source file. Check your NetSuite role permissions and try again."
-        )
+        const message = fetchError || "Could not retrieve the selected source file."
+        await markSourceAccess(script.id, fetchAccess === "unknown" ? "protected" : fetchAccess, message)
+        setSourceIssue({
+          script: { ...script, sourceAccess: fetchAccess === "unknown" ? "protected" : fetchAccess, sourceAccessNote: message },
+          message,
+          access: fetchAccess === "unknown" ? "protected" : fetchAccess,
+        })
+        setShowManualPaste(false)
+        setManualCode("")
+        setView("script_list")
+        return
       }
 
-      // ── Convert ──────────────────────────────────────────────────────────
-      const result = await convertScript({
-        code,
-        scriptName: script.name,
-        nsAccountId: activeAccount.accountId,
-      })
-
-      const conversion = {
-        conversionId: result.conversionId,
-        scriptName: script.name,
-        convertedCode: result.convertedCode,
-        originalCode: code,
-        confidenceScore: result.confidenceScore,
-        changeLog: result.changeLog,
-        manualReviewLines: result.manualReviewLines,
-        isValid: result.isValid,
-        validationErrors: result.validationErrors,
-        scriptType: result.scriptType,
-        originalVersion: result.originalVersion,
-      }
-
-      addConversion(conversion)
-      await saveConversion(conversion)
-      setConversionResult(conversion)
-      setView("conversion_result")
+      await markSourceAccess(script.id, "readable")
+      await runConversionWithCode(script, code)
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Conversion failed"
