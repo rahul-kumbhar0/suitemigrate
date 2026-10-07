@@ -299,13 +299,13 @@ export default function LandingPage() {
             {[
               {
                 title: "NetSuite Consultants &amp; Partners",
-                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and an Migration Readiness Report for project handoff.",
+                desc: "Managing migrations across client accounts on a deadline. Get an active-script inventory, clear migration priority, reviewable conversions, and a Migration Readiness Report for project handoff.",
                 tags: ["Account inventory","Migration priority","Migration Readiness Report"],
               },
               {
                 title: "NetSuite Admins",
                 desc: "Responsible for your organisation's scripts but not sure where to start. Scan active scripts and see which API versions still need migration before converting anything.",
-                tags: ["Active-script inventory","Version risk","Audit report"],
+                tags: ["Active-script inventory","Version priority","Blocker visibility"],
               },
               {
                 title: "NetSuite Developers",
@@ -488,7 +488,7 @@ export default function LandingPage() {
                 {
                   n: "02",
                   title: "Review — version-based migration inventory",
-                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export an Migration Readiness Report.",
+                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export a Migration Readiness Report.",
                 },
                 {
                   n: "03",
