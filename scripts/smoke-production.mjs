@@ -29,7 +29,7 @@ await check("refund policy", async () => { await expectStatus("/refund", [200]) 
 await check("health release", async () => {
   const res = await expectStatus("/api/health", [200])
   const data = await res.json()
-  if (data?.status !== "ok" || data?.release !== "1.1.3") {
+  if (data?.status !== "ok" || data?.release !== "1.1.4") {
     throw new Error(`unexpected health payload: ${JSON.stringify(data)}`)
   }
 })
