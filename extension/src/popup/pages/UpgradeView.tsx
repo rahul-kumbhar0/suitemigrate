@@ -93,7 +93,7 @@ export default function UpgradeView() {
         </div>
 
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", textAlign: "center", lineHeight: 1.6 }}>
-          Lifetime Pro is also available on the website for $299 one-time.
+          Annual Pro is available on the website for $299/year — save $49 versus 12 monthly payments.
         </p>
 
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--ink-mute)", textAlign: "center" }}>
