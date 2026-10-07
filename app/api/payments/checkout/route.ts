@@ -12,10 +12,10 @@ const PLAN_CONFIG = {
     planId: process.env.RAZORPAY_PLAN_PRO_MONTHLY,
     type: "subscription" as const,
   },
-  lifetime: {
+  annual: {
     amount: 29900,
     currency: "USD",
-    description: "SuiteMigrate Lifetime Pro",
+    description: "SuiteMigrate Annual Pro — 1 Year",
     planId: null,
     type: "one_time" as const,
   },
