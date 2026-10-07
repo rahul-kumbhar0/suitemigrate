@@ -55,10 +55,12 @@ export async function convertScript(req: ConvertRequest): Promise<ConvertRespons
     if (res.status === 403) {
       throw new Error("SuiteMigrate blocked this extension request. Check the production EXTENSION_ID/CORS configuration.")
     }
+    const serverMessage = data.message || data.error
+    const supportCode = data.supportCode ? ` [${data.supportCode}]` : ""
     if (res.status >= 500) {
-      throw new Error(data.error || `SuiteMigrate server error (HTTP ${res.status}). Please retry.`)
+      throw new Error((serverMessage || `SuiteMigrate server error (HTTP ${res.status}). Please retry.`) + supportCode)
     }
-    throw new Error(data.error || `Conversion failed (HTTP ${res.status}).`)
+    throw new Error((serverMessage || `Conversion failed (HTTP ${res.status}).`) + supportCode)
   }
   return data as ConvertResponse
 }
