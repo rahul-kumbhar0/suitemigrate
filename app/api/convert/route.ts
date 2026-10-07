@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     }
 
     const { data: reservation, error: reserveError } = await admin.rpc(
-      "reserve_conversion_slot",
+      "reserve_conversion_slot_v2",
       { p_user_id: user.id }
     )
 
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       const reserveMessage = String(reserveError.message || "")
       const missingRpc =
         reserveError.code === "PGRST202" ||
-        /reserve_conversion_slot|function.*does not exist|schema cache/i.test(reserveMessage)
+        /reserve_conversion_slot_v2|function.*does not exist|schema cache/i.test(reserveMessage)
 
       return NextResponse.json(
         missingRpc
@@ -145,7 +145,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const slot = Array.isArray(reservation) ? reservation[0] : reservation
+    const slot = reservation as {
+      allowed?: boolean
+      plan?: Plan
+      used?: number
+      limit?: number | null
+    } | null
+
     if (!slot?.allowed) {
       return NextResponse.json(
         {
@@ -200,7 +206,7 @@ export async function POST(request: Request) {
       requiredModules: result.requiredModules,
       detectedApiCalls: result.detectedApiCalls,
       usage: {
-        used: slot.used,
+        used: slot.used ?? 0,
         plan: (slot.plan as Plan) || "free",
       },
     }, { headers })
@@ -208,7 +214,7 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     if (reservedUserId) {
       const { error: releaseError } = await admin.rpc(
-        "release_conversion_slot",
+        "release_conversion_slot_v2",
         { p_user_id: reservedUserId }
       )
       if (releaseError) {
