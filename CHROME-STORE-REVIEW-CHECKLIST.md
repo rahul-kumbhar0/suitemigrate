@@ -1,13 +1,13 @@
 # SuiteMigrate — Chrome Web Store Final Review Checklist
 
-Release candidate: **v1.1.3**
+Release candidate: **v1.1.4**
 
 Do not submit until every **BLOCKER** item is checked.
 
 ## A. Extension functionality — BLOCKER
 
 - [ ] Install the exact CI artifact / store ZIP on a clean Chrome profile.
-- [ ] Manifest shows version 1.1.3.
+- [ ] Manifest shows version 1.1.4.
 - [ ] Extension opens normally from the toolbar.
 - [ ] Sign-up and sign-in work from the extension flow.
 - [ ] Returning to the extension after sign-in shows the authenticated account.
@@ -44,19 +44,19 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] Confirm `/api/convert` exists in production and never returns a Vercel/Next.js 404.
 - [ ] Confirm `/api/auth/session` and `/api/user` work from the Store extension ID.
 - [ ] Configure Upstash rate limiting in production; do not intentionally ship production in fail-open mode.
-- [ ] Production accepts Store ID `ohdcofhfnjahaoblipdcpflainibhcld` and the deployed `/api/health` reports release 1.1.3.
+- [ ] Production accepts Store ID `ohdcofhfnjahaoblipdcpflainibhcld` and the deployed `/api/health` reports release 1.1.4.
 
 ## C. Payments — BLOCKER if payments are enabled at submission
 
 - [ ] Razorpay production account is configured.
 - [ ] Pro Monthly plan is exactly **$29/month USD** and `RAZORPAY_PLAN_PRO_MONTHLY` points to it.
-- [ ] Lifetime checkout is exactly **$299 one-time USD**.
+- [ ] Annual Pro checkout is exactly **$299/year USD**.
 - [ ] `RAZORPAY_WEBHOOK_SECRET` is configured.
 - [ ] Webhook endpoint is `/api/webhooks/razorpay`.
 - [ ] Invalid/missing webhook signatures are rejected.
 - [ ] Old/stale low-price payments cannot activate an entitlement.
 - [ ] Successful Pro payment activates Pro.
-- [ ] Successful Lifetime payment activates Lifetime.
+- [ ] Successful Annual Pro payment activates 12 months of Annual Pro.
 - [ ] Subscription cancellation/expiry returns the account to Free with 5-conversion limit.
 - [ ] Test checkout first in Razorpay test mode, then repeat a production smoke test before launch.
 
@@ -85,7 +85,7 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] Store description contains no unsupported Batch, ZIP, PDF, Priority Queue, Team collaboration, automatic deployment or “production-ready” claims.
 - [ ] At least one real screenshot clearly shows the working scan flow.
 - [ ] At least one real screenshot shows the conversion result.
-- [ ] Screenshots come from the exact v1.1.3 release candidate, not mock UI.
+- [ ] Screenshots come from the exact v1.1.4 release candidate, not mock UI.
 - [ ] Promo images match the same logo/colors/UI and do not promise future features.
 - [ ] Listing has no placeholder copy, test codes, internal TODOs or owner-confirm text.
 - [ ] Support URL/email and Privacy Policy URL work publicly without login.
@@ -122,6 +122,6 @@ Submit only when all of these are true:
 - [ ] Website production backend is deployed and healthy.
 - [ ] Privacy/Terms/listing match behavior.
 - [ ] Reviewer credentials and steps are verified from a clean browser profile.
-- [ ] Final v1.1.3 ZIP is the same artifact that passed testing.
+- [ ] Final v1.1.4 ZIP is the same artifact that passed testing.
 
 If any item above is unchecked, treat the release as **NO-GO** for Chrome Web Store submission.
