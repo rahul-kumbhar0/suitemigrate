@@ -1,4 +1,4 @@
-export type Plan = "free" | "pro" | "lifetime" | "team"
+export type Plan = "free" | "pro" | "annual" | "lifetime" | "team"
 
 export interface AuthUser {
   id: string
@@ -20,6 +20,8 @@ export interface NSScript {
   riskLevel: "HIGH" | "MEDIUM" | "LOW" | "NONE"
   needsMigration: boolean
   hasFile?: boolean         // whether scriptfile column is non-null
+  sourceAccess?: "unknown" | "readable" | "no_file" | "restricted" | "protected"
+  sourceAccessNote?: string
 }
 
 export interface NSAccount {
