@@ -3,6 +3,7 @@ import type { Plan } from "@/types"
 export const PLAN_LIMITS: Record<Plan, number> = {
   free: 5,
   pro: Infinity,
+  annual: Infinity,
   lifetime: Infinity,
   team: Infinity, // retained only for backwards compatibility with existing accounts
 }
