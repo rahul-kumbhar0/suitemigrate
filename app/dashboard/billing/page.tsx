@@ -15,7 +15,7 @@ const plans = [
     desc: "One developer, one migration. Unlimited conversions.",
     features: [
       "Unlimited script conversions",
-      "HTML migration audit report",
+      "Migration Readiness Report",
       "Code, Changes & Inline review views",
       "Manual-review flags",
       "Converted JavaScript downloads",
@@ -34,7 +34,7 @@ const plans = [
     features: [
       "Everything currently included in Pro",
       "12 months of Pro access",
-      "HTML migration audit report",
+      "Migration Readiness Report",
       "Converted JavaScript downloads",
     ],
     cta: "Get Annual",
