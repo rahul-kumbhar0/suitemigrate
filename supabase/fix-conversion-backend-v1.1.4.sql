@@ -9,6 +9,15 @@ UPDATE public.users
 SET conversions_limit = 5
 WHERE plan = 'free' AND (conversions_limit IS NULL OR conversions_limit < 5);
 
+-- Reconcile the visible usage counter to successful saved conversions.
+-- Failed conversions are never stored, so this removes stale counts from earlier tests.
+UPDATE public.users AS u
+SET conversions_used = COALESCE((
+  SELECT COUNT(*)::INTEGER
+  FROM public.conversions AS c
+  WHERE c.user_id = u.id
+), 0);
+
 CREATE OR REPLACE FUNCTION public.reserve_conversion_slot_v2(p_user_id UUID)
 RETURNS JSONB
 LANGUAGE plpgsql
