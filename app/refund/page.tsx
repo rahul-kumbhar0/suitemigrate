@@ -15,7 +15,7 @@ export default function RefundPage() {
             <div style={{ padding: "24px 28px", borderBottom: "1px solid var(--rule)" }}>
               <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 18, marginBottom: 10 }}>Initial purchase refund window</h2>
               <p style={{ fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.8 }}>
-                Pro and Lifetime purchases may be eligible for a refund request within 7 days of the initial purchase if SuiteMigrate did not function as described. Requests are reviewed against account and payment records.
+                Pro and Annual Pro purchases may be eligible for a refund request within 7 days of the initial purchase if SuiteMigrate did not function as described. Requests are reviewed against account and payment records.
               </p>
             </div>
             <div style={{ padding: "24px 28px", borderBottom: "1px solid var(--rule)" }}>
