@@ -58,7 +58,7 @@ const faqs = [
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro and Lifetime add unlimited conversions and the HTML migration audit report.",
+    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro Monthly and Annual Pro add unlimited conversions and the HTML migration audit report.",
   },
 ]
 
@@ -597,7 +597,7 @@ export default function LandingPage() {
                   <th style={{ textAlign: "left", padding: "12px 20px", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", fontWeight: 500, width: "44%" }}>
                     Feature
                   </th>
-                  {["Free", "Pro", "Lifetime"].map(h => (
+                  {["Free", "Pro", "Annual"].map(h => (
                     <th key={h} style={{ padding: "12px 16px", textAlign: "center", fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink)", fontWeight: 600 }}>
                       {h}
                     </th>
@@ -606,14 +606,14 @@ export default function LandingPage() {
               </thead>
               <tbody>
                 {[
-                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  lifetime: "Unlimited" },
-                  { f: "Active-script scan",       free: "✓",          pro: "✓",          lifetime: "✓" },
+                  { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
+                  { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
                   { f: "Change review + JS download", free: "✓",       pro: "✓",          lifetime: "✓" },
                   { f: "HTML migration audit report", free: "—",       pro: "✓",          lifetime: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
-                    {[row.free, row.pro, row.lifetime].map((v, j) => (
+                    {[row.free, row.pro, row.annual].map((v, j) => (
                       <td key={j} style={{
                         padding: "11px 16px", textAlign: "center", fontSize: 13,
                         color: v === "✓" ? "var(--clay)" : v === "—" ? "var(--ink-mute)" : "var(--ink)",
@@ -633,7 +633,7 @@ export default function LandingPage() {
 
       {/* ═══════════════════════════════════════════
           04 — PRICING
-          Free / Pro / Lifetime
+          Free / Pro / Annual
       ═══════════════════════════════════════════ */}
       <section id="pricing" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)" }}>
         <div className="landing-section-padding">
@@ -715,27 +715,27 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* LIFETIME */}
+            {/* ANNUAL */}
             <div style={{ padding: "32px 28px", border: "1px solid var(--rule)", borderRadius: 5, background: "var(--paper)", display: "flex", flexDirection: "column" }}>
-              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Lifetime</div>
-              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>One payment, same Pro access</div>
+              <div style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, textTransform: "uppercase", letterSpacing: ".15em", color: "var(--ink-mute)", marginBottom: 6 }}>Annual Pro</div>
+              <div style={{ fontSize: 12.5, color: "var(--ink-soft)", marginBottom: 18, fontStyle: "italic" }}>12 months of Pro access</div>
               <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(32px,4vw,48px)", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>$299</div>
-              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>one time</div>
-              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Pro access for the life of the product</div>
+              <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 4 }}>per year</div>
+              <div style={{ fontSize: 12, color: "var(--ink-mute)", marginBottom: 20 }}>Save $49 vs 12 monthly payments</div>
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 24, flex: 1 }}>
                 {[
                   "Unlimited script conversions",
                   "HTML migration audit report",
                   "Code review and JavaScript downloads",
-                  "No monthly renewal",
+                  "One annual payment",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
                     <span style={{ color: "var(--clay)", flexShrink: 0, fontFamily: "var(--f-mono)" }}>✓</span>{f}
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?plan=lifetime" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
-                Get Lifetime
+              <Link href="/signup?plan=annual" className="free-plan-cta" style={{ display: "block", textAlign: "center", padding: "12px 16px", borderRadius: 4, fontSize: 13.5, fontWeight: 500, border: "1px solid var(--rule)", color: "var(--ink)", textDecoration: "none", marginTop: "auto" }}>
+                Get Annual
               </Link>
             </div>
           </div>
@@ -885,7 +885,7 @@ export default function LandingPage() {
         .free-plan-cta:hover    { background: var(--ink) !important; color: var(--paper) !important; border-color: var(--ink) !important; }
         .pro-plan-cta:hover     { background: #c23d15 !important; }
         .team-contact-link:hover { color: var(--ink) !important; }
-        .lifetime-link:hover    { text-decoration: underline !important; }
+        .annual-link:hover    { text-decoration: underline !important; }
       `}</style>
     </div>
   )
