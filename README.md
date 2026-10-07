@@ -53,14 +53,11 @@ npm install
 ```bash
 # Copy template
 cp .env.local.example .env.local
-
-# Edit .env.local and fill in:
-# - NEXT_PUBLIC_SUPABASE_URL
-# - NEXT_PUBLIC_SUPABASE_ANON_KEY
-# - SUPABASE_SERVICE_ROLE_KEY
-# - GEMINI_API_KEY
-# - (Optional) Razorpay keys for testing payments
 ```
+
+Configure the required application, database, AI-service, payment, email, rate-limiting, and analytics environment variables in `.env.local`.
+
+> AI provider and model configuration are intentionally kept implementation-specific and are not documented publicly.
 
 ### 4. Supabase Setup
 1. Create project at [supabase.com](https://supabase.com)
@@ -85,7 +82,7 @@ npm install
 npm run build
 
 # Load unpacked extension in Chrome:
-# 1. Open chrome://extensions
+# 1. Open chrome://extensions/
 # 2. Enable "Developer mode"
 # 3. Click "Load unpacked"
 # 4. Select extension/dist folder
@@ -185,7 +182,7 @@ define(['N/record', 'N/log'], function(record, log) {
 ### Vercel (Website)
 ```bash
 # Connect GitHub repo to Vercel
-# Environment variables are auto-imported from .env.local
+# Configure required environment variables in Vercel
 
 # Deploy:
 git push origin main
@@ -212,18 +209,11 @@ All tables are created via `supabase/schema.sql`:
 - **teams** — Team workspaces (for Team plan)
 - **team_members** — Team membership
 
-## 🔐 Environment Variables Reference
+## 🔐 Configuration
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | ✅ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | ✅ |
-| `GEMINI_API_KEY` | Google Gemini API key | ✅ |
-| `GEMINI_MODEL` | Model name (default: `gemini-2.0-flash-exp`) | ❌ |
-| `RAZORPAY_KEY_ID` | Razorpay publishable key | ❌ |
-| `RAZORPAY_KEY_SECRET` | Razorpay secret key | ❌ |
-| `RAZORPAY_WEBHOOK_SECRET` | Razorpay webhook secret | ❌ |
+SuiteMigrate uses server-side environment configuration for authentication, database access, AI conversion, payments, email, rate limiting, and analytics.
+
+For security and implementation flexibility, exact AI provider/model details are intentionally not documented in this public README.
 
 ## 🐛 Known Issues & Troubleshooting
 
@@ -231,9 +221,9 @@ All tables are created via `supabase/schema.sql`:
 **Cause:** Polling interval not triggering or CORS issue  
 **Fix:** Check browser console for errors, verify CORS headers in `/api/auth/session`
 
-### Gemini API returns 400 error
-**Cause:** AI service configuration error  
-**Fix:** Check server logs and verify AI API key is set in Vercel environment variables
+### AI conversion service returns an error
+**Cause:** AI service configuration or upstream availability issue  
+**Fix:** Check server logs and verify the required AI-service environment configuration is present
 
 ### "Conversion limit reached" error on first conversion
 **Cause:** User profile not created in database  
@@ -250,7 +240,7 @@ All rights reserved. See LICENSE file.
 
 ## 🤝 Contributing
 
-This is a private repository. Please contact the owner before contributing.
+Please contact the owner before contributing.
 
 ## 📧 Support
 
