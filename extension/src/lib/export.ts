@@ -57,6 +57,7 @@ export function downloadAuditReport(account: NSAccount): void {
 
   const accessLabel = (s: NSAccount["scripts"][number]) => {
     if (s.sourceAccess === "readable") return "Source ready"
+    if (s.sourceAccess === "manual") return "Authorized copy supplied"
     if (s.sourceAccess === "no_file") return "No source file"
     if (s.sourceAccess === "restricted") return "Role restricted"
     if (s.sourceAccess === "protected") return "Protected / hidden"
@@ -78,7 +79,7 @@ export function downloadAuditReport(account: NSAccount): void {
   }
 
   const accessClass = (s: NSAccount["scripts"][number]) => {
-    if (s.sourceAccess === "readable") return "ok"
+    if (s.sourceAccess === "readable" || s.sourceAccess === "manual") return "ok"
     if (["no_file", "restricted", "protected"].includes(s.sourceAccess || "")) return "block"
     return "neutral"
   }
