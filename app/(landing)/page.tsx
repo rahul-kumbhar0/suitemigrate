@@ -26,6 +26,10 @@ const faqs = [
     a: "Yes. NetSuite provides account-level preferences that let you test 2.0/2.x server scripts in the 2.1 runtime. SuiteMigrate complements that testing by giving you an active-script inventory, version-based migration priority, and a reviewable conversion workflow.",
   },
   {
+    q: "What if a client or vendor script is locked or hidden?",
+    a: "SuiteMigrate does not bypass NetSuite or vendor source protection. A locked bundle file can still be readable, while vendor-hidden server source may be intentionally unavailable. SuiteMigrate marks missing, role-restricted, and protected source as migration blockers. If you already have an authorized source copy, you can paste it manually; otherwise request a SuiteScript 2.1-compatible release or source from the vendor/client.",
+  },
+  {
     q: "Is my code safe?",
     // §9.2 — links to the security section
     a: "See the Security & privacy section below. In short: the extension reads script records using your existing NetSuite session and never modifies your account. If you choose to convert a script, the code is sent to the AI provider for that conversion only. See the data-handling note near the top of the page for full details.",
@@ -104,8 +108,8 @@ export default function LandingPage() {
           fontSize: "clamp(15px,2vw,18px)", color: "var(--ink-soft)",
           maxWidth: 560, lineHeight: 1.65, marginBottom: 36,
         }}>
-          Scan active scripts visible to your current NetSuite role, identify which versions need migration, and convert
-          SuiteScript 1.0 / 2.0 / 2.x to 2.1 with version-based migration priority and review flags.
+          Scan active scripts visible to your current NetSuite role, identify migration blockers, and convert
+          readable SuiteScript 1.0 / 2.0 / 2.x source to 2.1 with version-based priority and review flags.
         </p>
 
         {/* §2.3 CTAs + §2.4 trust line */}
@@ -336,7 +340,7 @@ export default function LandingPage() {
               '"We have 200+ custom scripts and no clear picture of which are 1.0 vs 2.0 vs 2.1."',
               '"Manual conversion takes a full day per script — we can\'t do 200 scripts manually."',
               '"I assumed 2.0 scripts were fine. Now I hear they may break too in 2028.2."',
-              '"I converted a script and it broke in production — no visibility into what changed."',
+              '"Some client/vendor scripts are protected or missing — I need to know that before promising a migration timeline."',
             ].map(item => (
               <div key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "13px 14px", border: "1px solid rgba(250,250,249,.08)", borderRadius: 4, fontSize: 13.5, color: "rgba(250,250,249,.7)", lineHeight: 1.5 }}>
                 <span style={{ color: "var(--clay)", flexShrink: 0 }}>⚠</span>
@@ -378,9 +382,9 @@ export default function LandingPage() {
               },
               {
                 icon: AlertTriangle,
-                title: "Search and filter the migration inventory",
-                desc: "Search scripts by name or type and filter between scripts that need an update, all active scripts, and scripts already on SuiteScript 2.1.",
-                admin: "Keeps large inventories manageable without claiming unverified behaviour analysis.",
+                title: "Migration blocker detection",
+                desc: "Classifies source access as ready, missing, role-restricted, or protected/inaccessible after access is checked. Protected items stay visible in the migration plan instead of disappearing behind a generic error.",
+                admin: "Know what your team can migrate directly — and what needs an authorized source copy, a different role, or a vendor 2.1 release.",
               },
               {
                 icon: Zap,
