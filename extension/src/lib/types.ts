@@ -20,7 +20,7 @@ export interface NSScript {
   riskLevel: "HIGH" | "MEDIUM" | "LOW" | "NONE"
   needsMigration: boolean
   hasFile?: boolean         // whether scriptfile column is non-null
-  sourceAccess?: "unknown" | "readable" | "no_file" | "restricted" | "protected"
+  sourceAccess?: "unknown" | "readable" | "manual" | "no_file" | "restricted" | "protected"
   sourceAccessNote?: string
 }
 
