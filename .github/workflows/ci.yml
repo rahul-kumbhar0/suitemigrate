@@ -22,7 +22,7 @@ jobs:
       RAZORPAY_KEY_SECRET: test-secret
       RAZORPAY_WEBHOOK_SECRET: test-webhook-secret
       RAZORPAY_PLAN_PRO_MONTHLY: plan_placeholder
-      EXTENSION_ID: abcdefghijklmnopqrstuvwxyzabcdef
+      EXTENSION_ID: ohdcofhfnjahaoblipdcpflainibhcld
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,6 +49,6 @@ jobs:
       - name: Upload Chrome test package
         uses: actions/upload-artifact@v4
         with:
-          name: SuiteMigrate-v1.1.2-extension
+          name: SuiteMigrate-v1.1.3-extension
           path: extension/dist/
           if-no-files-found: error
