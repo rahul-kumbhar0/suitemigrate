@@ -120,11 +120,25 @@ export default function ScriptListView() {
   }
 
   const handleConvert = async (script: NSScript) => {
-    // Item 7: show privacy notice before the very first conversion
     if (!privacyAccepted) {
       setPendingScript(script)
       return
     }
+
+    if (["no_file", "restricted", "protected"].includes(script.sourceAccess || "")) {
+      setSourceIssue({
+        script,
+        access: script.sourceAccess as NonNullable<NSScript["sourceAccess"]>,
+        message: script.sourceAccessNote ||
+          (script.sourceAccess === "no_file"
+            ? "No source file is attached to this script record."
+            : "Automatic source access is unavailable for this script."),
+      })
+      setShowManualPaste(false)
+      setManualCode("")
+      return
+    }
+
     await doConvert(script)
   }
 
@@ -205,8 +219,41 @@ export default function ScriptListView() {
     }
   }
 
+  const handleManualConvert = async () => {
+    if (!sourceIssue) return
+    const code = manualCode.trim()
+    if (code.length < 30) {
+      setConversionError("Paste the complete authorized SuiteScript source before converting.")
+      return
+    }
+
+    setSelectedScript(sourceIssue.script)
+    setSourceIssue(null)
+    setShowManualPaste(false)
+    setConverting(true)
+    setConversionError(null)
+    setView("converting")
+
+    try {
+      await runConversionWithCode(sourceIssue.script, code)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Conversion failed"
+      if (msg === "conversion_limit_reached") setView("upgrade")
+      else {
+        setConversionError(msg)
+        setView("conversion_result")
+      }
+    } finally {
+      setConverting(false)
+      setManualCode("")
+    }
+  }
+
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
+  const blockers = activeAccount.scripts.filter(s =>
+    ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+  ).length
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -244,14 +291,14 @@ export default function ScriptListView() {
 
         {/* Filter tabs */}
         <div style={{ display: "flex", gap: 4 }}>
-          {(["needs_update", "all", "done"] as const).map(f => (
+          {(["needs_update", "blockers", "all", "done"] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={filter === f ? "tab-active" : "tab-inactive"}
               style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 10, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer", fontWeight: 500 }}
             >
-              {f === "needs_update" ? `Update (${needs})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
+              {f === "needs_update" ? `Update (${needs})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
             </button>
           ))}
         </div>
@@ -292,9 +339,10 @@ export default function ScriptListView() {
               </p>
               <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", marginTop: 2 }}>
                 {script.scriptType} · SS {script.apiVersion}
-                {script.hasFile === false && (
-                  <span style={{ color: "var(--clay)", marginLeft: 4 }}>· no file</span>
-                )}
+                {script.sourceAccess === "no_file" && <span style={{ color: "var(--clay)", marginLeft: 4 }}>· no file</span>}
+                {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
+                {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
+                {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
@@ -302,12 +350,11 @@ export default function ScriptListView() {
               {script.needsMigration ? (
                 <button
                   onClick={() => handleConvert(script)}
-                  disabled={script.hasFile === false}
-                  className="btn-primary"
-                  title={script.hasFile === false ? "No source file is attached to this script" : "Convert this script"}
+                  className={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "btn-outline" : "btn-primary"}
+                  title={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "View migration options" : "Convert this script"}
                   style={{ fontSize: 10, padding: "4px 10px" }}
                 >
-                  {script.hasFile === false ? "No file" : "Convert"}
+                  {["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "Options" : "Convert"}
                 </button>
               ) : (
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "#15803d" }}>✓ 2.1</span>
