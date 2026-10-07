@@ -10,7 +10,7 @@ import Header from "../components/Header"
 
 const PRO_FEATURES = [
   "Unlimited script conversions",
-  "HTML migration audit report",
+  "Migration Readiness Report",
   "Converted code with change notes and review flags",
   "Download converted SuiteScript files",
 ] as const
