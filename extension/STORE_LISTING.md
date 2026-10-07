@@ -36,8 +36,10 @@ Scan active NetSuite scripts, identify legacy SuiteScript, and convert selected 
 - Converted SuiteScript 2.1 output
 - Change log and manual-review markers
 - Download converted JavaScript
+- Source-access blocker states: ready, missing, role-restricted, protected/inaccessible
+- Authorized manual source paste when automatic access is unavailable
 - Migration Readiness Report for paid plans
-- Source-access blocker states: ready, missing, role-restricted, protected/inaccessible\n- Authorized manual source paste when automatic access is unavailable\n- Migration Readiness Report for paid plans\n- Local scan/history cache with clear-cache action
+- Local scan/history cache with clear-cache action
 
 Do not advertise batch conversion, ZIP export, PDF export, priority queue, Team collaboration or automatic deployment until those features are implemented end-to-end.
 
