@@ -1,6 +1,6 @@
 /**
  * Rate limiting using Upstash Redis.
- * Falls back gracefully (allows the request) when Redis is not configured.
+ * Missing Redis configuration blocks production requests; development can run locally.
  *
  * Limits:
  *  - /api/convert   : 10 requests per user per minute  (per-user)
@@ -51,7 +51,12 @@ async function check(
   limiter: Ratelimit | null,
   identifier: string
 ): Promise<RateLimitResult> {
-  if (!limiter) return { limited: false, resetIn: 0 }
+  if (!limiter) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Production rate limiting is not configured")
+    }
+    return { limited: false, resetIn: 0 }
+  }
   const { success, reset } = await limiter.limit(identifier)
   return {
     limited: !success,

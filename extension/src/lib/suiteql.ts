@@ -145,7 +145,13 @@ export async function fetchScriptCode(scriptId: string): Promise<{
       const text = await res.text()
       const contentType = (res.headers.get("content-type") || "").toLowerCase()
       const isHtml = contentType.includes("text/html") || /^\s*<!doctype html|^\s*<html/i.test(text)
-      if (res.ok && text.trim() && !isHtml) return { code: text, access: "readable" as const }
+      if (res.ok && text.trim() && !isHtml) {
+        // A successful HTTP response can still be a NetSuite error payload.
+        if (!contentType.includes("json") && looksLikeSource(text)) {
+          return { code: text, access: "readable" as const }
+        }
+        return { code: "", access: classifyHtml(text) }
+      }
       if (res.ok && isHtml) {
         const embedded = extractSourceFromHtml(text)
         if (embedded) return { code: embedded, access: "readable" as const }

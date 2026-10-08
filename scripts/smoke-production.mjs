@@ -12,7 +12,7 @@ async function check(name, fn) {
 }
 
 async function expectStatus(path, expected, init) {
-  const res = await fetch(`${base}${path}`, init)
+  const res = await fetch(`${base}${path}`, { ...init, signal: AbortSignal.timeout(15000) })
   if (!expected.includes(res.status)) {
     const body = await res.text().catch(() => "")
     throw new Error(`expected HTTP ${expected.join("/")} but got ${res.status}: ${body.slice(0, 180)}`)
@@ -29,7 +29,7 @@ await check("refund policy", async () => { await expectStatus("/refund", [200]) 
 await check("health release", async () => {
   const res = await expectStatus("/api/health", [200])
   const data = await res.json()
-  if (data?.status !== "ok" || data?.release !== "1.1.4") {
+  if (data?.status !== "ok" || data?.release !== "1.1.4" || !data?.readyForConversions || data?.checks?.quotaRpc !== "ok" || data?.checks?.rateLimit !== "configured") {
     throw new Error(`unexpected health payload: ${JSON.stringify(data)}`)
   }
 })

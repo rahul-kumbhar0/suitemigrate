@@ -192,6 +192,11 @@ export async function POST(request: Request) {
 
     reservedUserId = null
 
+    const { count: completedCount } = await admin
+      .from("conversions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+
     return NextResponse.json({
       success: true,
       conversionId: saved.id,
@@ -206,7 +211,7 @@ export async function POST(request: Request) {
       requiredModules: result.requiredModules,
       detectedApiCalls: result.detectedApiCalls,
       usage: {
-        used: slot.used ?? 0,
+        used: completedCount ?? slot.used ?? 0,
         plan: (slot.plan as Plan) || "free",
       },
     }, { headers })

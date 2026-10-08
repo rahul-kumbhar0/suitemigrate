@@ -1,3 +1,5 @@
+BEGIN;
+
 -- SuiteMigrate v1.1.4 — conversion backend repair
 -- Run in Supabase Dashboard → SQL Editor on the PRODUCTION project.
 -- Safe to run more than once.
@@ -28,9 +30,10 @@ DECLARE
   v_plan TEXT;
   v_used INTEGER;
   v_limit INTEGER;
+  v_expires_at TIMESTAMPTZ;
 BEGIN
-  SELECT u.plan, COALESCE(u.conversions_used, 0), COALESCE(u.conversions_limit, 5)
-    INTO v_plan, v_used, v_limit
+  SELECT u.plan, COALESCE(u.conversions_used, 0), COALESCE(u.conversions_limit, 5), u.entitlement_expires_at
+    INTO v_plan, v_used, v_limit, v_expires_at
   FROM public.users AS u
   WHERE u.id = p_user_id
   FOR UPDATE;
@@ -39,6 +42,16 @@ BEGIN
     RAISE EXCEPTION USING
       ERRCODE = 'P0002',
       MESSAGE = 'user_profile_not_found';
+  END IF;
+
+  -- Enforce expiry under the same row lock as quota reservation.
+  IF v_expires_at IS NOT NULL AND v_expires_at <= NOW() THEN
+    UPDATE public.users SET plan = 'free', conversions_limit = 5,
+      entitlement_expires_at = NULL WHERE id = p_user_id;
+    v_plan := 'free';
+  END IF;
+  IF v_plan = 'free' THEN
+    v_limit := 5;
   END IF;
 
   IF v_plan = 'free' AND v_used >= v_limit THEN
@@ -101,3 +114,5 @@ FROM information_schema.routines
 WHERE routine_schema = 'public'
   AND routine_name IN ('reserve_conversion_slot_v2', 'release_conversion_slot_v2')
 ORDER BY routine_name;
+
+COMMIT;

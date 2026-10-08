@@ -1,3 +1,5 @@
+BEGIN;
+
 -- Review-ready production migration
 ALTER TABLE public.users
   DROP CONSTRAINT IF EXISTS users_plan_check;
@@ -53,6 +55,7 @@ DROP POLICY IF EXISTS "users_update_own" ON public.users;
 REVOKE UPDATE ON TABLE public.users FROM anon, authenticated;
 
 DROP POLICY IF EXISTS "conversions_own" ON public.conversions;
+DROP POLICY IF EXISTS "conversions_select_own" ON public.conversions;
 CREATE POLICY "conversions_select_own" ON public.conversions
   FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
@@ -124,20 +127,31 @@ RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_plan TEXT;
   v_used INTEGER;
   v_limit INTEGER;
+  v_expires_at TIMESTAMPTZ;
 BEGIN
-  SELECT u.plan, COALESCE(u.conversions_used, 0), COALESCE(u.conversions_limit, 5)
-    INTO v_plan, v_used, v_limit
+  SELECT u.plan, COALESCE(u.conversions_used, 0), COALESCE(u.conversions_limit, 5), u.entitlement_expires_at
+    INTO v_plan, v_used, v_limit, v_expires_at
   FROM public.users AS u
   WHERE u.id = p_user_id
   FOR UPDATE;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'user_profile_not_found';
+  END IF;
+
+  -- Enforce expiry under the same row lock as quota reservation.
+  IF v_expires_at IS NOT NULL AND v_expires_at <= NOW() THEN
+    UPDATE public.users SET plan = 'free', conversions_limit = 5,
+      entitlement_expires_at = NULL WHERE id = p_user_id;
+    v_plan := 'free';
+  END IF;
+  IF v_plan = 'free' THEN
+    v_limit := 5;
   END IF;
 
   IF v_plan = 'free' AND v_used >= v_limit THEN
@@ -156,14 +170,14 @@ BEGIN
     'limit', CASE WHEN v_plan = 'free' THEN v_limit ELSE NULL END
   );
 END;
-$;
+$$;
 
 CREATE OR REPLACE FUNCTION public.release_conversion_slot_v2(p_user_id UUID)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
   v_used INTEGER;
 BEGIN
@@ -174,7 +188,7 @@ BEGIN
 
   RETURN jsonb_build_object('released', FOUND, 'used', COALESCE(v_used, 0));
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.reserve_conversion_slot_v2(UUID) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.release_conversion_slot_v2(UUID) FROM PUBLIC, anon, authenticated;
@@ -191,3 +205,5 @@ SET conversions_used = COALESCE((
 
 NOTIFY pgrst, 'reload schema';
 
+
+COMMIT;

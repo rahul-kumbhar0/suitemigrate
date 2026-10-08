@@ -34,7 +34,7 @@ Do not submit until every **BLOCKER** item is checked.
 - [ ] Run `supabase/review-ready-security.sql` in the production Supabase project.
 - [ ] Confirm users cannot directly change their own `plan`, `conversions_limit`, or `conversions_used`.
 - [ ] Confirm original source code is not persisted in `conversions.original_code` after new conversions.
-- [ ] Confirm `reserve_conversion_slot` and `release_conversion_slot` exist and work.
+- [ ] Confirm `reserve_conversion_slot_v2` and `release_conversion_slot_v2` exist and work.
 - [ ] Confirm Free starts at exactly 5 conversions.
 - [ ] Confirm failed conversions release a reserved Free slot.
 - [ ] Confirm Promo codes are not publicly enumerable.

@@ -104,7 +104,7 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient()
     const entitlementExpiresAt = plan === "annual"
-      ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+      ? new Date(Number(payment.created_at) * 1000 + 365 * 24 * 60 * 60 * 1000).toISOString()
       : null
 
     const { error: planError } = await admin

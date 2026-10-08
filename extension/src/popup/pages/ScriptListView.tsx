@@ -116,7 +116,11 @@ export default function ScriptListView() {
     }
 
     addConversion(conversion)
-    await saveConversion(conversion)
+    try {
+      await saveConversion(conversion)
+    } catch {
+      // Server history already holds this result; local cache is best effort.
+    }
 
     // Update usage immediately so the popup never shows a stale conversion count.
     if (user) {
@@ -129,8 +133,12 @@ export default function ScriptListView() {
     }
 
     // Then reconcile against the backend profile in case the plan/quota changed.
-    const freshUser = await fetchCurrentUser()
-    if (freshUser) setUser(freshUser)
+    try {
+      const freshUser = await fetchCurrentUser()
+      if (freshUser) setUser(freshUser)
+    } catch {
+      // A profile refresh failure must not hide an already saved result.
+    }
 
     setConversionResult(conversion)
     setView("conversion_result")

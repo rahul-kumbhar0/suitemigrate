@@ -4,21 +4,24 @@ import { createAdminClient } from "@/lib/supabase/admin"
 export const dynamic = "force-dynamic"
 
 export async function GET() {
-  const admin = createAdminClient()
-
   let quotaRpcReady = false
   let quotaRpcError: string | null = null
 
   try {
     // A zero UUID cannot match a real auth user; release is therefore a no-op.
     // It still proves the v2 RPC exists, is executable by service_role, and is visible to PostgREST.
+    const admin = createAdminClient()
     const { error } = await admin.rpc("release_conversion_slot_v2", {
       p_user_id: "00000000-0000-0000-0000-000000000000",
     })
-    quotaRpcReady = !error
-    quotaRpcError = error ? (error.code || error.message || "rpc_error") : null
-  } catch (err) {
-    quotaRpcError = err instanceof Error ? err.message : "rpc_error"
+    // Probe reservation without a real user: P0002 is the expected no-write response.
+    const { error: reserveError } = await admin.rpc("reserve_conversion_slot_v2", {
+      p_user_id: "00000000-0000-0000-0000-000000000000",
+    })
+    quotaRpcReady = !error && reserveError?.code === "P0002"
+    quotaRpcError = error ? (error.code || "rpc_error") : quotaRpcReady ? null : (reserveError?.code || "unexpected_rpc_response")
+  } catch {
+    quotaRpcError = "rpc_error"
   }
 
   const aiConfigured = Boolean(process.env.GEMINI_API_KEY)
@@ -26,7 +29,7 @@ export async function GET() {
     process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   )
 
-  const status = quotaRpcReady && aiConfigured ? "ok" : "degraded"
+  const status = quotaRpcReady && aiConfigured && rateLimitConfigured ? "ok" : "degraded"
 
   return NextResponse.json({
     status,
