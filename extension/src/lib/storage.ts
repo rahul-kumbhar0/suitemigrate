@@ -5,6 +5,15 @@
 
 import type { AuthUser, NSAccount, ConversionResult } from "./types"
 
+export interface AccessAuditState {
+  state: "running" | "paused" | "complete"
+  checked: number
+  total: number
+  tabId: number
+  updatedAt: string
+  lastError?: string
+}
+
 export interface ExtensionStorage {
   authToken?: string
   authRefreshToken?: string
@@ -14,6 +23,7 @@ export interface ExtensionStorage {
   conversions?: ConversionResult[]
   lastActiveAccount?: string
   privacyAccepted?: boolean
+  accessAudits?: Record<string, AccessAuditState>
 }
 
 export async function getStorage<K extends keyof ExtensionStorage>(
@@ -69,6 +79,6 @@ export async function getAllAccounts(): Promise<NSAccount[]> {
 /** Clear all conversion history and cached account data */
 export async function clearHistory(): Promise<void> {
   return new Promise((resolve) => {
-    chrome.storage.local.remove(["conversions", "accounts", "lastActiveAccount"], resolve)
+    chrome.storage.local.remove(["conversions", "accounts", "lastActiveAccount", "accessAudits"], resolve)
   })
 }
