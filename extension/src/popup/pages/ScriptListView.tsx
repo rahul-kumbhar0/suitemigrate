@@ -98,6 +98,57 @@ export default function ScriptListView() {
     await saveAccount(next)
   }
 
+  // Preflight: fetch source inside the current NetSuite session, classify it,
+  // and discard all code. It never reaches the AI API or Chrome storage.
+  const checkSourceAccess = async (script: NSScript): Promise<void> => {
+    setCheckingId(script.id)
+    setAccessError("")
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+      const hostname = tab?.url ? new URL(tab.url).hostname : ""
+      if (!tab?.id || !/(^|\\.)netsuite\\.com$/i.test(hostname)) {
+        throw new Error("Open your NetSuite tab before checking source access.")
+      }
+
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: fetchScriptCode,
+        args: [script.id],
+      })
+      const result = results?.[0]?.result as {
+        code: string
+        access: NonNullable<NSScript["sourceAccess"]>
+        error?: string
+      } | null
+
+      if (!result) throw new Error("NetSuite did not return a source access result.")
+      const access = result.code ? "readable" : result.access
+      await markSourceAccess(
+        script.id,
+        access,
+        access === "readable"
+          ? "Source checked successfully in NetSuite."
+          : (result.error || "Source is not readable.")
+      )
+      if (access === "unknown") {
+        setAccessError(result.error || "Source could not be verified. Try again.")
+      }
+    } catch (err) {
+      setAccessError(err instanceof Error ? err.message : "Source check failed.")
+    } finally {
+      setCheckingId(null)
+    }
+  }
+
+  const checkVisibleScripts = async () => {
+    setCheckingBatch(true)
+    setAccessError("")
+    // A small batch avoids overwhelming NetSuite; repeat to check the next five.
+    const candidates = filtered.filter(s => s.needsMigration && s.sourceAccess === "unknown").slice(0, 5)
+    for (const script of candidates) await checkSourceAccess(script)
+    setCheckingBatch(false)
+  }
+
   const runConversionWithCode = async (script: NSScript, code: string) => {
     const result = await convertScript({
       code,
