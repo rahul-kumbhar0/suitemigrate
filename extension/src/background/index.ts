@@ -1,24 +1,44 @@
 /**
  * Background service worker (Manifest V3)
- * Item 1: BASE_URL from env — no hardcoded localhost in production
- * Item 5: alarms keepalive removed; "alarms" permission dropped from manifest
- * Item 5: content.js SCAN_SCRIPTS / CONTENT_READY dead code removed
  */
 
-// Single source of truth — set at build time via VITE_APP_URL
-// Defaults to production URL so the build fails fast if localhost sneaks in
 const BASE_URL = import.meta.env.VITE_APP_URL || "https://suitemigrate.vercel.app"
 
-// Open welcome tab on first install
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     chrome.tabs.create({ url: `${BASE_URL}/signup?from=extension` })
   }
 })
 
-// Handle messages from popup
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
+    case "AUTH_SESSION": {
+      // Only the SuiteMigrate first-party auth bridge may hand a session to us.
+      const senderUrl = sender.url || sender.tab?.url || ""
+      if (!senderUrl.startsWith(BASE_URL)) {
+        sendResponse({ ok: false, error: "untrusted_sender" })
+        break
+      }
+
+      const accessToken = typeof message.accessToken === "string" ? message.accessToken : ""
+      const refreshToken = typeof message.refreshToken === "string" ? message.refreshToken : ""
+      const expiresAt = typeof message.expiresAt === "number" ? message.expiresAt : null
+
+      if (!accessToken || !refreshToken) {
+        sendResponse({ ok: false, error: "invalid_session" })
+        break
+      }
+
+      chrome.storage.local.set(
+        {
+          authToken: accessToken,
+          authRefreshToken: refreshToken,
+          authExpiresAt: expiresAt,
+        },
+        () => sendResponse({ ok: true })
+      )
+      return true
+    }
 
     case "OPEN_WEBSITE": {
       const path: string = message.path || ""
@@ -31,7 +51,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         sendResponse({ tab: tabs[0] ?? null })
       })
-      return true // async
+      return true
     }
 
     default:
