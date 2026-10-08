@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -22,7 +22,7 @@ const GoogleIcon = () => (
   </svg>
 )
 
-export default function SignupPage() {
+function SignupPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromExtension = searchParams.get("from") === "extension"
@@ -212,6 +212,14 @@ export default function SignupPage() {
         .auth-link:hover { color: var(--ink) !important; }
       `}</style>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div style={{ width: "100%", maxWidth: 400 }} />}>
+      <SignupPageContent />
+    </Suspense>
   )
 }
 
