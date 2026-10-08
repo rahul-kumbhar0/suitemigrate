@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Search, Download, LockKeyhole, CircleHelp, CheckCircle2, FileWarning, ShieldAlert, RefreshCw } from "lucide-react"
+import { Search, Download, LockKeyhole, HelpCircle, CheckCircle2, FileWarning, ShieldAlert, RefreshCw } from "lucide-react"
 import Header from "../components/Header"
 import { useStore } from "../../lib/store"
 import { downloadAuditReport } from "../../lib/export"
@@ -521,7 +521,7 @@ export default function ScriptListView() {
                 ? <CheckCircle2 size={13} color="#15803d" aria-label="Source readable" />
                 : script.sourceAccess === "manual"
                 ? <ShieldAlert size={13} color="#2563eb" aria-label="Manual source required" />
-                : <CircleHelp size={13} color="#64748b" aria-label="Source access not checked" />}
+                : <HelpCircle size={13} color="#64748b" aria-label="Source access not checked" />}
               <span className={`risk-${script.riskLevel.toLowerCase()}`}>{script.riskLevel}</span>
               {script.needsMigration ? (
                 <button
