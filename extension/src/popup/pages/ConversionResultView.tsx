@@ -12,6 +12,7 @@ export default function ConversionResultView() {
   if (conversionError) {
     const setupError = /DB_QUOTA_RPC_MISSING|AI_CONFIG|AI_MODEL/.test(conversionError)
     const capacityError = /AI_CAPACITY/.test(conversionError)
+    const outputError = /AI_OUTPUT_REVIEW/.test(conversionError)
     const supportCode = conversionError.match(/\[([A-Z0-9_]+)\]/)?.[1]
 
     return (
@@ -23,7 +24,7 @@ export default function ConversionResultView() {
           </div>
           <div>
             <p style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)", marginBottom: 6 }}>
-              {setupError ? "Service setup needs attention" : capacityError ? "Conversion capacity is busy" : "Conversion could not complete"}
+              {setupError ? "Service setup needs attention" : capacityError ? "AI service capacity or quota limit" : outputError ? "Generated code needs reprocessing" : "Conversion could not complete"}
             </p>
             <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>{conversionError.replace(/\s*\[[A-Z0-9_]+\]\s*$/, "")}</p>
             {supportCode && (
@@ -32,7 +33,7 @@ export default function ConversionResultView() {
               </p>
             )}
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", lineHeight: 1.55, marginTop: 8 }}>
-              No conversion is charged when processing does not complete. {capacityError ? "Retry in a moment." : "Your script stays unchanged in NetSuite."}
+              The conversion is not recorded as completed when processing fails. {capacityError ? "If this persists, contact support so the service quota can be checked." : "Your NetSuite script stays unchanged."}
             </p>
           </div>
           <button onClick={() => setView("script_list")} className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
@@ -61,7 +62,7 @@ export default function ConversionResultView() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
-      <Header showBack onBack={() => setView("script_list")} title="Conversion Complete" />
+      <Header showBack onBack={() => setView("script_list")} title="Conversion Generated" />
 
       <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
 
@@ -82,7 +83,7 @@ export default function ConversionResultView() {
           {/* Stats row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 1, background: "var(--rule)", border: "1px solid var(--rule)", borderRadius: 3, overflow: "hidden" }}>
             {[
-              { label: "Confidence", value: `${conversionResult.confidenceScore}%`, color: confColor },
+              { label: "Review score*", value: `${conversionResult.confidenceScore}%`, color: confColor },
               { label: "Changes",    value: conversionResult.changeLog.length,       color: "var(--ink)" },
               { label: "Review",     value: conversionResult.manualReviewLines.length, color: conversionResult.manualReviewLines.length > 0 ? "#b45309" : "#15803d" },
             ].map(s => (
@@ -93,6 +94,12 @@ export default function ConversionResultView() {
             ))}
           </div>
         </div>
+
+        <p style={{ fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.6 }}>
+          *Heuristic score, not a measured probability of correctness. Structural checks
+          do not verify NetSuite business logic. Review all changes and test in a NetSuite
+          Sandbox before deployment. SuiteMigrate never deploys the converted script.
+        </p>
 
         {/* Manual review warning */}
         {conversionResult.manualReviewLines.length > 0 && (
