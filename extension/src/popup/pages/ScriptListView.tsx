@@ -6,6 +6,7 @@ import { downloadAuditReport } from "../../lib/export"
 import { convertScript } from "../../lib/api"
 import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
+import { getActiveNetSuiteTab } from "../../lib/netsuite-tab"
 import { fetchCurrentUser } from "../../lib/auth"
 import type { NSScript } from "../../lib/types"
 
@@ -104,12 +105,7 @@ export default function ScriptListView() {
     setCheckingId(script.id)
     setAccessError("")
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-      const hostname = tab?.url ? new URL(tab.url).hostname : ""
-      if (!tab?.id || !/(^|\\.)netsuite\\.com$/i.test(hostname)) {
-        throw new Error("Open your NetSuite tab before checking source access.")
-      }
-
+      const tab = await getActiveNetSuiteTab()
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         func: fetchScriptCode,
@@ -243,8 +239,8 @@ export default function ScriptListView() {
       let fetchAccess: NonNullable<NSScript["sourceAccess"]> = script.sourceAccess || "unknown"
 
       try {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-        if (tab?.id) {
+        const tab = await getActiveNetSuiteTab()
+        if (tab.id !== undefined) {
           const results = await chrome.scripting.executeScript({
             target: { tabId: tab.id },
             func: fetchScriptCode,           // serialised and injected
