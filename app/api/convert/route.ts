@@ -7,6 +7,26 @@ import type { Plan } from "@/types"
 
 export const dynamic = "force-dynamic"
 
+function isObviousNonSourcePayload(code: string): boolean {
+  const text = code.trim()
+  const sample = text.slice(0, 20000)
+
+  if (/^<!doctype\s+html/i.test(sample) || /^<html[\s>]/i.test(sample) || /<body[\s>]/i.test(sample)) {
+    return true
+  }
+
+  if (text.startsWith("{") || text.startsWith("[")) {
+    try {
+      JSON.parse(text)
+      return true
+    } catch {
+      // JavaScript object/array syntax that is not valid JSON can still be source.
+    }
+  }
+
+  return false
+}
+
 async function getUser(request: Request) {
   const admin = createAdminClient()
 
@@ -78,6 +98,19 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: `Script too large: ${lineCount.toLocaleString()} lines (max ${MAX_LINES.toLocaleString()}).` },
         { status: 400, headers }
+      )
+    }
+
+    // Reject NetSuite HTML/JSON error payloads before reserving quota.
+    // This is a backend safety net in addition to the extension source classifier.
+    if (isObviousNonSourcePayload(code)) {
+      return NextResponse.json(
+        {
+          error: "source_not_javascript",
+          message: "NetSuite did not return readable JavaScript source. No conversion was charged.",
+          supportCode: "SOURCE_UNREADABLE",
+        },
+        { status: 422, headers }
       )
     }
 
