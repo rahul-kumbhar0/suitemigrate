@@ -46,6 +46,7 @@ jobs:
           cache: npm
           cache-dependency-path: extension/package-lock.json
       - run: npm ci
+      - run: npm run test:netSuite-host
       - run: npm run build:store
       - name: Upload Chrome test package
         uses: actions/upload-artifact@v4
