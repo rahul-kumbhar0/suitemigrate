@@ -19,8 +19,8 @@ function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel:
         </p>
         <p style={{ fontSize: 12.5, color: "var(--ink)", lineHeight: 1.65, marginBottom: 12 }}>
           The script code you choose to convert is sent to{" "}
-          <strong>SuiteMigrate&apos;s server</strong> and then to{" "}
-          <strong>Google Gemini API</strong> to perform the requested conversion.
+          <strong>SuiteMigrate&apos;s server-side AI conversion service</strong>{" "}
+          to perform the requested conversion.
         </p>
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 10.5, color: "var(--ink-mute)", lineHeight: 1.6, marginBottom: 14 }}>
           SuiteMigrate does not retain the original source code in its conversion database after processing. The converted result may be stored in your account for review and re-download.
@@ -56,7 +56,7 @@ export default function ScriptListView() {
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
-    getStorage("privacyAccepted" as any).then((v) => {
+    getStorage("privacyAccepted").then((v) => {
       if (v) setPrivacyAccepted(true)
     }).catch(() => {})
   }, [setPrivacyAccepted])
@@ -293,7 +293,7 @@ export default function ScriptListView() {
           onAccept={async () => {
             setPrivacyAccepted(true)
             // Persist across sessions
-            await setStorage("privacyAccepted" as any, true)
+            await setStorage("privacyAccepted", true)
             const s = pendingScript
             setPendingScript(null)
             await doConvert(s)
