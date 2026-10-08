@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Search, Download } from "lucide-react"
+import { Search, Download, LockKeyhole, CircleHelp, CheckCircle2, FileWarning, ShieldAlert, RefreshCw } from "lucide-react"
 import Header from "../components/Header"
 import { useStore } from "../../lib/store"
 import { downloadAuditReport } from "../../lib/export"
@@ -53,6 +53,9 @@ export default function ScriptListView() {
   const [manualCode, setManualCode] = useState("")
   const [manualError, setManualError] = useState("")
   const [showManualPaste, setShowManualPaste] = useState(false)
+  const [checkingId, setCheckingId] = useState<string | null>(null)
+  const [checkingBatch, setCheckingBatch] = useState(false)
+  const [accessError, setAccessError] = useState("")
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -84,9 +87,10 @@ export default function ScriptListView() {
     access: NonNullable<NSScript["sourceAccess"]>,
     note?: string
   ) => {
+    const current = useStore.getState().activeAccount || activeAccount
     const next = {
-      ...activeAccount,
-      scripts: activeAccount.scripts.map((s) =>
+      ...current,
+      scripts: current.scripts.map((s) =>
         s.id === scriptId ? { ...s, sourceAccess: access, sourceAccessNote: note } : s
       ),
     }
@@ -150,7 +154,7 @@ export default function ScriptListView() {
       return
     }
 
-    if (["no_file", "restricted", "protected"].includes(script.sourceAccess || "")) {
+    if (["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")) {
       setSourceIssue({
         script,
         access: script.sourceAccess as NonNullable<NSScript["sourceAccess"]>,
@@ -198,7 +202,7 @@ export default function ScriptListView() {
           const result = results?.[0]?.result as {
             code: string
             error?: string
-            access: "readable" | "no_file" | "restricted" | "protected"
+            access: "readable" | "no_file" | "restricted" | "protected" | "unknown"
           } | null
           if (result?.code) {
             code = result.code
@@ -215,11 +219,11 @@ export default function ScriptListView() {
       // Never send placeholder/HTML content to the conversion service.
       if (!code) {
         const message = fetchError || "Could not retrieve the selected source file."
-        await markSourceAccess(script.id, fetchAccess === "unknown" ? "protected" : fetchAccess, message)
+        await markSourceAccess(script.id, fetchAccess, message)
         setSourceIssue({
-          script: { ...script, sourceAccess: fetchAccess === "unknown" ? "protected" : fetchAccess, sourceAccessNote: message },
+          script: { ...script, sourceAccess: fetchAccess, sourceAccessNote: message },
           message,
-          access: fetchAccess === "unknown" ? "protected" : fetchAccess,
+          access: fetchAccess,
         })
         setShowManualPaste(false)
         setManualCode("")
@@ -277,6 +281,7 @@ export default function ScriptListView() {
     }
   }
 
+  const unchecked = activeAccount.scripts.filter(s => s.needsMigration && s.sourceAccess === "unknown").length
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
   const blockers = activeAccount.scripts.filter(s =>
