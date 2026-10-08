@@ -6,6 +6,21 @@ import type { Plan } from "@/types"
 
 export const dynamic = "force-dynamic"
 
+async function getUser(request: Request) {
+  const admin = createAdminClient()
+  const authHeader = request.headers.get("authorization")
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7)
+    const { data: { user }, error } = await admin.auth.getUser(token)
+    if (!error && user) return user
+  }
+
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user ?? null
+}
+
 export async function OPTIONS(request: Request) {
   return corsOptions(request)
 }
@@ -15,10 +30,9 @@ export async function GET(request: Request) {
   const headers = getCorsHeaders(origin)
 
   try {
-    const supabase = createClient()
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const user = await getUser(request)
 
-    if (error || !user) {
+    if (!user) {
       return NextResponse.json({ authenticated: false }, { status: 401, headers })
     }
 
@@ -69,7 +83,7 @@ export async function GET(request: Request) {
         plan,
         conversionsUsed: used,
         conversionsLimit: unlimited ? null : limit,
-        conversionsRemaining: unlimited ? null : Math.max(0, limit - (profile.conversions_used || 0)),
+        conversionsRemaining: unlimited ? null : Math.max(0, limit - used),
         unlimited,
       },
       { headers }
