@@ -566,7 +566,7 @@ export default function ScriptListView() {
               } catch (error) {
                 setReportError(error instanceof Error ? error.message : "Report download failed.")
               }
-            }
+            }}
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
           >
