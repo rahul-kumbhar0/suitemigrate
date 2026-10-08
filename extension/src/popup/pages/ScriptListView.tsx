@@ -7,6 +7,7 @@ import { convertScript } from "../../lib/api"
 import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
 import { getActiveNetSuiteTab } from "../../lib/netsuite-tab"
+import type { AccessAuditState } from "../../lib/storage"
 import { fetchCurrentUser } from "../../lib/auth"
 import type { NSScript } from "../../lib/types"
 
@@ -57,6 +58,8 @@ export default function ScriptListView() {
   const [checkingId, setCheckingId] = useState<string | null>(null)
   const [checkingBatch, setCheckingBatch] = useState(false)
   const [accessError, setAccessError] = useState("")
+  const [audit, setAudit] = useState<AccessAuditState | null>(null)
+  const [reportError, setReportError] = useState("")
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -64,6 +67,32 @@ export default function ScriptListView() {
       if (v) setPrivacyAccepted(true)
     }).catch(() => {})
   }, [setPrivacyAccepted])
+
+  // Receive background audit progress even after the popup reopens.
+  useEffect(() => {
+    const accountId = activeAccount?.accountId
+    if (!accountId) return
+
+    chrome.storage.local.get(["accounts", "accessAudits"]).then(data => {
+      setAudit((data.accessAudits as Record<string, AccessAuditState> | undefined)?.[accountId] || null)
+      const saved = (data.accounts as Record<string, NSAccount> | undefined)?.[accountId]
+      if (saved) setActiveAccount(saved)
+    }).catch(() => {})
+
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+      if (area !== "local") return
+      if (changes.accessAudits) {
+        const status = (changes.accessAudits.newValue as Record<string, AccessAuditState> | undefined)?.[accountId]
+        if (status) setAudit(status)
+      }
+      if (changes.accounts) {
+        const next = (changes.accounts.newValue as Record<string, NSAccount> | undefined)?.[accountId]
+        if (next) setActiveAccount(next)
+      }
+    }
+    chrome.storage.onChanged.addListener(listener)
+    return () => chrome.storage.onChanged.removeListener(listener)
+  }, [activeAccount?.accountId, setActiveAccount])
 
   if (!activeAccount) return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -136,13 +165,21 @@ export default function ScriptListView() {
     }
   }
 
-  const checkVisibleScripts = async () => {
-    setCheckingBatch(true)
+  const startAllSourceChecks = async () => {
     setAccessError("")
-    // A small batch avoids overwhelming NetSuite; repeat to check the next five.
-    const candidates = filtered.filter(s => s.needsMigration && s.sourceAccess === "unknown").slice(0, 5)
-    for (const script of candidates) await checkSourceAccess(script)
-    setCheckingBatch(false)
+    try {
+      const tab = await getActiveNetSuiteTab()
+      const result = await chrome.runtime.sendMessage({
+        type: "START_SOURCE_AUDIT", accountId: activeAccount.accountId, tabId: tab.id,
+      }) as { ok?: boolean }
+      if (!result?.ok) throw new Error("Could not start the source audit.")
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : "Could not start source verification.")
+    }
+  }
+
+  const pauseAllSourceChecks = async () => {
+    await chrome.runtime.sendMessage({ type: "PAUSE_SOURCE_AUDIT", accountId: activeAccount.accountId })
   }
 
   const runConversionWithCode = async (script: NSScript, code: string) => {
@@ -340,7 +377,7 @@ export default function ScriptListView() {
     }
   }
 
-  const unchecked = activeAccount.scripts.filter(s => s.needsMigration && s.sourceAccess === "unknown").length
+  const unchecked = activeAccount.scripts.filter(s => s.needsMigration && (!s.sourceAccess || s.sourceAccess === "unknown")).length
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
   const blockers = activeAccount.scripts.filter(s =>
