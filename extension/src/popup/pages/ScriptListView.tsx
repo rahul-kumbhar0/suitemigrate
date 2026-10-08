@@ -500,18 +500,50 @@ export default function ScriptListView() {
           ))}
         </div>
 
-        <button
-          onClick={checkVisibleScripts}
-          disabled={checkingBatch || !!checkingId || filtered.every(s => !s.needsMigration || s.sourceAccess !== "unknown")}
-          className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
-          title="Checks up to five unchecked scripts. No conversion quota is used."
-        >
-          <RefreshCw size={11} />
-          {checkingBatch ? "Checking access…" : `Check access (5 at a time · ${unchecked} unchecked)`}
-        </button>
+        {audit?.state === "running" ? (
+          <div className="card" style={{ padding: "9px 11px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 11, marginBottom: 6 }}>
+              <strong style={{ color: "var(--ink)" }}>Checking source access</strong>
+              <span style={{ fontFamily: "var(--f-mono)", color: "var(--ink-mute)" }}>
+                {audit.checked} / {audit.total}
+              </span>
+            </div>
+            <div style={{ height: 5, background: "var(--rule)", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                width: `${audit.total ? Math.min(100, Math.round(audit.checked / audit.total * 100)) : 100}%`,
+                background: "var(--clay)",
+                transition: "width .25s",
+              }} />
+            </div>
+            <button onClick={pauseAllSourceChecks} className="btn-outline" style={{ marginTop: 8, fontSize: 10, padding: "5px 10px" }}>
+              Pause checking
+            </button>
+            <p style={{ fontSize: 10, color: "var(--ink-mute)", marginTop: 5, lineHeight: 1.5 }}>
+              The audit runs automatically and may take several minutes for large accounts. Keep your NetSuite tab open.
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={startAllSourceChecks}
+            disabled={!!checkingId || !unchecked}
+            className="btn-outline"
+            style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+          >
+            <RefreshCw size={11} />
+            {audit?.state === "paused" ? `Resume verification (${unchecked} unverified)` :
+              audit?.state === "complete" && unchecked === 0
+                ? "Source verification complete"
+                : `Verify all remaining sources (${unchecked})`}
+          </button>
+        )}
+        {audit?.lastError && audit.state !== "complete" && (
+          <p role="status" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{audit.lastError}</p>
+        )}
         {accessError && <p role="alert" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{accessError}</p>}
-        <p style={{ fontSize: 10, color: "var(--ink-mute)" }}>
-          Unchecked does not mean unlocked. Source checks run in NetSuite and do not use conversion quota.
+        <p style={{ fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.5 }}>
+          Verification uses the current NetSuite role and does not consume AI conversion quota.
+          Unverified does not mean unlocked; protected source is never bypassed.
         </p>
         {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
@@ -526,7 +558,14 @@ export default function ScriptListView() {
           </button>
         ) : (
           <button
-            onClick={() => downloadAuditReport(activeAccount)}
+            onClick={() => {
+              try {
+                setReportError("")
+                downloadAuditReport(activeAccount)
+              } catch (error) {
+                setReportError(error instanceof Error ? error.message : "Report download failed.")
+              }
+            }
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
           >
@@ -534,6 +573,8 @@ export default function ScriptListView() {
           </button>
         )}
       </div>
+
+      {reportError && <p role="alert" style={{ padding: "0 14px 8px", fontSize: 10.5, color: "var(--clay)" }}>{reportError}</p>}
 
       {/* Script list */}
       <div style={{ overflowY: "auto", maxHeight: 300, padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
