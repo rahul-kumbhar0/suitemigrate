@@ -77,7 +77,7 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "blockers") return m && ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    if (filter === "blockers") return m && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
     if (filter === "done") return m && !s.needsMigration
     return m
   })
@@ -287,6 +287,12 @@ export default function ScriptListView() {
       await runConversionWithCode(script, code)
 
     } catch (err: unknown) {
+      // Reconcile the visible quota after an error: the backend releases a
+      // reserved slot when processing or persistence fails.
+      try {
+        const freshUser = await fetchCurrentUser()
+        if (freshUser) setUser(freshUser)
+      } catch { /* Preserve the original conversion error. */ }
       const msg = err instanceof Error ? err.message : "Conversion failed"
       // Server returns "conversion_limit_reached" when the 5-conversion cap is hit
       if (msg === "conversion_limit_reached") {
@@ -320,6 +326,12 @@ export default function ScriptListView() {
     try {
       await runConversionWithCode(sourceIssue.script, code)
     } catch (err: unknown) {
+      // Reconcile the visible quota after an error: the backend releases a
+      // reserved slot when processing or persistence fails.
+      try {
+        const freshUser = await fetchCurrentUser()
+        if (freshUser) setUser(freshUser)
+      } catch { /* Preserve the original conversion error. */ }
       const msg = err instanceof Error ? err.message : "Conversion failed"
       if (msg === "conversion_limit_reached") setView("upgrade")
       else {
@@ -336,7 +348,7 @@ export default function ScriptListView() {
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
   const blockers = activeAccount.scripts.filter(s =>
-    ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
   ).length
 
   return (
