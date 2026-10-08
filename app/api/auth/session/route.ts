@@ -1,25 +1,9 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
 import { getCorsHeaders, corsOptions } from "@/lib/cors"
+import { getRequestSupabase } from "@/lib/supabase/request"
 import type { Plan } from "@/types"
 
 export const dynamic = "force-dynamic"
-
-async function getUser(request: Request) {
-  const admin = createAdminClient()
-  const authHeader = request.headers.get("authorization")
-
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7)
-    const { data: { user }, error } = await admin.auth.getUser(token)
-    if (!error && user) return user
-  }
-
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user ?? null
-}
 
 export async function OPTIONS(request: Request) {
   return corsOptions(request)
@@ -30,48 +14,36 @@ export async function GET(request: Request) {
   const headers = getCorsHeaders(origin)
 
   try {
-    const user = await getUser(request)
+    const { supabase, user } = await getRequestSupabase(request)
 
     if (!user) {
       return NextResponse.json({ authenticated: false }, { status: 401, headers })
     }
 
-    const admin = createAdminClient()
-    let { data: profile } = await admin
-      .from("users")
-      .select("plan, conversions_used, conversions_limit, entitlement_expires_at, name")
-      .eq("id", user.id)
-      .maybeSingle()
+    const [{ data: profile }, { count: completedCount, error: countError }] = await Promise.all([
+      supabase
+        .from("users")
+        .select("plan, conversions_limit, entitlement_expires_at, name")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("conversions")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id),
+    ])
 
-    if (!profile) {
-      await admin.from("users").upsert({
-        id: user.id, email: user.email,
-        name: user.user_metadata?.name || null,
-        plan: "free", conversions_used: 0, conversions_limit: 5,
-      }, { onConflict: "id", ignoreDuplicates: true })
-      profile = { plan: "free", conversions_used: 0, conversions_limit: 5, entitlement_expires_at: null, name: user.user_metadata?.name || null }
-    } else if (profile.plan === "free" && profile.conversions_limit === 2) {
-      await admin.from("users").update({ conversions_limit: 5 }).eq("id", user.id)
-      profile = { ...profile, conversions_limit: 5 }
+    if (countError) {
+      console.error("[/api/auth/session] conversion count:", countError)
     }
 
-    if (profile.entitlement_expires_at && new Date(profile.entitlement_expires_at).getTime() <= Date.now()) {
-      await admin.from("users").update({
-        plan: "free",
-        conversions_limit: 5,
-        entitlement_expires_at: null,
-      }).eq("id", user.id)
-      profile = { ...profile, plan: "free", conversions_limit: 5, entitlement_expires_at: null }
-    }
+    const expired = Boolean(
+      profile?.entitlement_expires_at &&
+      new Date(profile.entitlement_expires_at).getTime() <= Date.now()
+    )
 
-    const plan      = (profile.plan as Plan) || "free"
-    const { count: completedCount, error: countError } = await admin
-      .from("conversions")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-    if (countError) throw countError
+    const plan = (expired ? "free" : ((profile?.plan as Plan) || "free")) as Plan
     const used = completedCount ?? 0
-    const limit     = profile.conversions_limit ?? 5
+    const limit = plan === "free" ? 5 : null
     const unlimited = plan !== "free"
 
     return NextResponse.json(
@@ -79,14 +51,14 @@ export async function GET(request: Request) {
         authenticated: true,
         id: user.id,
         email: user.email,
-        name: profile.name || user.user_metadata?.name || null,
+        name: profile?.name || user.user_metadata?.name || null,
         plan,
         conversionsUsed: used,
-        conversionsLimit: unlimited ? null : limit,
-        conversionsRemaining: unlimited ? null : Math.max(0, limit - used),
+        conversionsLimit: limit,
+        conversionsRemaining: unlimited ? null : Math.max(0, 5 - used),
         unlimited,
       },
-      { headers }
+      { headers: { ...headers, "Cache-Control": "no-store" } }
     )
   } catch (err) {
     console.error("[/api/auth/session]", err)
