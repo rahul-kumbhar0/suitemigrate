@@ -12,7 +12,7 @@ import UpgradeView from "./pages/UpgradeView"
 
 export default function App() {
   const { view, setView, setUser, setAccounts } = useStore()
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const tryAuth = useCallback(async () => {
     const cached = await getCachedUser()

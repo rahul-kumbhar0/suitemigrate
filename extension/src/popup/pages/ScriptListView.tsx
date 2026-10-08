@@ -7,8 +7,9 @@ import { convertScript } from "../../lib/api"
 import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
 import { getActiveNetSuiteTab } from "../../lib/netsuite-tab"
+import type { AccessAuditState } from "../../lib/storage"
 import { fetchCurrentUser } from "../../lib/auth"
-import type { NSScript } from "../../lib/types"
+import type { NSScript, NSAccount } from "../../lib/types"
 
 // ── Privacy consent notice (Item 7) ──────────────────────────────────────────
 function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel: () => void }) {
@@ -48,15 +49,16 @@ export default function ScriptListView() {
   } = useStore()
 
   const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<"all" | "needs_update" | "blockers" | "done">("needs_update")
+  const [filter, setFilter] = useState<"all" | "needs_update" | "locked" | "blockers" | "done">("needs_update")
   const [pendingScript, setPendingScript] = useState<NSScript | null>(null)
   const [sourceIssue, setSourceIssue] = useState<{ script: NSScript; message: string; access: NonNullable<NSScript["sourceAccess"]> } | null>(null)
   const [manualCode, setManualCode] = useState("")
   const [manualError, setManualError] = useState("")
   const [showManualPaste, setShowManualPaste] = useState(false)
   const [checkingId, setCheckingId] = useState<string | null>(null)
-  const [checkingBatch, setCheckingBatch] = useState(false)
   const [accessError, setAccessError] = useState("")
+  const [audit, setAudit] = useState<AccessAuditState | null>(null)
+  const [reportError, setReportError] = useState("")
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -64,6 +66,32 @@ export default function ScriptListView() {
       if (v) setPrivacyAccepted(true)
     }).catch(() => {})
   }, [setPrivacyAccepted])
+
+  // Receive background audit progress even after the popup reopens.
+  useEffect(() => {
+    const accountId = activeAccount?.accountId
+    if (!accountId) return
+
+    chrome.storage.local.get(["accounts", "accessAudits"]).then(data => {
+      setAudit((data.accessAudits as Record<string, AccessAuditState> | undefined)?.[accountId] || null)
+      const saved = (data.accounts as Record<string, NSAccount> | undefined)?.[accountId]
+      if (saved) setActiveAccount(saved)
+    }).catch(() => {})
+
+    const listener = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+      if (area !== "local") return
+      if (changes.accessAudits) {
+        const status = (changes.accessAudits.newValue as Record<string, AccessAuditState> | undefined)?.[accountId]
+        if (status) setAudit(status)
+      }
+      if (changes.accounts) {
+        const next = (changes.accounts.newValue as Record<string, NSAccount> | undefined)?.[accountId]
+        if (next) setActiveAccount(next)
+      }
+    }
+    chrome.storage.onChanged.addListener(listener)
+    return () => chrome.storage.onChanged.removeListener(listener)
+  }, [activeAccount?.accountId, setActiveAccount])
 
   if (!activeAccount) return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -78,7 +106,8 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "blockers") return m && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
+    if (filter === "locked") return m && s.needsMigration && ["restricted", "protected"].includes(s.sourceAccess || "")
+    if (filter === "blockers") return m && s.needsMigration && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
     if (filter === "done") return m && !s.needsMigration
     return m
   })
@@ -136,13 +165,21 @@ export default function ScriptListView() {
     }
   }
 
-  const checkVisibleScripts = async () => {
-    setCheckingBatch(true)
+  const startAllSourceChecks = async () => {
     setAccessError("")
-    // A small batch avoids overwhelming NetSuite; repeat to check the next five.
-    const candidates = filtered.filter(s => s.needsMigration && s.sourceAccess === "unknown").slice(0, 5)
-    for (const script of candidates) await checkSourceAccess(script)
-    setCheckingBatch(false)
+    try {
+      const tab = await getActiveNetSuiteTab()
+      const result = await chrome.runtime.sendMessage({
+        type: "START_SOURCE_AUDIT", accountId: activeAccount.accountId, tabId: tab.id,
+      }) as { ok?: boolean }
+      if (!result?.ok) throw new Error("Could not start the source audit.")
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : "Could not start source verification.")
+    }
+  }
+
+  const pauseAllSourceChecks = async () => {
+    await chrome.runtime.sendMessage({ type: "PAUSE_SOURCE_AUDIT", accountId: activeAccount.accountId })
   }
 
   const runConversionWithCode = async (script: NSScript, code: string) => {
@@ -340,9 +377,10 @@ export default function ScriptListView() {
     }
   }
 
-  const unchecked = activeAccount.scripts.filter(s => s.needsMigration && s.sourceAccess === "unknown").length
+  const unchecked = activeAccount.scripts.filter(s => s.needsMigration && (!s.sourceAccess || s.sourceAccess === "unknown")).length
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
+  const locked = activeAccount.scripts.filter(s => s.needsMigration && ["restricted", "protected"].includes(s.sourceAccess || "")).length
   const blockers = activeAccount.scripts.filter(s =>
     ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
   ).length
@@ -451,30 +489,62 @@ export default function ScriptListView() {
 
         {/* Filter tabs */}
         <div style={{ display: "flex", gap: 4 }}>
-          {(["needs_update", "blockers", "all", "done"] as const).map(f => (
+          {(["needs_update", "locked", "blockers", "all", "done"] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={filter === f ? "tab-active" : "tab-inactive"}
               style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 10, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer", fontWeight: 500 }}
             >
-              {f === "needs_update" ? `Update (${needs})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
+              {f === "needs_update" ? `Update (${needs})` : f === "locked" ? `Locked (${locked})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
             </button>
           ))}
         </div>
 
-        <button
-          onClick={checkVisibleScripts}
-          disabled={checkingBatch || !!checkingId || filtered.every(s => !s.needsMigration || s.sourceAccess !== "unknown")}
-          className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
-          title="Checks up to five unchecked scripts. No conversion quota is used."
-        >
-          <RefreshCw size={11} />
-          {checkingBatch ? "Checking access…" : `Check access (5 at a time · ${unchecked} unchecked)`}
-        </button>
+        {audit?.state === "running" ? (
+          <div className="card" style={{ padding: "9px 11px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, fontSize: 11, marginBottom: 6 }}>
+              <strong style={{ color: "var(--ink)" }}>Checking source access</strong>
+              <span style={{ fontFamily: "var(--f-mono)", color: "var(--ink-mute)" }}>
+                {audit.checked} / {audit.total}
+              </span>
+            </div>
+            <div style={{ height: 5, background: "var(--rule)", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                width: `${audit.total ? Math.min(100, Math.round(audit.checked / audit.total * 100)) : 100}%`,
+                background: "var(--clay)",
+                transition: "width .25s",
+              }} />
+            </div>
+            <button onClick={pauseAllSourceChecks} className="btn-outline" style={{ marginTop: 8, fontSize: 10, padding: "5px 10px" }}>
+              Pause checking
+            </button>
+            <p style={{ fontSize: 10, color: "var(--ink-mute)", marginTop: 5, lineHeight: 1.5 }}>
+              The audit runs automatically and may take several minutes for large accounts. Keep your NetSuite tab open.
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={startAllSourceChecks}
+            disabled={!!checkingId || !unchecked}
+            className="btn-outline"
+            style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+          >
+            <RefreshCw size={11} />
+            {audit?.state === "paused" ? `Resume verification (${unchecked} unverified)` :
+              audit?.state === "complete" && unchecked === 0
+                ? "Source verification complete"
+                : `Verify all remaining sources (${unchecked})`}
+          </button>
+        )}
+        {audit?.lastError && audit.state !== "complete" && (
+          <p role="status" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{audit.lastError}</p>
+        )}
         {accessError && <p role="alert" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{accessError}</p>}
-        <p style={{ fontSize: 10, color: "var(--ink-mute)" }}>
-          Unchecked does not mean unlocked. Source checks run in NetSuite and do not use conversion quota.
+        <p style={{ fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.5 }}>
+          Verification uses the current NetSuite role and does not consume AI conversion quota.
+          Unverified does not mean unlocked; protected source is never bypassed.
         </p>
         {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
@@ -489,7 +559,14 @@ export default function ScriptListView() {
           </button>
         ) : (
           <button
-            onClick={() => downloadAuditReport(activeAccount)}
+            onClick={() => {
+              try {
+                setReportError("")
+                downloadAuditReport(activeAccount)
+              } catch (error) {
+                setReportError(error instanceof Error ? error.message : "Report download failed.")
+              }
+            }}
             className="btn-outline"
             style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
           >
@@ -497,6 +574,8 @@ export default function ScriptListView() {
           </button>
         )}
       </div>
+
+      {reportError && <p role="alert" style={{ padding: "0 14px 8px", fontSize: 10.5, color: "var(--clay)" }}>{reportError}</p>}
 
       {/* Script list */}
       <div style={{ overflowY: "auto", maxHeight: 300, padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
@@ -536,7 +615,7 @@ export default function ScriptListView() {
                   onClick={() => !script.sourceAccess || script.sourceAccess === "unknown"
                     ? checkSourceAccess(script)
                     : handleConvert(script)}
-                  disabled={checkingBatch || !!checkingId}
+                  disabled={audit?.state === "running" || !!checkingId}
                   className={script.sourceAccess === "readable" ? "btn-primary" : "btn-outline"}
                   title={script.sourceAccess === "readable" ? "Convert verified source" :
                     ["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")

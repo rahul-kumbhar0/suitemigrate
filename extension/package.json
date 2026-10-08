@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:store": "vite build",
     "test:netSuite-host": "node --experimental-strip-types scripts/test-netsuite-host.mjs",
+    "test:readiness-report": "node --experimental-strip-types scripts/test-readiness-report.mjs",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
   "dependencies": {

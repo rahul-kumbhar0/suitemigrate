@@ -72,7 +72,7 @@ export async function authFetch(path: string, init: RequestInit = {}): Promise<R
 
   if (res.status !== 401) return res
 
-  token = await refreshAccessToken()
+  token = (await refreshAccessToken()) ?? undefined
   if (!token) return res
 
   return fetch(`${APP_URL}${path}`, {

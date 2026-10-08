@@ -133,6 +133,18 @@ export default function DashboardView() {
       setAccounts(await getAllAccounts())
       setView("script_list")
 
+      // One scan action starts the source-access audit automatically.
+      // Inventory remains usable while the background checks only legacy
+      // files. No code is uploaded or converted by this scan.
+      const started = await chrome.runtime.sendMessage({
+        type: "START_SOURCE_AUDIT",
+        accountId: account.accountId,
+        tabId,
+      }) as { ok?: boolean; error?: string }
+      if (!started?.ok) {
+        setScanError("Inventory scanned, but source verification could not start. Use Resume audit in the script list.")
+      }
+
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       setScanError(msg.includes("Cannot access")
@@ -153,7 +165,7 @@ export default function DashboardView() {
 
   const display  = activeAccount || accounts[0]
   const needsUpd = display?.scripts.filter(s => s.needsMigration).length || 0
-  const blockers = display?.scripts.filter(s => ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")).length || 0
+  const blockers = display?.scripts.filter(s => ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")).length || 0
   const onLatest = display?.scripts.filter(s => !s.needsMigration).length || 0
 
   return (
@@ -178,7 +190,7 @@ export default function DashboardView() {
               )}
             </div>
             <button onClick={handleScan} disabled={isScanning || !isNS} className="btn-primary" style={{ fontSize: 11, padding: "6px 12px", flexShrink: 0 }}>
-              {isScanning ? <><div className="spinner" style={{ width: 11, height: 11 }} /> Scanning…</> : <><RefreshCw size={11} /> Scan</>}
+              {isScanning ? <><div className="spinner" style={{ width: 11, height: 11 }} /> Scanning…</> : <><RefreshCw size={11} /> Scan & verify</>}
             </button>
           </div>
 
