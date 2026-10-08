@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ authenticated: false }, { status: 401, headers })
     }
 
-    const [{ data: profile }, { count: completedCount, error: countError }] = await Promise.all([
+    const [{ data: profileData }, { count: completedCount, error: countError }] = await Promise.all([
       supabase
         .from("users")
         .select("plan, conversions_limit, entitlement_expires_at, name")
@@ -35,6 +35,13 @@ export async function GET(request: Request) {
     if (countError) {
       console.error("[/api/auth/session] conversion count:", countError)
     }
+
+    const profile = profileData as {
+      plan?: Plan | null
+      conversions_limit?: number | null
+      entitlement_expires_at?: string | null
+      name?: string | null
+    } | null
 
     const expired = Boolean(
       profile?.entitlement_expires_at &&
