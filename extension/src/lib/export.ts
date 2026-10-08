@@ -49,7 +49,7 @@ export function downloadAuditReport(account: NSAccount): void {
   const needsUpdate = account.scripts.filter((s) => s.needsMigration)
   const current = account.scripts.filter((s) => !s.needsMigration)
   const blockers = account.scripts.filter((s) =>
-    ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
   )
   const ready = needsUpdate.filter((s) =>
     !["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
@@ -57,7 +57,7 @@ export function downloadAuditReport(account: NSAccount): void {
 
   const accessLabel = (s: NSAccount["scripts"][number]) => {
     if (s.sourceAccess === "readable") return "Source ready"
-    if (s.sourceAccess === "manual") return "Authorized copy supplied"
+    if (s.sourceAccess === "manual") return "Manual source needed"
     if (s.sourceAccess === "no_file") return "No source file"
     if (s.sourceAccess === "restricted") return "Role restricted"
     if (s.sourceAccess === "protected") return "Protected / hidden"
@@ -75,11 +75,12 @@ export function downloadAuditReport(account: NSAccount): void {
     if (s.sourceAccess === "no_file" || s.hasFile === false) {
       return "Locate or attach the source file before conversion."
     }
+    if (s.sourceAccess !== "readable") return "Check source access first, then convert only if readable."
     return "Convert, review manual flags, then validate in NetSuite Sandbox."
   }
 
   const accessClass = (s: NSAccount["scripts"][number]) => {
-    if (s.sourceAccess === "readable" || s.sourceAccess === "manual") return "ok"
+    if (s.sourceAccess === "readable") return "ok"
     if (["no_file", "restricted", "protected"].includes(s.sourceAccess || "")) return "block"
     return "neutral"
   }
@@ -143,10 +144,10 @@ export function downloadAuditReport(account: NSAccount): void {
     "<section class=\"stats\">",
     "<div class=\"stat\"><b>" + account.scripts.length + "</b><span>Active scripts</span></div>",
     "<div class=\"stat\"><b>" + needsUpdate.length + "</b><span>Need migration</span></div>",
-    "<div class=\"stat\"><b>" + ready.length + "</b><span>Ready to work</span></div>",
+    "<div class=\"stat\"><b>" + ready.length + "</b><span>Verified readable</span></div>",
     "<div class=\"stat\"><b>" + blockers.length + "</b><span>Migration blockers</span></div>",
     "</section>",
-    "<div class=\"callout\"><strong>Protected source is a planning signal.</strong> A locked bundle object can still be readable, while vendor-hidden server source can be intentionally unavailable. SuiteMigrate does not bypass source protection; resolve protected items with the vendor/client or an authorized source copy.</div>",
+    "<div class=\"callout\"><strong>Access is verified, not guessed.</strong> " + unchecked.length + " legacy scripts are still unchecked. A locked bundle object may still have readable code, but inaccessible vendor source must not be bypassed. Use authorized access or request a vendor update.</div>",
     blockers.length ? "<h2>Blockers requiring action</h2><div class=\"blockers\">" + blockerRows + "</div>" : "",
     "<h2>Script inventory</h2><div class=\"table-wrap\"><table>",
     "<thead><tr><th>Script</th><th>Type</th><th>Version</th><th>Priority</th><th>Source access</th><th>Recommended action</th></tr></thead>",
