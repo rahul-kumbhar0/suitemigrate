@@ -455,6 +455,19 @@ export default function ScriptListView() {
           ))}
         </div>
 
+        <button
+          onClick={checkVisibleScripts}
+          disabled={checkingBatch || !!checkingId || filtered.every(s => !s.needsMigration || s.sourceAccess !== "unknown")}
+          className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+          title="Checks up to five unchecked scripts. No conversion quota is used."
+        >
+          <RefreshCw size={11} />
+          {checkingBatch ? "Checking access…" : `Check access (5 at a time · ${unchecked} unchecked)`}
+        </button>
+        {accessError && <p role="alert" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{accessError}</p>}
+        <p style={{ fontSize: 10, color: "var(--ink-mute)" }}>
+          Unchecked does not mean unlocked. Source checks run in NetSuite and do not use conversion quota.
+        </p>
         {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
         {user && !user.unlimited ? (
@@ -495,19 +508,37 @@ export default function ScriptListView() {
                 {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
                 {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
                 {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
-                {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· authorized copy</span>}
+                {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· manual source needed</span>}
+                {(!script.sourceAccess || script.sourceAccess === "unknown") && <span style={{ marginLeft: 4 }}>· not checked</span>}
               </p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+              {script.sourceAccess === "protected" || script.sourceAccess === "restricted"
+                ? <LockKeyhole size={13} color="#b91c1c" aria-label="Source protected or restricted" />
+                : script.sourceAccess === "no_file"
+                ? <FileWarning size={13} color="#b45309" aria-label="No source file attached" />
+                : script.sourceAccess === "readable"
+                ? <CheckCircle2 size={13} color="#15803d" aria-label="Source readable" />
+                : script.sourceAccess === "manual"
+                ? <ShieldAlert size={13} color="#2563eb" aria-label="Manual source required" />
+                : <CircleHelp size={13} color="#64748b" aria-label="Source access not checked" />}
               <span className={`risk-${script.riskLevel.toLowerCase()}`}>{script.riskLevel}</span>
               {script.needsMigration ? (
                 <button
-                  onClick={() => handleConvert(script)}
-                  className={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "btn-outline" : "btn-primary"}
-                  title={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "View migration options" : "Convert this script"}
-                  style={{ fontSize: 10, padding: "4px 10px" }}
+                  onClick={() => !script.sourceAccess || script.sourceAccess === "unknown"
+                    ? checkSourceAccess(script)
+                    : handleConvert(script)}
+                  disabled={checkingBatch || !!checkingId}
+                  className={script.sourceAccess === "readable" ? "btn-primary" : "btn-outline"}
+                  title={script.sourceAccess === "readable" ? "Convert verified source" :
+                    ["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")
+                      ? "View blocker and authorized source options" : "Check NetSuite source access first"}
+                  style={{ fontSize: 10, padding: "4px 8px" }}
                 >
-                  {["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "Options" : "Convert"}
+                  {checkingId === script.id ? "Checking…" :
+                    script.sourceAccess === "readable" ? "Convert" :
+                    ["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")
+                      ? "Options" : "Check"}
                 </button>
               ) : (
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "#15803d" }}>✓ 2.1</span>
