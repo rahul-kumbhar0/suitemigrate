@@ -49,7 +49,7 @@ export default function ScriptListView() {
   } = useStore()
 
   const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<"all" | "needs_update" | "blockers" | "done">("needs_update")
+  const [filter, setFilter] = useState<"all" | "needs_update" | "locked" | "blockers" | "done">("needs_update")
   const [pendingScript, setPendingScript] = useState<NSScript | null>(null)
   const [sourceIssue, setSourceIssue] = useState<{ script: NSScript; message: string; access: NonNullable<NSScript["sourceAccess"]> } | null>(null)
   const [manualCode, setManualCode] = useState("")
@@ -106,7 +106,8 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "blockers") return m && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
+    if (filter === "locked") return m && s.needsMigration && ["restricted", "protected"].includes(s.sourceAccess || "")
+    if (filter === "blockers") return m && s.needsMigration && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
     if (filter === "done") return m && !s.needsMigration
     return m
   })
@@ -379,6 +380,7 @@ export default function ScriptListView() {
   const unchecked = activeAccount.scripts.filter(s => s.needsMigration && (!s.sourceAccess || s.sourceAccess === "unknown")).length
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
+  const locked = activeAccount.scripts.filter(s => s.needsMigration && ["restricted", "protected"].includes(s.sourceAccess || "")).length
   const blockers = activeAccount.scripts.filter(s =>
     ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
   ).length
@@ -487,14 +489,14 @@ export default function ScriptListView() {
 
         {/* Filter tabs */}
         <div style={{ display: "flex", gap: 4 }}>
-          {(["needs_update", "blockers", "all", "done"] as const).map(f => (
+          {(["needs_update", "locked", "blockers", "all", "done"] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={filter === f ? "tab-active" : "tab-inactive"}
               style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 10, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer", fontWeight: 500 }}
             >
-              {f === "needs_update" ? `Update (${needs})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
+              {f === "needs_update" ? `Update (${needs})` : f === "locked" ? `Locked (${locked})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
             </button>
           ))}
         </div>
