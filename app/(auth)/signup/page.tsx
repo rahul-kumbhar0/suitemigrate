@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react"
 
@@ -22,6 +23,10 @@ const GoogleIcon = () => (
 )
 
 export default function SignupPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromExtension = searchParams.get("from") === "extension"
+  const nextPath = fromExtension ? "/extension-connect" : "/dashboard"
   const [form, setForm]           = useState({ name: "", email: "", password: "" })
   const [showPass, setShowPass]   = useState(false)
   const [loading, setLoading]     = useState(false)
@@ -35,11 +40,19 @@ export default function SignupPage() {
     if (form.password.length < 8) { setError("Password must be at least 8 characters."); return }
     setLoading(true)
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: form.email, password: form.password,
-        options: { data: { name: form.name }, emailRedirectTo: `${window.location.origin}/auth/callback` },
+        options: {
+          data: { name: form.name },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`,
+        },
       })
       if (error) throw error
+      if (data.session) {
+        router.push(nextPath)
+        router.refresh()
+        return
+      }
       setSuccess(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong.")
@@ -50,7 +63,7 @@ export default function SignupPage() {
     setGLoading(true)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}` },
     })
     if (error) { setError(error.message); setGLoading(false) }
   }
@@ -67,7 +80,7 @@ export default function SignupPage() {
         <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.65, marginBottom: 28 }}>
           We sent a verification link to{" "}
           <strong style={{ color: "var(--ink)" }}>{form.email}</strong>.{" "}
-          Click it to activate your account and start migrating.
+          Click it to activate your account and continue to SuiteMigrate.
         </p>
         <div style={{ textAlign: "left", border: "1px solid var(--rule)", borderRadius: 4, overflow: "hidden", marginBottom: 24 }}>
           <div style={{ padding: "10px 16px", background: "rgba(15,23,42,.04)", borderBottom: "1px solid var(--rule)" }}>
@@ -82,7 +95,7 @@ export default function SignupPage() {
             </div>
           ))}
         </div>
-        <Link href="/login" style={{
+        <Link href={fromExtension ? "/login?from=extension" : "/login"} style={{
           display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 4,
           border: "1px solid var(--rule)", fontSize: 13.5, color: "var(--ink)", textDecoration: "none",
           transition: "background .14s",
@@ -182,7 +195,7 @@ export default function SignupPage() {
 
         <p style={{ marginTop: 20, textAlign: "center", fontSize: 13, color: "var(--ink-soft)" }}>
           Already have an account?{" "}
-          <Link href="/login" style={{ color: "var(--clay)", textDecoration: "none", fontWeight: 500 }} className="auth-link">Sign in</Link>
+          <Link href={fromExtension ? "/login?from=extension" : "/login"} style={{ color: "var(--clay)", textDecoration: "none", fontWeight: 500 }} className="auth-link">Sign in</Link>
         </p>
 
         <p style={{ marginTop: 14, textAlign: "center", fontSize: 11.5, color: "var(--ink-mute)", lineHeight: 1.65 }}>
