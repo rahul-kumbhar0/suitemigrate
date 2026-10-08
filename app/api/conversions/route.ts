@@ -56,7 +56,8 @@ export async function GET(request: Request) {
         .order("created_at", { ascending: false })
         .limit(50)
 
-      conversions = (legacy.data ?? []).map((row) => ({
+      const legacyRows = (legacy.data ?? []) as Array<Record<string, unknown>>
+      conversions = legacyRows.map((row) => ({
         ...row,
         changes_log: [],
         manual_review_lines: [],
