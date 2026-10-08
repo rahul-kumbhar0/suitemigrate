@@ -18,7 +18,7 @@ const account = {
 const html = buildReadinessReportHtml(account)
 for (const fragment of ["Verified readable", "Locked, restricted & missing source",
    "Not yet verified", "Already on SuiteScript 2.1",
-   "Print / Save as PDF", "1 of 4", "Partial audit",
+   "Print / Save as PDF", "3 of 4", "Partial audit",
    "Vendor-locked", "Role restricted"]) {
   assert.ok(html.includes(fragment), `Expected report fragment: ${fragment}`)
 }
