@@ -155,7 +155,7 @@ export async function fetchScriptCode(scriptId: string): Promise<{
         if (!contentType.includes("json") && looksLikeSource(text)) {
           return { code: text, access: "readable" as const }
         }
-        return { code: "", access: classifyHtml(text) }
+        return { code: "", access: "unknown" as const }
       }
       if (res.ok && isHtml) {
         const embedded = extractSourceFromHtml(text)
@@ -164,6 +164,9 @@ export async function fetchScriptCode(scriptId: string): Promise<{
       }
       if (res.status === 401 || res.status === 403) return { code: "", access: "restricted" as const }
       if (res.status === 429 || res.status >= 500) return { code: "", access: "unknown" as const }
+      // An HTTP 404/410 for one File Cabinet URL may be a stale link,
+      // not evidence that the source is vendor-protected.
+      if (res.status === 404 || res.status === 410) return { code: "", access: "unknown" as const }
       return { code: "", access: "protected" as const }
     }
 
@@ -245,6 +248,10 @@ export async function fetchScriptCode(scriptId: string): Promise<{
     const read = await readResponse(mediaRes)
     if (read.code) return read
     if (read.access === "restricted") return { code: "", access: "restricted", error: `The current NetSuite role cannot read source file ${fileId}. Try an authorized role or paste authorized source manually.` }
+    if (read.access === "unknown") return {
+      code: "", access: "unknown",
+      error: `NetSuite could not verify source file ${fileId}. Retry after checking the active session or NetSuite service availability.`,
+    }
 
     return {
       code: "",
