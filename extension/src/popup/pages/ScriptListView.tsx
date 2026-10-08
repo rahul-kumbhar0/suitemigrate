@@ -9,7 +9,7 @@ import { fetchScriptCode } from "../../lib/suiteql"
 import { getActiveNetSuiteTab } from "../../lib/netsuite-tab"
 import type { AccessAuditState } from "../../lib/storage"
 import { fetchCurrentUser } from "../../lib/auth"
-import type { NSScript } from "../../lib/types"
+import type { NSScript, NSAccount } from "../../lib/types"
 
 // ── Privacy consent notice (Item 7) ──────────────────────────────────────────
 function PrivacyNotice({ onAccept, onCancel }: { onAccept: () => void; onCancel: () => void }) {
@@ -56,7 +56,6 @@ export default function ScriptListView() {
   const [manualError, setManualError] = useState("")
   const [showManualPaste, setShowManualPaste] = useState(false)
   const [checkingId, setCheckingId] = useState<string | null>(null)
-  const [checkingBatch, setCheckingBatch] = useState(false)
   const [accessError, setAccessError] = useState("")
   const [audit, setAudit] = useState<AccessAuditState | null>(null)
   const [reportError, setReportError] = useState("")
@@ -614,7 +613,7 @@ export default function ScriptListView() {
                   onClick={() => !script.sourceAccess || script.sourceAccess === "unknown"
                     ? checkSourceAccess(script)
                     : handleConvert(script)}
-                  disabled={checkingBatch || !!checkingId}
+                  disabled={audit?.state === "running" || !!checkingId}
                   className={script.sourceAccess === "readable" ? "btn-primary" : "btn-outline"}
                   title={script.sourceAccess === "readable" ? "Convert verified source" :
                     ["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")
