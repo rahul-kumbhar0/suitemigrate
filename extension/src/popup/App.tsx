@@ -15,58 +15,67 @@ export default function App() {
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const tryAuth = useCallback(async () => {
-    // Show cached instantly — no flicker
     const cached = await getCachedUser()
     if (cached) {
       setUser(cached)
       const accounts = await getAllAccounts()
       setAccounts(accounts)
-      // Only set view to dashboard if we're on loading or login_required
       if (view === "loading" || view === "login_required") {
         setView("dashboard")
       }
     }
 
-    // Verify fresh in background
     const fresh = await fetchCurrentUser()
     if (fresh) {
       setUser(fresh)
       const accounts = await getAllAccounts()
       setAccounts(accounts)
-      // Only set view to dashboard if we're on loading or login_required
       if (view === "loading" || view === "login_required") {
         setView("dashboard")
       }
     } else if (!cached) {
-      // No cache and no fresh — show login
       setUser(null)
       setView("login_required")
     }
-    // If fresh null but cached exists — keep showing dashboard (network issue)
   }, [setUser, setView, setAccounts, view])
 
   useEffect(() => {
-    // Initial auth check
     tryAuth()
 
-    // Light fallback polling; focus/visibility changes trigger immediate refresh.
     pollIntervalRef.current = setInterval(() => {
       tryAuth()
     }, 30000)
 
-    // Re-check when popup regains focus (user comes back from website)
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         tryAuth()
       }
     }
+
+    // The website auth bridge writes authUser/authToken while this popup may
+    // already be open. React immediately instead of waiting for focus or the
+    // 30-second fallback poll.
+    const handleStorageChange = (
+      changes: { [key: string]: chrome.storage.StorageChange },
+      areaName: string
+    ) => {
+      if (
+        areaName === "local" &&
+        (changes.authUser || changes.authToken || changes.authRefreshToken)
+      ) {
+        tryAuth()
+      }
+    }
+
     document.addEventListener("visibilitychange", handleVisibility)
+    chrome.storage.onChanged.addListener(handleStorageChange)
 
     return () => {
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current)
       }
       document.removeEventListener("visibilitychange", handleVisibility)
+      chrome.storage.onChanged.removeListener(handleStorageChange)
     }
   }, [tryAuth])
 

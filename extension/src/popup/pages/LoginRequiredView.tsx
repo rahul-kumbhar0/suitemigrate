@@ -70,7 +70,7 @@ export default function LoginRequiredView() {
           {[
             "Open the SuiteMigrate website",
             "Sign in to your account",
-            "Come back and click Refresh below",
+            "The extension connects automatically",
           ].map((step, i) => (
             <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
               <div style={{ width: 16, height: 16, borderRadius: "50%", border: "1px solid var(--rule)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
