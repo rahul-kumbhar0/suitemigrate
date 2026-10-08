@@ -254,7 +254,9 @@ export default function DashboardView() {
         {user && (
           <div className="card" style={{ padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <p style={{ fontSize: 11.5, color: "var(--ink-soft)" }}>
-              {user.unlimited ? "Unlimited conversions" : `${user.conversionsUsed} / 5 free conversions used`}
+              {user.unlimited
+                ? `${user.conversionsUsed} conversion${user.conversionsUsed === 1 ? "" : "s"} completed · ${user.plan === "annual" ? "Annual Pro" : user.plan === "pro" ? "Pro" : "Paid"}`
+                : `${user.conversionsUsed} / 5 free conversions used`}
             </p>
             {!user.unlimited && (
               <button onClick={() => setView("upgrade")} style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", padding: "3px 9px", borderRadius: 3, background: "rgba(217,74,31,.10)", color: "var(--clay)", border: "1px solid rgba(217,74,31,.2)", cursor: "pointer" }}>

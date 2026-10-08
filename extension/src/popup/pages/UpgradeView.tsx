@@ -97,7 +97,7 @@ export default function UpgradeView() {
         </p>
 
         <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".1em", color: "var(--ink-mute)", textAlign: "center" }}>
-          Secured by Razorpay · UPI · Cards · Net Banking
+          Payments processed securely by Razorpay
         </p>
       </div>
 

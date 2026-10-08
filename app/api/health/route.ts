@@ -10,7 +10,9 @@ export async function GET() {
   let quotaRpcError: string | null = null
 
   try {
-    const { error } = await admin.rpc("reserve_conversion_slot", {
+    // A zero UUID cannot match a real auth user; release is therefore a no-op.
+    // It still proves the v2 RPC exists, is executable by service_role, and is visible to PostgREST.
+    const { error } = await admin.rpc("release_conversion_slot_v2", {
       p_user_id: "00000000-0000-0000-0000-000000000000",
     })
     quotaRpcReady = !error
