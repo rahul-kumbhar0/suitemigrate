@@ -1,10 +1,8 @@
 /**
- * API client — calls the SuiteMigrate backend
- *
- * Item 2 fix: auth uses credentials:"include" to send HTTP-only session cookies
- * (matching /api/auth/session which already uses cookies, not Bearer tokens).
- * Bearer token logic removed — authToken is never populated anyway.
+ * API client — calls the SuiteMigrate backend with the extension auth session.
  */
+
+import { authFetch } from "./auth"
 
 const APP_URL = import.meta.env.VITE_APP_URL || "https://suitemigrate.vercel.app"
 
@@ -32,12 +30,12 @@ export interface ConvertResponse {
 }
 
 export async function convertScript(req: ConvertRequest): Promise<ConvertResponse> {
-  const res = await fetch(`${APP_URL}/api/convert`, {
+  const res = await authFetch("/api/convert", {
     method: "POST",
-    credentials: "include",           // Item 2: send HTTP-only session cookie
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   })
+
   const contentType = res.headers.get("content-type") || ""
   const data = contentType.includes("application/json")
     ? await res.json()
@@ -52,6 +50,9 @@ export async function convertScript(req: ConvertRequest): Promise<ConvertRespons
     if (res.status === 401) {
       throw new Error("Your SuiteMigrate session expired. Sign in again, then retry the conversion.")
     }
+    if (res.status === 402 && data.error === "conversion_limit_reached") {
+      throw new Error("conversion_limit_reached")
+    }
     if (res.status === 403) {
       throw new Error("SuiteMigrate blocked this extension request. Check the production EXTENSION_ID/CORS configuration.")
     }
@@ -62,18 +63,18 @@ export async function convertScript(req: ConvertRequest): Promise<ConvertRespons
     }
     throw new Error((serverMessage || `Conversion failed (HTTP ${res.status}).`) + supportCode)
   }
+
   return data as ConvertResponse
 }
 
 export async function getUserInfo() {
-  const res = await fetch(`${APP_URL}/api/user`, {
-    credentials: "include",
+  const res = await authFetch("/api/user", {
     headers: { "Content-Type": "application/json" },
   })
   if (!res.ok) throw new Error("Not authenticated")
   return res.json()
 }
 
-export function getUpgradeUrl(plan: string): string {
-  return `${APP_URL}/dashboard/billing`  // direct to billing page, not checkout API
+export function getUpgradeUrl(_plan: string): string {
+  return `${APP_URL}/dashboard/billing`
 }
