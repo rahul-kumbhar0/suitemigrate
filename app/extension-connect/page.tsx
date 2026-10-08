@@ -31,7 +31,13 @@ export default function ExtensionConnectPage() {
         cleanup()
         setStatus("connected")
         setMessage("Extension connected. Open SuiteMigrate from the Chrome toolbar to continue.")
+        return
       }
+
+      stopped = true
+      cleanup()
+      setStatus("error")
+      setMessage("The extension received the session but could not save it. Reload the extension and try again.")
     }
 
     window.addEventListener("message", onMessage)
@@ -48,12 +54,43 @@ export default function ExtensionConnectPage() {
       setStatus("connecting")
       setMessage("Connecting your signed-in account to the extension…")
 
+      const userId = data.session.user.id
+
+      const [{ data: profile }, { count }] = await Promise.all([
+        supabase
+          .from("users")
+          .select("plan, conversions_limit, entitlement_expires_at, name")
+          .eq("id", userId)
+          .maybeSingle(),
+        supabase
+          .from("conversions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId),
+      ])
+
+      const expired = Boolean(
+        profile?.entitlement_expires_at &&
+        new Date(profile.entitlement_expires_at).getTime() <= Date.now()
+      )
+      const plan = expired ? "free" : (profile?.plan || "free")
+      const used = count ?? 0
+      const unlimited = plan !== "free"
+
       const payload = {
         type: "SUITEMIGRATE_AUTH_SESSION",
         source: "suitemigrate-web",
         accessToken: data.session.access_token,
         refreshToken: data.session.refresh_token,
         expiresAt: data.session.expires_at ?? null,
+        authUser: {
+          id: userId,
+          email: data.session.user.email ?? "",
+          name: profile?.name || data.session.user.user_metadata?.name || "",
+          plan,
+          conversionsUsed: used,
+          conversionsRemaining: unlimited ? null : Math.max(0, 5 - used),
+          unlimited,
+        },
       }
 
       const send = () => {
@@ -66,7 +103,7 @@ export default function ExtensionConnectPage() {
         if (stopped) return
         cleanup()
         setStatus("missing")
-        setMessage("The SuiteMigrate extension did not respond. Make sure it is installed and enabled, then reload this page.")
+        setMessage("The SuiteMigrate extension did not respond. Make sure the latest test extension is installed and enabled, then reload this page.")
       }, 8000)
     }
 
@@ -95,7 +132,7 @@ export default function ExtensionConnectPage() {
 
         {status === "connected" && (
           <div style={{ padding: "12px 14px", border: "1px solid var(--rule)", borderRadius: 5, marginBottom: 18, fontSize: 13, color: "var(--ink-soft)" }}>
-            You can close this tab. Your extension will now use the same SuiteMigrate account without relying on third-party cookies.
+            You can close this tab. Your extension now has the same signed-in SuiteMigrate session.
           </div>
         )}
 

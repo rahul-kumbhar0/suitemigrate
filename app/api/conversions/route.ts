@@ -1,24 +1,8 @@
 import { NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
 import { getCorsHeaders, corsOptions } from "@/lib/cors"
+import { getRequestSupabase } from "@/lib/supabase/request"
 
 export const dynamic = "force-dynamic"
-
-async function getUser(request: Request) {
-  const admin = createAdminClient()
-  const authHeader = request.headers.get("authorization")
-
-  if (authHeader?.startsWith("Bearer ")) {
-    const token = authHeader.slice(7)
-    const { data: { user }, error } = await admin.auth.getUser(token)
-    if (!error && user) return user
-  }
-
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user ?? null
-}
 
 function isMissingOptionalColumn(error: { code?: string; message?: string } | null) {
   if (!error) return false
@@ -39,16 +23,15 @@ export async function GET(request: Request) {
   const headers = getCorsHeaders(origin)
 
   try {
-    const user = await getUser(request)
+    const { supabase, user } = await getRequestSupabase(request)
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers })
     }
 
-    const admin = createAdminClient()
-
-    // Prefer the current schema, but gracefully read older production rows if
-    // optional review-metadata columns have not yet been added there.
-    let history = await admin
+    // Query as the signed-in user so RLS protects history and this endpoint does
+    // not depend on the production service-role key.
+    let history = await supabase
       .from("conversions")
       .select(
         "id, script_name, original_version, script_type, converted_code, confidence_score, changes_log, manual_review_lines, created_at",
@@ -63,7 +46,7 @@ export async function GET(request: Request) {
     let error = history.error
 
     if (isMissingOptionalColumn(error)) {
-      const legacy = await admin
+      const legacy = await supabase
         .from("conversions")
         .select(
           "id, script_name, original_version, script_type, converted_code, confidence_score, created_at",
@@ -73,7 +56,8 @@ export async function GET(request: Request) {
         .order("created_at", { ascending: false })
         .limit(50)
 
-      conversions = (legacy.data ?? []).map((row) => ({
+      const legacyRows = (legacy.data ?? []) as Array<Record<string, unknown>>
+      conversions = legacyRows.map((row) => ({
         ...row,
         changes_log: [],
         manual_review_lines: [],
@@ -88,23 +72,33 @@ export async function GET(request: Request) {
         {
           error: "conversion_history_unavailable",
           message: "Conversion history is temporarily unavailable.",
-          supportCode: "HISTORY_DB",
+          supportCode: "HISTORY_RLS",
         },
         { status: 503, headers }
       )
     }
 
-    const { data: profile } = await admin
+    const { data: profileData } = await supabase
       .from("users")
-      .select("plan")
+      .select("plan, entitlement_expires_at")
       .eq("id", user.id)
       .maybeSingle()
+
+    const profile = profileData as {
+      plan?: string | null
+      entitlement_expires_at?: string | null
+    } | null
+
+    const expired = Boolean(
+      profile?.entitlement_expires_at &&
+      new Date(profile.entitlement_expires_at).getTime() <= Date.now()
+    )
 
     return NextResponse.json(
       {
         conversions: conversions ?? [],
         totalConversions: count ?? 0,
-        plan: profile?.plan ?? "free",
+        plan: expired ? "free" : (profile?.plan ?? "free"),
       },
       { headers: { ...headers, "Cache-Control": "no-store" } }
     )
