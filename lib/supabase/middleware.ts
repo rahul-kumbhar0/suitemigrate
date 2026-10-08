@@ -44,7 +44,10 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith("/signup"))
   ) {
     const url = request.nextUrl.clone()
-    url.pathname = "/dashboard"
+    url.pathname = request.nextUrl.searchParams.get("from") === "extension"
+      ? "/extension-connect"
+      : "/dashboard"
+    url.search = ""
     return NextResponse.redirect(url)
   }
 

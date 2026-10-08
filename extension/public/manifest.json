@@ -36,5 +36,13 @@
 
   "host_permissions": [
     "https://suitemigrate.vercel.app/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["https://suitemigrate.vercel.app/*"],
+      "js": ["authBridge.js"],
+      "run_at": "document_start"
+    }
   ]
 }

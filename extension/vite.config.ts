@@ -59,7 +59,8 @@ export default defineConfig({
       input: {
         popup:      resolve(__dirname, "popup.html"),
         background: resolve(__dirname, "src/background/index.ts"),
-        // content.js removed — Item 5: dead code eliminated
+        authBridge: resolve(__dirname, "src/content/auth-bridge.ts"),
+        // General NetSuite content.js remains removed; the auth bridge runs only on our own website.
         // The popup uses scripting.executeScript for inline scanning instead
       },
       output: {
