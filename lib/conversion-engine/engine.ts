@@ -122,35 +122,35 @@ define([${moduleList}], function(/* module params */) {
 ### 4. SuiteScript 1.0 → 2.1 API Mappings (apply ALL of these)
 ${buildApiMappingReference()}
 
-### 5. Variable Declarations
-- Replace ALL \`var\` with \`const\` (for values that don't change) or \`let\` (for values that change)
-- Never use \`var\`
+### 5. Preserve JavaScript Semantics
+- Change var to const/let ONLY when hoisting, scope, mutation, and closure behavior are preserved.
+- Do not change function declarations, this-binding, promise handling, or execution order just for style.
+- Keep synchronous NetSuite entry points synchronous unless the original API and NetSuite runtime explicitly support an asynchronous pattern.
+- Never invent async/await migrations, new API methods, or N/* modules.
 
-### 6. Modern JavaScript (ES6+)
-- Use arrow functions: \`const fn = (x) => x + 1\`
-- Use template literals: \`\`Hello \${name}\`\`
-- Use destructuring: \`const { id, type } = context.newRecord\`
-- Use async/await instead of .then() chains
+### 6. Source-Level Migration Discipline
+- Only modify code where required for SuiteScript 2.1 compatibility.
+- Preserve business rules, governance handling, query filters, runtime behavior, error paths, and entry-point contracts.
+- Validate that the actual N/* replacement API supports the exact parameters/return values.
+- For unsupported or ambiguous APIs, preserve the logic as much as possible and add a TODO: MANUAL REVIEW comment rather than guessing.
 
-### 7. Inline Comments
-For EVERY change you make, add an inline comment directly on that line:
-\`\`\`javascript
-const rec = record.load({ type: 'customer', id: customerId }); // MIGRATED: nlapiLoadRecord → record.load()
-\`\`\`
+### 7. Review Notes
+- Add short MIGRATED: comments for important changed APIs, but do not add comments that would break syntax or change output.
+- Explain ambiguities with // TODO: MANUAL REVIEW and preserve original intent.
+- Do not claim conversion has passed NetSuite runtime or business-logic testing.
 
-### 8. Manual Review Flags
-If a conversion is ambiguous or complex, add this comment:
-\`\`\`javascript
-// TODO: MANUAL REVIEW — original logic may need adjustment
-\`\`\`
+### 8. Completeness
+- Keep file header, @NScriptType and all originally supported entry points.
+- Preserve original comments where possible and the full script body.
+- Avoid unnecessary new dependencies and minimize code movement.
 
 ## CRITICAL RULES
-1. NEVER remove or alter business logic — only modernise the syntax and API calls
-2. NEVER add features that weren't in the original
-3. ALWAYS preserve all original comments
-4. ALWAYS output ONLY valid JavaScript — no markdown, no explanations outside comments
-5. The output must be a complete, deployable SuiteScript 2.1 file
-6. If you cannot confidently convert a specific call, flag it with TODO: MANUAL REVIEW
+1. NEVER intentionally alter business logic or add unrequested features.
+2. NEVER guess API mappings or behavior. Flag unsupported cases for manual review.
+3. Output ONLY JavaScript; no markdown, no explanations outside comments.
+4. Include a complete SuiteScript 2.1 migration draft, not a claim of production deployment readiness.
+5. Keep NetSuite module calls, sublist/subrecord APIs, and execution context semantics intact.
+6. Explicitly flag potentially incompatible calls and test requirements.
 
 ## OUTPUT FORMAT
 Output ONLY the converted JavaScript code. No markdown code fences. No explanations before or after. Just the clean JS file.`

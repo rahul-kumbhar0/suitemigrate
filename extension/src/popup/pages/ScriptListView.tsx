@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Search, Download } from "lucide-react"
+import { Search, Download, LockKeyhole, HelpCircle, CheckCircle2, FileWarning, ShieldAlert, RefreshCw } from "lucide-react"
 import Header from "../components/Header"
 import { useStore } from "../../lib/store"
 import { downloadAuditReport } from "../../lib/export"
@@ -53,6 +53,9 @@ export default function ScriptListView() {
   const [manualCode, setManualCode] = useState("")
   const [manualError, setManualError] = useState("")
   const [showManualPaste, setShowManualPaste] = useState(false)
+  const [checkingId, setCheckingId] = useState<string | null>(null)
+  const [checkingBatch, setCheckingBatch] = useState(false)
+  const [accessError, setAccessError] = useState("")
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "blockers") return m && ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    if (filter === "blockers") return m && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
     if (filter === "done") return m && !s.needsMigration
     return m
   })
@@ -84,14 +87,66 @@ export default function ScriptListView() {
     access: NonNullable<NSScript["sourceAccess"]>,
     note?: string
   ) => {
+    const current = useStore.getState().activeAccount || activeAccount
     const next = {
-      ...activeAccount,
-      scripts: activeAccount.scripts.map((s) =>
+      ...current,
+      scripts: current.scripts.map((s) =>
         s.id === scriptId ? { ...s, sourceAccess: access, sourceAccessNote: note } : s
       ),
     }
     setActiveAccount(next)
     await saveAccount(next)
+  }
+
+  // Preflight: fetch source inside the current NetSuite session, classify it,
+  // and discard all code. It never reaches the AI API or Chrome storage.
+  const checkSourceAccess = async (script: NSScript): Promise<void> => {
+    setCheckingId(script.id)
+    setAccessError("")
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
+      const hostname = tab?.url ? new URL(tab.url).hostname : ""
+      if (!tab?.id || !/(^|\\.)netsuite\\.com$/i.test(hostname)) {
+        throw new Error("Open your NetSuite tab before checking source access.")
+      }
+
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: fetchScriptCode,
+        args: [script.id],
+      })
+      const result = results?.[0]?.result as {
+        code: string
+        access: NonNullable<NSScript["sourceAccess"]>
+        error?: string
+      } | null
+
+      if (!result) throw new Error("NetSuite did not return a source access result.")
+      const access = result.code ? "readable" : result.access
+      await markSourceAccess(
+        script.id,
+        access,
+        access === "readable"
+          ? "Source checked successfully in NetSuite."
+          : (result.error || "Source is not readable.")
+      )
+      if (access === "unknown") {
+        setAccessError(result.error || "Source could not be verified. Try again.")
+      }
+    } catch (err) {
+      setAccessError(err instanceof Error ? err.message : "Source check failed.")
+    } finally {
+      setCheckingId(null)
+    }
+  }
+
+  const checkVisibleScripts = async () => {
+    setCheckingBatch(true)
+    setAccessError("")
+    // A small batch avoids overwhelming NetSuite; repeat to check the next five.
+    const candidates = filtered.filter(s => s.needsMigration && s.sourceAccess === "unknown").slice(0, 5)
+    for (const script of candidates) await checkSourceAccess(script)
+    setCheckingBatch(false)
   }
 
   const runConversionWithCode = async (script: NSScript, code: string) => {
@@ -150,7 +205,7 @@ export default function ScriptListView() {
       return
     }
 
-    if (["no_file", "restricted", "protected"].includes(script.sourceAccess || "")) {
+    if (["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")) {
       setSourceIssue({
         script,
         access: script.sourceAccess as NonNullable<NSScript["sourceAccess"]>,
@@ -198,7 +253,7 @@ export default function ScriptListView() {
           const result = results?.[0]?.result as {
             code: string
             error?: string
-            access: "readable" | "no_file" | "restricted" | "protected"
+            access: "readable" | "no_file" | "restricted" | "protected" | "unknown"
           } | null
           if (result?.code) {
             code = result.code
@@ -215,11 +270,11 @@ export default function ScriptListView() {
       // Never send placeholder/HTML content to the conversion service.
       if (!code) {
         const message = fetchError || "Could not retrieve the selected source file."
-        await markSourceAccess(script.id, fetchAccess === "unknown" ? "protected" : fetchAccess, message)
+        await markSourceAccess(script.id, fetchAccess, message)
         setSourceIssue({
-          script: { ...script, sourceAccess: fetchAccess === "unknown" ? "protected" : fetchAccess, sourceAccessNote: message },
+          script: { ...script, sourceAccess: fetchAccess, sourceAccessNote: message },
           message,
-          access: fetchAccess === "unknown" ? "protected" : fetchAccess,
+          access: fetchAccess,
         })
         setShowManualPaste(false)
         setManualCode("")
@@ -232,6 +287,12 @@ export default function ScriptListView() {
       await runConversionWithCode(script, code)
 
     } catch (err: unknown) {
+      // Reconcile the visible quota after an error: the backend releases a
+      // reserved slot when processing or persistence fails.
+      try {
+        const freshUser = await fetchCurrentUser()
+        if (freshUser) setUser(freshUser)
+      } catch { /* Preserve the original conversion error. */ }
       const msg = err instanceof Error ? err.message : "Conversion failed"
       // Server returns "conversion_limit_reached" when the 5-conversion cap is hit
       if (msg === "conversion_limit_reached") {
@@ -265,6 +326,12 @@ export default function ScriptListView() {
     try {
       await runConversionWithCode(sourceIssue.script, code)
     } catch (err: unknown) {
+      // Reconcile the visible quota after an error: the backend releases a
+      // reserved slot when processing or persistence fails.
+      try {
+        const freshUser = await fetchCurrentUser()
+        if (freshUser) setUser(freshUser)
+      } catch { /* Preserve the original conversion error. */ }
       const msg = err instanceof Error ? err.message : "Conversion failed"
       if (msg === "conversion_limit_reached") setView("upgrade")
       else {
@@ -277,10 +344,11 @@ export default function ScriptListView() {
     }
   }
 
+  const unchecked = activeAccount.scripts.filter(s => s.needsMigration && s.sourceAccess === "unknown").length
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
   const blockers = activeAccount.scripts.filter(s =>
-    ["no_file", "restricted", "protected"].includes(s.sourceAccess || "")
+    ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
   ).length
 
   return (
@@ -399,6 +467,19 @@ export default function ScriptListView() {
           ))}
         </div>
 
+        <button
+          onClick={checkVisibleScripts}
+          disabled={checkingBatch || !!checkingId || filtered.every(s => !s.needsMigration || s.sourceAccess !== "unknown")}
+          className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+          title="Checks up to five unchecked scripts. No conversion quota is used."
+        >
+          <RefreshCw size={11} />
+          {checkingBatch ? "Checking access…" : `Check access (5 at a time · ${unchecked} unchecked)`}
+        </button>
+        {accessError && <p role="alert" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{accessError}</p>}
+        <p style={{ fontSize: 10, color: "var(--ink-mute)" }}>
+          Unchecked does not mean unlocked. Source checks run in NetSuite and do not use conversion quota.
+        </p>
         {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
         {user && !user.unlimited ? (
@@ -439,19 +520,37 @@ export default function ScriptListView() {
                 {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
                 {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
                 {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
-                {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· authorized copy</span>}
+                {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· manual source needed</span>}
+                {(!script.sourceAccess || script.sourceAccess === "unknown") && <span style={{ marginLeft: 4 }}>· not checked</span>}
               </p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+              {script.sourceAccess === "protected" || script.sourceAccess === "restricted"
+                ? <LockKeyhole size={13} color="#b91c1c" aria-label="Source protected or restricted" />
+                : script.sourceAccess === "no_file"
+                ? <FileWarning size={13} color="#b45309" aria-label="No source file attached" />
+                : script.sourceAccess === "readable"
+                ? <CheckCircle2 size={13} color="#15803d" aria-label="Source readable" />
+                : script.sourceAccess === "manual"
+                ? <ShieldAlert size={13} color="#2563eb" aria-label="Manual source required" />
+                : <HelpCircle size={13} color="#64748b" aria-label="Source access not checked" />}
               <span className={`risk-${script.riskLevel.toLowerCase()}`}>{script.riskLevel}</span>
               {script.needsMigration ? (
                 <button
-                  onClick={() => handleConvert(script)}
-                  className={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "btn-outline" : "btn-primary"}
-                  title={["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "View migration options" : "Convert this script"}
-                  style={{ fontSize: 10, padding: "4px 10px" }}
+                  onClick={() => !script.sourceAccess || script.sourceAccess === "unknown"
+                    ? checkSourceAccess(script)
+                    : handleConvert(script)}
+                  disabled={checkingBatch || !!checkingId}
+                  className={script.sourceAccess === "readable" ? "btn-primary" : "btn-outline"}
+                  title={script.sourceAccess === "readable" ? "Convert verified source" :
+                    ["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")
+                      ? "View blocker and authorized source options" : "Check NetSuite source access first"}
+                  style={{ fontSize: 10, padding: "4px 8px" }}
                 >
-                  {["no_file", "restricted", "protected"].includes(script.sourceAccess || "") ? "Options" : "Convert"}
+                  {checkingId === script.id ? "Checking…" :
+                    script.sourceAccess === "readable" ? "Convert" :
+                    ["no_file", "restricted", "protected", "manual"].includes(script.sourceAccess || "")
+                      ? "Options" : "Check"}
                 </button>
               ) : (
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "#15803d" }}>✓ 2.1</span>

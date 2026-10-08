@@ -201,6 +201,15 @@ export async function POST(request: Request) {
 
     const result = await convertScript({ code, scriptName })
 
+    // A structurally invalid migration is not a completed conversion.
+    // Human review and NetSuite Sandbox testing are still required even when valid.
+    if (!result.isValid || !result.convertedCode.trim()) {
+      console.warn("[/api/convert] output failed structural checks", {
+        validationErrors: result.validationErrors,
+      })
+      throw new Error("conversion_validation_failed")
+    }
+
     const { data: saved, error: saveError } = await admin
       .from("conversions")
       .insert({
@@ -293,8 +302,20 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: "conversion_capacity",
-          message: "The AI conversion service is at capacity. Please retry shortly.",
+          message: "The AI service is rate-limited or has reached its available API capacity/quota. Retrying may help; persistent errors require the service owner to check upstream usage and billing.",
           supportCode: "AI_CAPACITY",
+          retryable: true,
+        },
+        { status: 503, headers }
+      )
+    }
+
+    if (raw.includes("conversion_validation_failed")) {
+      return NextResponse.json(
+        {
+          error: "conversion_validation_failed",
+          message: "The AI response failed migration structure checks and was not saved as a successful conversion.",
+          supportCode: "AI_OUTPUT_REVIEW",
           retryable: true,
         },
         { status: 503, headers }
