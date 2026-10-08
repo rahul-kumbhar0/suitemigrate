@@ -77,11 +77,16 @@ export async function GET(request: Request) {
       )
     }
 
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from("users")
       .select("plan, entitlement_expires_at")
       .eq("id", user.id)
       .maybeSingle()
+
+    const profile = profileData as {
+      plan?: string | null
+      entitlement_expires_at?: string | null
+    } | null
 
     const expired = Boolean(
       profile?.entitlement_expires_at &&
