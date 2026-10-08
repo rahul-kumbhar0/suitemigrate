@@ -103,7 +103,7 @@ async function runSuiteQL(baseQuery: string): Promise<Record<string, string>[]> 
 export async function fetchScriptCode(scriptId: string): Promise<{
   code: string
   error?: string
-  access: "readable" | "no_file" | "restricted" | "protected"
+  access: "readable" | "no_file" | "restricted" | "protected" | "unknown"
 }> {
   try {
     const numericId = Number(scriptId)
@@ -158,6 +158,7 @@ export async function fetchScriptCode(scriptId: string): Promise<{
         return { code: "", access: classifyHtml(text) }
       }
       if (res.status === 401 || res.status === 403) return { code: "", access: "restricted" as const }
+      if (res.status === 429 || res.status >= 500) return { code: "", access: "unknown" as const }
       return { code: "", access: "protected" as const }
     }
 
@@ -190,7 +191,7 @@ export async function fetchScriptCode(scriptId: string): Promise<{
         body: JSON.stringify({ q: `SELECT scriptfile FROM script WHERE id = ${numericId}` }),
       })
       if (!fallbackQuery.ok) {
-        return { code: "", access: fallbackQuery.status === 401 || fallbackQuery.status === 403 ? "restricted" : "protected", error: `NetSuite could not read script metadata (HTTP ${fallbackQuery.status}).` }
+        return { code: "", access: fallbackQuery.status === 401 || fallbackQuery.status === 403 ? "restricted" : "unknown", error: `NetSuite could not read script metadata (HTTP ${fallbackQuery.status}).` }
       }
       const data = await fallbackQuery.json()
       fileId = data?.items?.[0]?.scriptfile ?? null
@@ -246,7 +247,7 @@ export async function fetchScriptCode(scriptId: string): Promise<{
       error: `Source file ${fileId} is present but NetSuite returned a protected/inaccessible page instead of JavaScript. This can happen with vendor-hidden SuiteBundle/SuiteApp source or other File Cabinet restrictions. SuiteMigrate will not bypass source protection. Use an authorized source copy, request a 2.1 update from the vendor, or keep this script as a migration blocker.`,
     }
   } catch (err) {
-    return { code: "", access: "protected", error: err instanceof Error ? err.message : "Could not retrieve script source." }
+    return { code: "", access: "unknown", error: err instanceof Error ? err.message : "Could not retrieve script source." }
   }
 }
 
