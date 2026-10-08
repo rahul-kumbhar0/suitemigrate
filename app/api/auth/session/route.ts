@@ -51,7 +51,12 @@ export async function GET(request: Request) {
     }
 
     const plan      = (profile.plan as Plan) || "free"
-    const used      = profile.conversions_used || 0
+    const { count: completedCount, error: countError } = await admin
+      .from("conversions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+    if (countError) throw countError
+    const used = completedCount ?? 0
     const limit     = profile.conversions_limit ?? 5
     const unlimited = plan !== "free"
 
@@ -64,7 +69,7 @@ export async function GET(request: Request) {
         plan,
         conversionsUsed: used,
         conversionsLimit: unlimited ? null : limit,
-        conversionsRemaining: unlimited ? null : Math.max(0, limit - used),
+        conversionsRemaining: unlimited ? null : Math.max(0, limit - (profile.conversions_used || 0)),
         unlimited,
       },
       { headers }

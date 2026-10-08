@@ -21,10 +21,10 @@ export async function GET(request: Request) {
     }
 
     const admin = createAdminClient()
-    const [{ data: conversions, error }, { data: profile }] = await Promise.all([
+    const [{ data: conversions, error, count }, { data: profile }] = await Promise.all([
       admin
       .from("conversions")
-      .select("id, script_name, original_version, script_type, converted_code, confidence_score, changes_log, manual_review_lines, created_at")
+      .select("id, script_name, original_version, script_type, converted_code, confidence_score, changes_log, manual_review_lines, created_at", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50),
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         conversions: conversions ?? [],
-        totalConversions: profile?.conversions_used ?? (conversions?.length ?? 0),
+        totalConversions: count ?? 0,
         plan: profile?.plan ?? "free",
       },
       { headers: { ...headers, "Cache-Control": "no-store" } }

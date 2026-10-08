@@ -7,7 +7,8 @@
     "smoke:prod": "node scripts/smoke-production.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:quota": "node scripts/test-quota.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
@@ -33,6 +34,7 @@
     "tailwind-merge": "^2.2.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
         if (userId && validPaidPlan(plan) && matchesPrice) {
           const entitlementExpiresAt =
-            plan === "annual" ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() : null
+            plan === "annual" ? new Date(Number(payment.created_at) * 1000 + 365 * 24 * 60 * 60 * 1000).toISOString() : null
 
           await admin.from("users").update({
             plan,

@@ -69,8 +69,13 @@ export async function GET(request: Request) {
     }
 
     const plan = (profile?.plan as Plan) || "free"
-    const used = profile?.conversions_used || 0
-    const remaining = getRemainingConversions(plan, used)
+    const { count: completedCount, error: countError } = await admin
+      .from("conversions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+    if (countError) throw countError
+    const used = completedCount ?? 0
+    const remaining = getRemainingConversions(plan, profile?.conversions_used || 0)
 
     return NextResponse.json({
       id: user.id,
