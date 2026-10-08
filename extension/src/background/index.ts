@@ -1,3 +1,4 @@
+import { startSourceAudit, pauseSourceAudit } from "./access-scanner"
 /**
  * Background service worker (Manifest V3)
  */
@@ -12,6 +13,29 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
+    case "START_SOURCE_AUDIT": {
+      const accountId = typeof message.accountId === "string" ? message.accountId : ""
+      const tabId = typeof message.tabId === "number" ? message.tabId : NaN
+      if (!accountId || !Number.isInteger(tabId)) {
+        sendResponse({ ok: false, error: "invalid_scan_request" })
+        break
+      }
+      // Caller begins the scan from a user-selected NetSuite tab. Never send
+      // any script source to the website or an external AI API during audit.
+      void startSourceAudit(accountId, tabId)
+      sendResponse({ ok: true })
+      break
+    }
+    case "PAUSE_SOURCE_AUDIT": {
+      if (typeof message.accountId === "string") {
+        pauseSourceAudit(message.accountId)
+        sendResponse({ ok: true })
+      } else {
+        sendResponse({ ok: false })
+      }
+      break
+    }
+
     case "AUTH_SESSION": {
       const senderUrl = sender.url || sender.tab?.url || ""
       if (!senderUrl.startsWith(BASE_URL)) {
