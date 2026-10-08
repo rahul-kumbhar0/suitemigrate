@@ -3,6 +3,8 @@
  * Validates output, calculates confidence score, extracts change log
  */
 
+import { Script } from "node:vm"
+
 export interface PostprocessResult {
   code: string
   confidenceScore: number
@@ -27,6 +29,15 @@ function validateStructure(code: string): string[] {
   }
   if (/\bnlapi[A-Z]/.test(code)) {
     errors.push("Legacy nlapi* calls still present — conversion incomplete")
+  }
+
+  // Parse only: never execute user-supplied code on our server.
+  // This catches malformed JavaScript output before it can be billed as a
+  // successful migration. It does not prove NetSuite runtime compatibility.
+  try {
+    new Script(code, { filename: "migration-draft.js" })
+  } catch {
+    errors.push("Generated JavaScript failed syntax parsing")
   }
 
   return errors
