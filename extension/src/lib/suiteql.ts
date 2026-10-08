@@ -145,6 +145,11 @@ export async function fetchScriptCode(scriptId: string): Promise<{
       const text = await res.text()
       const contentType = (res.headers.get("content-type") || "").toLowerCase()
       const isHtml = contentType.includes("text/html") || /^\s*<!doctype html|^\s*<html/i.test(text)
+      if (res.ok && contentType.includes("json")) {
+        // A JSON API response is never a verified SuiteScript source file.
+        // It may be a transient NetSuite error, not a vendor source lock.
+        return { code: "", access: "unknown" as const }
+      }
       if (res.ok && text.trim() && !isHtml) {
         // A successful HTTP response can still be a NetSuite error payload.
         if (!contentType.includes("json") && looksLikeSource(text)) {
