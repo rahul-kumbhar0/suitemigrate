@@ -1,9 +1,9 @@
 /**
  * First-party website -> extension auth bridge.
  *
- * Runs only on the SuiteMigrate website. The website posts the authenticated
- * session to the page; this isolated content script relays it to the extension
- * background worker. No NetSuite page can use this bridge.
+ * Runs only on the SuiteMigrate website. The website posts its already
+ * authenticated session/user snapshot to the page; this isolated content
+ * script relays it to the extension background worker.
  */
 
 window.addEventListener("message", (event) => {
@@ -15,13 +15,22 @@ window.addEventListener("message", (event) => {
     accessToken?: string
     refreshToken?: string
     expiresAt?: number | null
+    authUser?: {
+      id?: string
+      email?: string
+      name?: string | null
+      plan?: string
+      conversionsUsed?: number
+      conversionsRemaining?: number | null
+      unlimited?: boolean
+    }
   } | null
 
   if (!data || data.type !== "SUITEMIGRATE_AUTH_SESSION" || data.source !== "suitemigrate-web") {
     return
   }
 
-  if (!data.accessToken || !data.refreshToken) return
+  if (!data.accessToken || !data.refreshToken || !data.authUser?.id) return
 
   chrome.runtime.sendMessage(
     {
@@ -29,6 +38,7 @@ window.addEventListener("message", (event) => {
       accessToken: data.accessToken,
       refreshToken: data.refreshToken,
       expiresAt: data.expiresAt ?? null,
+      authUser: data.authUser,
     },
     (response) => {
       window.postMessage(
@@ -36,6 +46,7 @@ window.addEventListener("message", (event) => {
           type: "SUITEMIGRATE_AUTH_ACK",
           source: "suitemigrate-extension",
           ok: Boolean(response?.ok),
+          error: response?.error || null,
         },
         window.location.origin
       )
