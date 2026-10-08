@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Loader2, Eye, EyeOff } from "lucide-react"
 
@@ -24,6 +24,9 @@ const GoogleIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromExtension = searchParams.get("from") === "extension"
+  const nextPath = fromExtension ? "/extension-connect" : "/dashboard"
   const [form, setForm]           = useState({ email: "", password: "" })
   const [showPass, setShowPass]   = useState(false)
   const [loading, setLoading]     = useState(false)
@@ -36,7 +39,7 @@ export default function LoginPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password })
       if (error) throw error
-      router.push("/dashboard"); router.refresh()
+      router.push(nextPath); router.refresh()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Something went wrong."
       setError(msg === "Invalid login credentials" ? "Incorrect email or password." : msg)
@@ -47,7 +50,7 @@ export default function LoginPage() {
     setGLoading(true)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}` },
     })
     if (error) { setError(error.message); setGLoading(false) }
   }
@@ -147,7 +150,7 @@ export default function LoginPage() {
 
         <p style={{ marginTop: 22, textAlign: "center", fontSize: 13, color: "var(--ink-soft)" }}>
           Don&apos;t have an account?{" "}
-          <Link href="/signup" style={{ color: "var(--clay)", textDecoration: "none", fontWeight: 500 }} className="auth-link">
+          <Link href={fromExtension ? "/signup?from=extension" : "/signup"} style={{ color: "var(--clay)", textDecoration: "none", fontWeight: 500 }} className="auth-link">
             Sign up free
           </Link>
         </p>
