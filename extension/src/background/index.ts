@@ -22,7 +22,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const filename = typeof message.filename === "string" ? message.filename : ""
       if (!fromOwnExtension || !html.startsWith("<!DOCTYPE html>") ||
           html.length > 8_000_000 ||
-          !/^SuiteMigrate_Readiness_[a-zA-Z0-9_-]+_\\d{4}-\\d{2}-\\d{2}\\.html$/.test(filename)) {
+          !/^SuiteMigrate_Readiness_[a-zA-Z0-9_-]+_\d{4}-\d{2}-\d{2}\.html$/.test(filename)) {
         sendResponse({ ok: false, error: "Report download request was invalid." })
         break
       }
