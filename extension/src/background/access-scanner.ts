@@ -96,7 +96,7 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
       lastError: undefined,
     })
 
-    let inspected = 0
+    let classified = checked
     let consecutiveTransientFailures = 0
     for (const script of candidates) {
       if (stopping.has(accountId)) {
@@ -131,8 +131,8 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
       }
 
       await updateScriptAccess(accountId, script.id, access, note)
-      inspected += 1
-      await saveAudit(accountId, { checked: checked + inspected, total })
+      if (access !== "unknown") classified += 1
+      await saveAudit(accountId, { checked: classified, total })
 
       if (access === "unknown") {
         consecutiveTransientFailures += 1
@@ -152,7 +152,21 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
       }
     }
 
-    await saveAudit(accountId, { state: "complete", checked: total, total })
+    const finishedAccount = await resolveAccount(accountId)
+    const stillUnknown = finishedAccount?.scripts.filter(script =>
+      script.needsMigration && (!script.sourceAccess || script.sourceAccess === "unknown")
+    ).length ?? 0
+
+    if (stillUnknown > 0) {
+      await saveAudit(accountId, {
+        state: "paused",
+        checked: classified,
+        total,
+        lastError: `${stillUnknown} scripts could not be verified. Retry when your NetSuite session is ready.`,
+      })
+    } else {
+      await saveAudit(accountId, { state: "complete", checked: total, total, lastError: undefined })
+    }
   } catch (error) {
     await saveAudit(accountId, {
       state: "paused",
