@@ -28,24 +28,23 @@ assert.ok(!html.includes("Test <Client>"), "Raw HTML must not be injected into t
 assert.ok(html.includes("id=\"blocked\""), "Blocked section must be linkable")
 console.log("✓ Report categories, partial status, safe HTML, and Print/PDF design")
 
-let downloaded = false
-let attached = false
-let capturedBlob = null
-const originalCreateObjectURL = URL.createObjectURL
-const originalRevokeObjectURL = URL.revokeObjectURL
-URL.createObjectURL = (blob) => { capturedBlob = blob; return "blob:readiness-test" }
-URL.revokeObjectURL = () => {}
-globalThis.document = {
-  body: { appendChild(link) { attached = true; assert.equal(link.download.endsWith(".html"), true) } },
-  createElement(tag) {
-    assert.equal(tag, "a")
-    return { style: {}, href: "", download: "", click() { downloaded = true }, remove() {} }
+let payload = null
+globalThis.chrome = {
+  runtime: {
+    sendMessage: async (message) => {
+      payload = message
+      return { ok: true, downloadId: 42 }
+    },
   },
 }
-downloadAuditReport(account)
-assert.ok(attached && downloaded, "Download link must be attached and clicked")
-assert.ok(capturedBlob, "Report must produce an HTML Blob")
-assert.equal((await capturedBlob.text()).includes("Locked, restricted & missing source"), true)
-URL.createObjectURL = originalCreateObjectURL
-URL.revokeObjectURL = originalRevokeObjectURL
-console.log("✓ Readiness HTML download is triggered without runtime exception")
+const id = await downloadAuditReport(account)
+assert.equal(id, 42, "Download should return Chrome download ID")
+assert.equal(payload.type, "DOWNLOAD_HTML_REPORT")
+assert.equal(payload.filename.endsWith(".html"), true)
+assert.ok(payload.html.includes("Locked, restricted & missing source"))
+console.log("✓ Report is handed to background Chrome downloads handler")
+
+globalThis.chrome.runtime.sendMessage = async () =>
+  ({ ok: false, error: "Chrome download blocked" })
+await assert.rejects(() => downloadAuditReport(account), /Chrome download blocked/)
+console.log("✓ Chrome download failures are shown, not silently swallowed")
