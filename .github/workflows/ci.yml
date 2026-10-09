@@ -56,3 +56,23 @@ jobs:
           name: SuiteMigrate-v1.1.4-extension
           path: extension/dist/
           if-no-files-found: error
+
+
+  production-smoke-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Probe live SuiteMigrate production endpoints
+        run: node scripts/smoke-production.mjs
+      - name: Website production-dependency audit
+        if: always()
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
+      - name: Extension production-dependency audit
+        if: always()
+        continue-on-error: true
+        working-directory: extension
+        run: npm audit --omit=dev --audit-level=high
