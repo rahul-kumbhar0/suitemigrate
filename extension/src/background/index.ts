@@ -70,7 +70,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case "AUTH_SESSION": {
       const senderUrl = sender.url || sender.tab?.url || ""
-      if (!senderUrl.startsWith(BASE_URL)) {
+      // Exact origin comparison prevents lookalike hosts such as
+      // suitemigrate.vercel.app.attacker.example from passing this check.
+      let trusted = false
+      try {
+        trusted = new URL(senderUrl).origin === new URL(BASE_URL).origin
+      } catch { /* Invalid or absent sender URL. */ }
+      if (!trusted) {
         sendResponse({ ok: false, error: "untrusted_sender" })
         break
       }
