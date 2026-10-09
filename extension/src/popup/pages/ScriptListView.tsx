@@ -59,6 +59,7 @@ export default function ScriptListView() {
   const [accessError, setAccessError] = useState("")
   const [audit, setAudit] = useState<AccessAuditState | null>(null)
   const [reportError, setReportError] = useState("")
+  const [reportSuccess, setReportSuccess] = useState("")
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -559,11 +560,13 @@ export default function ScriptListView() {
           </button>
         ) : (
           <button
-            onClick={() => {
+            onClick={async () => {
               try {
                 setReportError("")
-                downloadAuditReport(activeAccount)
+                await downloadAuditReport(activeAccount)
+                setReportSuccess("Report download started. Open Chrome Downloads (Ctrl+J) to find it.")
               } catch (error) {
+                setReportSuccess("")
                 setReportError(error instanceof Error ? error.message : "Report download failed.")
               }
             }}
@@ -576,6 +579,7 @@ export default function ScriptListView() {
       </div>
 
       {reportError && <p role="alert" style={{ padding: "0 14px 8px", fontSize: 10.5, color: "var(--clay)" }}>{reportError}</p>}
+      {reportSuccess && <p role="status" style={{ padding: "0 14px 8px", fontSize: 10.5, color: "#167751" }}>{reportSuccess}</p>}
 
       {/* Script list */}
       <div style={{ overflowY: "auto", maxHeight: 300, padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
