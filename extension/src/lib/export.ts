@@ -237,11 +237,27 @@ export function buildReadinessReportHtml(account: NSAccount): string {
 </main></body></html>`
 }
 
-export function downloadAuditReport(account: NSAccount): void {
+/**
+ * Download from the extension service worker using chrome.downloads, rather
+ * than a temporary blob owned by a popup that may close at any moment.
+ * The HTML report stays on the device: it is never sent to our server.
+ */
+export async function downloadAuditReport(account: NSAccount): Promise<number> {
   const html = buildReadinessReportHtml(account)
   const safeId = account.accountId.replace(/[^a-z0-9_-]/gi, "_")
   const filename = `SuiteMigrate_Readiness_${safeId}_${new Date().toISOString().slice(0, 10)}.html`
-  downloadBlob(new Blob([html], { type: "text/html;charset=utf-8" }), filename)
+
+  const response = await chrome.runtime.sendMessage({
+    type: "DOWNLOAD_HTML_REPORT",
+    filename,
+    html,
+  }) as { ok?: boolean; downloadId?: number; error?: string } | undefined
+
+  if (!response?.ok || typeof response.downloadId !== "number") {
+    throw new Error(response?.error || "Chrome could not start the report download. Check Downloads permission.")
+  }
+
+  return response.downloadId
 }
 
 export function downloadAllConversions(conversions: ConversionResult[]): void {
