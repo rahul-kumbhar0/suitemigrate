@@ -13,6 +13,38 @@ chrome.runtime.onInstalled.addListener((details) => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
+    case "DOWNLOAD_HTML_REPORT": {
+      // Reports are initiated only by our own extension UI; never accept
+      // arbitrary download payloads sent from the NetSuite tab or web bridge.
+      const fromOwnExtension = sender.id === chrome.runtime.id &&
+        (sender.url || "").startsWith(`chrome-extension://${chrome.runtime.id}/`)
+      const html = typeof message.html === "string" ? message.html : ""
+      const filename = typeof message.filename === "string" ? message.filename : ""
+      if (!fromOwnExtension || !html.startsWith("<!DOCTYPE html>") ||
+          html.length > 8_000_000 ||
+          !/^SuiteMigrate_Readiness_[a-zA-Z0-9_-]+_\d{4}-\d{2}-\d{2}\.html$/.test(filename)) {
+        sendResponse({ ok: false, error: "Report download request was invalid." })
+        break
+      }
+
+      // data: URL is owned by the downloads subsystem, not a transient popup
+      // Blob URL. Chrome can continue saving after the extension popup closes.
+      chrome.downloads.download({
+        url: "data:text/html;charset=utf-8," + encodeURIComponent(html),
+        filename,
+        conflictAction: "uniquify",
+        saveAs: false,
+      }, (downloadId) => {
+        const error = chrome.runtime.lastError
+        if (error || typeof downloadId !== "number") {
+          sendResponse({ ok: false, error: error?.message || "Chrome rejected the report download." })
+        } else {
+          sendResponse({ ok: true, downloadId })
+        }
+      })
+      return true
+    }
+
     case "START_SOURCE_AUDIT": {
       const accountId = typeof message.accountId === "string" ? message.accountId : ""
       const tabId = typeof message.tabId === "number" ? message.tabId : NaN
@@ -38,7 +70,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case "AUTH_SESSION": {
       const senderUrl = sender.url || sender.tab?.url || ""
-      if (!senderUrl.startsWith(BASE_URL)) {
+      // Exact origin comparison prevents lookalike hosts such as
+      // suitemigrate.vercel.app.attacker.example from passing this check.
+      let trusted = false
+      try {
+        trusted = new URL(senderUrl).origin === new URL(BASE_URL).origin
+      } catch { /* Invalid or absent sender URL. */ }
+      if (!trusted) {
         sendResponse({ ok: false, error: "untrusted_sender" })
         break
       }

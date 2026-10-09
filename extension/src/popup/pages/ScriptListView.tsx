@@ -59,6 +59,7 @@ export default function ScriptListView() {
   const [accessError, setAccessError] = useState("")
   const [audit, setAudit] = useState<AccessAuditState | null>(null)
   const [reportError, setReportError] = useState("")
+  const [reportSuccess, setReportSuccess] = useState("")
 
   // Load persisted consent from chrome.storage on mount
   useEffect(() => {
@@ -89,8 +90,36 @@ export default function ScriptListView() {
         if (next) setActiveAccount(next)
       }
     }
+    const recoverInterruptedAudit = async () => {
+      const data = await chrome.storage.local.get("accessAudits")
+      const states = (data.accessAudits || {}) as Record<string, AccessAuditState>
+      const current = states[accountId]
+      // An MV3 service worker may stop during a large scan. Do not leave
+      // a frozen "Checking…" screen forever: let the user explicitly resume.
+      if (current?.state === "running" &&
+          Date.now() - Date.parse(current.updatedAt) > 180_000) {
+        const paused: AccessAuditState = {
+          ...current,
+          state: "paused",
+          lastError: "The scan stopped responding. Keep NetSuite open and select Resume verification.",
+          updatedAt: new Date().toISOString(),
+        }
+        setAudit(paused)
+        await chrome.storage.local.set({
+          accessAudits: { ...states, [accountId]: paused },
+        })
+      }
+    }
+    void recoverInterruptedAudit().catch(() => {})
+    const recoveryTimer = setInterval(() => {
+      void recoverInterruptedAudit().catch(() => {})
+    }, 30_000)
+
     chrome.storage.onChanged.addListener(listener)
-    return () => chrome.storage.onChanged.removeListener(listener)
+    return () => {
+      clearInterval(recoveryTimer)
+      chrome.storage.onChanged.removeListener(listener)
+    }
   }, [activeAccount?.accountId, setActiveAccount])
 
   if (!activeAccount) return (
@@ -559,11 +588,13 @@ export default function ScriptListView() {
           </button>
         ) : (
           <button
-            onClick={() => {
+            onClick={async () => {
               try {
                 setReportError("")
-                downloadAuditReport(activeAccount)
+                await downloadAuditReport(activeAccount)
+                setReportSuccess("Report download started. Open Chrome Downloads (Ctrl+J) to find it.")
               } catch (error) {
+                setReportSuccess("")
                 setReportError(error instanceof Error ? error.message : "Report download failed.")
               }
             }}
@@ -576,6 +607,7 @@ export default function ScriptListView() {
       </div>
 
       {reportError && <p role="alert" style={{ padding: "0 14px 8px", fontSize: 10.5, color: "var(--clay)" }}>{reportError}</p>}
+      {reportSuccess && <p role="status" style={{ padding: "0 14px 8px", fontSize: 10.5, color: "#167751" }}>{reportSuccess}</p>}
 
       {/* Script list */}
       <div style={{ overflowY: "auto", maxHeight: 300, padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
