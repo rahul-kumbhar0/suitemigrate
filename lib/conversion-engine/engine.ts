@@ -10,6 +10,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import { preprocess, type PreprocessResult } from "./preprocessor"
 import { postprocess } from "./postprocessor"
 import { SS1_TO_21_MAPPINGS } from "./api-mappings"
+import { modelCandidates, modelFailure, canTryAnotherModel } from "./model-routing"
 
 export interface ConversionInput {
   code: string
@@ -39,34 +40,23 @@ function sleep(ms: number): Promise<void> {
  */
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries = 3,
-  baseDelay = 2000
+  modelName: string
 ): Promise<T> {
-  let lastError: Error | null = null
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  // Only retry transient service errors once. A hard quota/429 must go to
+  // a different approved model (if available) rather than repeatedly hammer
+  // the same quota, and invalid credentials must not trigger provider hopping.
+  for (let attempt = 0; ; attempt++) {
     try {
       return await fn()
     } catch (error: unknown) {
-      lastError = error as Error
-      const msg = error instanceof Error ? error.message : String(error)
-
-      const shouldRetry =
-        msg.includes("503") ||
-        msg.includes("high demand") ||
-        msg.includes("rate limit") ||
-        msg.includes("quota")
-
-      if (!shouldRetry || attempt === maxRetries - 1) throw error
-
-      const delay = baseDelay * Math.pow(2, attempt)
-      // Server-side log only — never surfaced to clients
-      console.warn(`[engine] attempt ${attempt + 1} failed, retrying in ${delay}ms`)
-      await sleep(delay)
+      const failure = modelFailure(error)
+      if (failure !== "transient" || attempt >= 1) throw error
+      console.warn("[engine] transient upstream failure", {
+        model: modelName, attempt: attempt + 1,
+      })
+      await sleep(1000)
     }
   }
-
-  throw lastError
 }
 
 function buildApiMappingReference(): string {
@@ -163,14 +153,10 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     throw new Error("AI service configuration error")
   }
 
-  const requestedModel = process.env.GEMINI_MODEL || "gemini-3.8-flash"
-  const fallbackModel  = process.env.GEMINI_FALLBACK_MODEL || "gemini-3.5-flash"
-  const isProduction   = process.env.NODE_ENV === "production"
-
-  const useModel =
-    isProduction && /(preview|exp)/i.test(requestedModel)
-      ? fallbackModel
-      : requestedModel
+  const candidates = modelCandidates(process.env)
+  if (!candidates.length) {
+    throw new Error("AI service configuration error: no approved model configured")
+  }
   const MAX_TOKENS = 900_000
   // Conservative character-based estimate used only as an early size guard.
   const estimatedTokens = Math.ceil(input.code.length / 4)
@@ -204,16 +190,26 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     return model.generateContent(userPrompt)
   }
 
-  let result
-  try {
-    result = await retryWithBackoff(() => generate(useModel), 3, 2000)
-  } catch (primaryError) {
-    if (fallbackModel === useModel) throw primaryError
-    console.error("[engine] Primary model unavailable; trying configured fallback.")
-    result = await retryWithBackoff(() => generate(fallbackModel), 2, 2000)
+  // No cross-provider routing: every model uses the same explicitly approved
+  // Gemini project and the same privacy terms. No new API keys are sent to
+  // Chrome. If all models hit a project-level quota, conversion fails safely.
+  let rawOutput = ""
+  for (const [index, modelName] of candidates.entries()) {
+    try {
+      const result = await retryWithBackoff(() => generate(modelName), modelName)
+      rawOutput = result.response.text()
+      if (!rawOutput.trim()) {
+        throw new Error("AI service returned an empty response")
+      }
+      break
+    } catch (error: unknown) {
+      const failure = modelFailure(error)
+      console.warn("[engine] model attempt failed", {
+        model: modelName, failure, fallbackAvailable: index < candidates.length - 1,
+      })
+      if (index === candidates.length - 1 || !canTryAnotherModel(failure)) throw error
+    }
   }
-
-  const rawOutput = result.response.text()
 
   const postResult = postprocess(
     rawOutput,

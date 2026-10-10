@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:quota": "node scripts/test-quota.mjs"
+    "test:quota": "node scripts/test-quota.mjs",
+    "test:model-fallback": "node --experimental-strip-types scripts/test-model-fallback.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
