@@ -16,8 +16,8 @@ const account = {
   ],
 }
 const html = buildReadinessReportHtml(account)
-for (const fragment of ["Verified readable", "Locked, restricted & missing source",
-   "Not yet verified", "Already on SuiteScript 2.1",
+for (const fragment of ["Verified readable", "Locked or unavailable source",
+   "Checking / not yet verified", "Already on SuiteScript 2.1",
    "Print / Save as PDF", "3 of 4", "Partial audit",
    "Vendor-locked", "Role restricted"]) {
   assert.ok(html.includes(fragment), `Expected report fragment: ${fragment}`)
@@ -41,7 +41,7 @@ const id = await downloadAuditReport(account)
 assert.equal(id, 42, "Download should return Chrome download ID")
 assert.equal(payload.type, "DOWNLOAD_HTML_REPORT")
 assert.equal(payload.filename.endsWith(".html"), true)
-assert.ok(payload.html.includes("Locked, restricted & missing source"))
+assert.ok(payload.html.includes("Locked or unavailable source"))
 console.log("✓ Report is handed to background Chrome downloads handler")
 
 globalThis.chrome.runtime.sendMessage = async () =>
