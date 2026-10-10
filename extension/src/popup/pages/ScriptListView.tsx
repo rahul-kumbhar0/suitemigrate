@@ -515,7 +515,15 @@ export default function ScriptListView() {
           />
         </div>
 
-        {/* Filter tabs */}
+        <div aria-live="polite" style={{
+          display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", padding: "7px 9px",
+          background: "rgba(15,23,42,.035)", borderRadius: 4, fontSize: 10.5, color: "var(--ink-soft)",
+        }}>
+          <span style={{ color: "#15803d", fontWeight: 600 }}>✓ {unlocked} Unlocked</span>
+          <span style={{ color: "#b91c1c", fontWeight: 600 }}>🔒 {locked} Locked</span>
+          {unchecked > 0 && <span style={{ color: "#946200" }}>◷ {unchecked} Checking</span>}
+        </div>
+                {/* Filter tabs */}
         <div style={{ display: "flex", gap: 4 }}>
           {(["needs_update", "unlocked", "locked", "done"] as const).map(f => (
             <button
@@ -641,9 +649,9 @@ export default function ScriptListView() {
                 {script.sourceAccess === "no_file" && <span style={{ color: "var(--clay)", marginLeft: 4 }}>· no file</span>}
                 {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
                 {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
-                {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
+                {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· unlocked</span>}
                 {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· manual source needed</span>}
-                {(!script.sourceAccess || script.sourceAccess === "unknown") && <span style={{ marginLeft: 4 }}>· not checked</span>}
+                {(!script.sourceAccess || script.sourceAccess === "unknown") && <span style={{ marginLeft: 4 }}>· checking / unverified</span>}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
