@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { buildReadinessReportHtml, downloadAuditReport } from "../src/lib/export.ts"
+import { buildReadinessReportHtml, buildInventoryCsv, downloadAuditReport, downloadInventoryCsv, downloadScript } from "../src/lib/export.ts"
 
 const account = {
   accountId: "TSTDRV123",
@@ -48,3 +48,32 @@ globalThis.chrome.runtime.sendMessage = async () =>
   ({ ok: false, error: "Chrome download blocked" })
 await assert.rejects(() => downloadAuditReport(account), /Chrome download blocked/)
 console.log("✓ Chrome download failures are shown, not silently swallowed")
+
+const maliciousAccount = {
+  ...account,
+  scripts: [
+    { ...account.scripts[0], name: '=HYPERLINK("https://bad.example","click")' },
+    ...account.scripts.slice(1),
+  ],
+}
+const csv = buildInventoryCsv(maliciousAccount)
+assert.ok(csv.startsWith("\uFEFF"), "CSV must include BOM for Excel Unicode support")
+assert.ok(csv.includes("'=HYPERLINK"), "Spreadsheet formulas must be neutralized")
+assert.equal(csv.split("\r\n").length - 1, maliciousAccount.scripts.length + 1)
+console.log("✓ Spreadsheet-safe CSV source inventory")
+
+globalThis.chrome.runtime.sendMessage = async (message) => {
+  assert.equal(message.type, "DOWNLOAD_LOCAL_FILE")
+  if (message.format === "csv") {
+    assert.ok(message.filename.endsWith(".csv"))
+    assert.ok(message.contents.includes("Source access"))
+  } else {
+    assert.equal(message.format, "js")
+    assert.ok(message.filename.endsWith("_2.1.js"))
+    assert.ok(message.contents.includes("@NApiVersion"))
+  }
+  return { ok: true, downloadId: 73 }
+}
+assert.equal(await downloadInventoryCsv(maliciousAccount), 73)
+assert.equal(await downloadScript("My Script", "/** @NApiVersion 2.1 */"), 73)
+console.log("✓ JavaScript and CSV downloads use background Chrome API")
