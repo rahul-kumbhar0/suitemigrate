@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="SuiteMigrate">
+  <rect width="64" height="64" rx="15" fill="#111A2E" />
+  <path d="M42 18.5C35 13.4 22.1 16 19.5 23.2C15.6 33.4 43.8 31 44 41.4C44.2 50.6 26.3 54.5 19.2 46.5" fill="none" stroke="#FFFFFF" stroke-width="7.2" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="46.3" cy="17" r="5.3" fill="#E95A32" />
+</svg>
