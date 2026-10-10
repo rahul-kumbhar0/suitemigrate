@@ -16,7 +16,7 @@ const faqs = [
   // ── Core product ──────────────────────────────────────────────
   {
     q: "Why not just paste my script into ChatGPT?",
-    a: "Pasting one script is straightforward. SuiteMigrate adds the migration workflow around it: scan active script records visible to your current NetSuite role, identify legacy API versions, convert a selected script, review the changes, and export a Migration Readiness Report on a paid plan.",
+    a: "Pasting one script is straightforward. SuiteMigrate combines version-based inventory, read-only source-access verification, locked-script filters, AI-assisted conversion drafts, code comparison, and HTML/CSV planning exports on paid plans.",
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
@@ -28,12 +28,12 @@ const faqs = [
   },
   {
     q: "What if a client or vendor script is locked or hidden?",
-    a: "SuiteMigrate does not bypass NetSuite or vendor source protection. A locked bundle file can still be readable, while vendor-hidden server source may be intentionally unavailable. SuiteMigrate marks missing, role-restricted, and protected source as migration blockers. If you already have an authorized source copy, you can paste it manually; otherwise request a SuiteScript 2.1-compatible release or source from the vendor/client.",
+    a: "SuiteMigrate does not bypass NetSuite or vendor source protection. A locked bundle file can still be readable, while vendor-hidden server source may be intentionally unavailable. SuiteMigrate automatically separates protected/restricted source, missing files, and unverified results so a temporary error is not mislabeled as locked. If you already have an authorized source copy, you can paste it manually; otherwise request a SuiteScript 2.1-compatible release or source from the vendor/client.",
   },
   {
     q: "Is my code safe?",
     // §9.2 — links to the security section
-    a: "See the Security & privacy section below. In short: the extension reads script records using your existing NetSuite session and never modifies your account. If you choose to convert a script, the code is sent to the AI provider for that conversion only. See the data-handling note near the top of the page for full details.",
+    a: "See the Security & privacy section below. The extension checks legacy source access under your current NetSuite role without uploading it during scanning. If you explicitly convert a script, that selected source is sent to the backend and AI provider. No NetSuite records are modified. See the data-handling note near the top of the page for full details.",
   },
   {
     q: "What happens to my scripts if I cancel?",
@@ -51,7 +51,7 @@ const faqs = [
   },
   {
     q: "How accurate is the AI conversion?",
-    a: "SuiteMigrate runs mapping rules first, then its AI engine handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
+    a: "The conversion engine applies migration rules and AI-assisted transformation, then checks generated JavaScript structure. Its review score is a heuristic—not a guaranteed accuracy percentage—and flags cannot catch every business-logic issue. Always review and test the output in NetSuite Sandbox.",
   },
   {
     q: "Which script types are supported?",
@@ -63,7 +63,7 @@ const faqs = [
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro Monthly and Annual Pro add unlimited conversions and the Migration Readiness Report.",
+    a: "The Free plan includes inventory scanning, source-access checks, Locked/Blockers filters and five conversion attempts that finish successfully, with review and JavaScript downloads. Pro and Annual include unlimited conversions subject to service capacity, HTML/PDF readiness reports and CSV exports.",
   },
 ]
 
@@ -807,9 +807,9 @@ export default function LandingPage() {
                 title: "What the extension reads",
                  items: [
                    "Script records via SuiteQL (/services/rest/query/v1/suiteql)",
-                   "Script file content via your active NetSuite session",
+                   "Legacy script source temporarily during user-initiated Scan & Verify access checks", 
                    "Current page URL to detect the active account and environment",
-                   "Requests run inside the active NetSuite session; the extension does not read the session token value",
+                   "Source status and script metadata are saved locally; the scan discards source bytes", 
                  ],
                  footer: null,
               },
@@ -819,7 +819,7 @@ export default function LandingPage() {
                   "Never creates, modifies or deletes any NetSuite data",
                   "Never reads or stores your NetSuite password",
                   "Never sends your NetSuite session token to our servers",
-                  "Never sends your session token to our servers",
+                  "Never bypasses protected or role-restricted vendor source", 
                 ],
                 footer: null,
               },
@@ -838,8 +838,8 @@ export default function LandingPage() {
                 title: "Your data",
                 items: [
                   "Converted scripts are stored in your account for re-download",
-                  "You can delete your account and all data at any time",
-                  "Payment details are processed by Razorpay — never stored by us",
+                  "You can manage local extension history and account settings; see Privacy Policy for data removal details", 
+                  "Payment processing is planned through Razorpay; avoid sharing payment credentials in the extension", 
                   "See Privacy Policy for full retention details",
                 ],
                 footer: null,
