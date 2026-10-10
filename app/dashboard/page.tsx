@@ -23,14 +23,31 @@ export default async function DashboardPage() {
     } catch { /* use defaults */ }
   }
 
+  // The server's completed-conversion history is the authoritative count.
+  // Extension-only scan inventory cannot be read by this website.
+  let completedCount: number | null = null
+  let recentConversions: Array<{ id: string; script_name: string; created_at: string }> = []
+  let historyUnavailable = false
+  if (user) {
+    const { data, count, error } = await supabase.from("conversions")
+      .select("id,script_name,created_at", { count: "exact" })
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(3)
+    if (error) historyUnavailable = true
+    else {
+      completedCount = count
+      recentConversions = data || []
+    }
+  }
+
   const name     = user?.user_metadata?.name || user?.email?.split("@")[0] || "there"
   const first    = name.split(" ")[0]
-  const used     = profile.conversions_used
+  const used     = completedCount ?? profile.conversions_used
   const limit    = profile.conversions_limit
   const plan     = profile.plan
   const pct      = limit ? Math.min((used / limit) * 100, 100) : 0
-  const daysLeft = Math.ceil((new Date("2028-06-01").getTime() - Date.now()) / 86_400_000) // TODO: update to confirmed 2028.2 release date when Oracle announces it
-  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", lifetime: "Lifetime", team: "Team" }
+  const planLabels: Record<string, string> = { free: "Free", pro: "Pro", annual: "Annual", lifetime: "Lifetime", team: "Team" }
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto" }}>
@@ -72,14 +89,14 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, flexShrink: 0 }}>
-            <a href="#" className="btn-pill" style={{ fontSize: 13, padding: "10px 20px" }}>
+            <a href="/support" className="btn-pill" style={{ fontSize: 13, padding: "10px 20px" }}>
               <Chrome size={14} />
-              Install free
+              Installation help
             </a>
             {[
-              { n: "01", t: "Install from Chrome Web Store" },
+              { n: "01", t: "Use the current private test extension" },
               { n: "02", t: "Open NetSuite tab" },
-              { n: "03", t: "Scan & convert" },
+              { n: "03", t: "Scan & verify source access" },
             ].map(s => (
               <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)", width: 18, flexShrink: 0 }}>{s.n}</span>
@@ -93,14 +110,14 @@ export default async function DashboardPage() {
       {/* Stats row */}
       <div className="dash-stat-grid" style={{ marginBottom: 24 }}>
         {[
-          { label: "Conversions used",  value: limit ? `${used} / ${limit}` : `${used}`, sub: plan === "free" ? "free tier" : "unlimited" },
-          { label: "Scripts scanned",   value: "0",                sub: "all accounts" },
-          { label: "Accounts linked",   value: "0",                sub: "environments" },
-          { label: "Days to 2028.2",    value: daysLeft.toString(), sub: "hard cutoff deadline" },
+          { label: "Completed conversions", value: historyUnavailable ? "—" : used.toLocaleString(), sub: historyUnavailable ? "History temporarily unavailable" : "Saved server-side" },
+          { label: "Plan", value: planLabels[plan] ?? "Free", sub: limit ? `${Math.max(0, limit - used)} left` : "Unlimited plan" },
+          { label: "Scripts scanned", value: "Local", sub: "Open extension to see inventory" },
+          { label: "Legacy transition", value: "2028.2", sub: "Oracle's planned release milestone" },
         ].map((s, i) => (
           <div key={s.label} style={{ background: "var(--paper)", padding: "18px 16px" }}>
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 9, textTransform: "uppercase", letterSpacing: ".14em", color: "var(--ink-mute)", marginBottom: 8 }}>{s.label}</p>
-            <p style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(22px,3vw,32px)", letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 3, color: i === 3 && daysLeft < 365 ? "var(--clay)" : "var(--ink)" }}>{s.value}</p>
+            <p style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(22px,3vw,32px)", letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 3, color: "var(--ink)" }}>{s.value}</p>
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, color: "var(--ink-mute)" }}>{s.sub}</p>
           </div>
         ))}
@@ -125,14 +142,25 @@ export default async function DashboardPage() {
             <div style={{ width: 44, height: 44, border: "1px solid var(--rule)", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
               <History size={20} style={{ color: "var(--ink-mute)" }} />
             </div>
-            <p style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 15, color: "var(--ink)", marginBottom: 5 }}>No conversions yet</p>
-            <p style={{ fontSize: 12.5, color: "var(--ink-soft)", maxWidth: 280, lineHeight: 1.6, marginBottom: 18 }}>
-              Install the extension and convert your first script.
+            <p style={{ fontFamily: "var(--f-head)", fontWeight: 400, fontSize: 15, color: "var(--ink)", marginBottom: 5 }}>
+              {historyUnavailable ? "Conversion history unavailable" : recentConversions.length ? "Recent saved migrations" : "No conversions yet"}
             </p>
-            <a href="#" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 999, border: "1px solid var(--rule)", fontSize: 12.5, color: "var(--ink-soft)", textDecoration: "none" }}
+            <p style={{ fontSize: 12.5, color: "var(--ink-soft)", maxWidth: 280, lineHeight: 1.6, marginBottom: 18 }}>
+              {historyUnavailable ? "Please retry or contact support if the issue continues." : recentConversions.length ? "Open Conversion History to review your saved results." : "Install the extension and convert your first script."}
+            </p>
+            {recentConversions.length > 0 && (
+              <div style={{ width: "100%", maxWidth: 300, textAlign: "left", marginBottom: 12 }}>
+                {recentConversions.map(item => (
+                  <div key={item.id} style={{ padding: "7px 0", fontSize: 11.5, borderTop: "1px solid var(--rule)", color: "var(--ink-soft)" }}>
+                    {item.script_name} · {new Date(item.created_at).toLocaleDateString()}
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link href={historyUnavailable ? "/support" : "/dashboard/conversions"} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 999, border: "1px solid var(--rule)", fontSize: 12.5, color: "var(--ink-soft)", textDecoration: "none" }}
               className="ghost-btn">
-              <Chrome size={13} /> Get the extension
-            </a>
+              <History size={13} /> {historyUnavailable ? "Get support" : "View conversion history"}
+            </Link>
           </div>
         </div>
 
@@ -161,7 +189,7 @@ export default async function DashboardPage() {
               {plan === "free" && (
                 <div style={{ borderTop: "1px solid var(--rule)", paddingTop: 12 }}>
                   <p style={{ fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.55, marginBottom: 10 }}>
-                    Pro: $29/month or <strong style={{ color: "var(--ink)" }}>$299 lifetime</strong>. Unlimited conversions.
+                    Review current Pro and Annual pricing, features, and billing terms before upgrading.
                   </p>
                   <Link href="/dashboard/billing" className="btn-pill" style={{ fontSize: 11.5, padding: "8px 16px", display: "flex", justifyContent: "center" }}>
                     Upgrade →
@@ -201,7 +229,7 @@ export default async function DashboardPage() {
                 { icon: FileCode2,     label: "Convert a script",   href: "/dashboard/conversions" },
                 { icon: TrendingUp,    label: "View history",        href: "/dashboard/conversions" },
                 { icon: AlertTriangle, label: "Billing & plans",     href: "/dashboard/billing" },
-                { icon: Chrome,        label: "Get the extension",   href: "#" },
+                { icon: Chrome,        label: "Installation support", href: "/support" },
               ].map(a => (
                 <Link key={a.label} href={a.href} className="dash-action-link"
                   style={{ display: "flex", alignItems: "center", gap: 9, padding: "9px 8px", borderBottom: "1px solid var(--rule)", fontSize: 13, color: "var(--ink-soft)", textDecoration: "none" }}>
