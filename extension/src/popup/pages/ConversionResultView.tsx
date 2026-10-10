@@ -7,7 +7,8 @@ import { downloadScript } from "../../lib/export"
 export default function ConversionResultView() {
   const { conversionResult, conversionError, setView } = useStore()
   const [copied, setCopied] = useState(false)
-  const [tab, setTab]       = useState<"converted" | "changes" | "comments">("converted")
+  const [tab, setTab]       = useState<"converted" | "changes" | "comments" | "compare">("converted")
+  const [downloadStatus, setDownloadStatus] = useState("")
 
   if (conversionError) {
     const setupError = /DB_QUOTA_RPC_MISSING|AI_CONFIG|AI_MODEL/.test(conversionError)
@@ -115,11 +116,11 @@ export default function ConversionResultView() {
 
         {/* Tab switcher */}
         <div style={{ display: "flex", gap: 3 }}>
-          {(["converted", "changes", "comments"] as const).map(t => (
+          {(["converted", "changes", "comments", "compare"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={tab === t ? "tab-active" : "tab-inactive"}
               style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 9.5, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer" }}>
-              {t === "converted" ? "Code" : t === "changes" ? `Changes (${conversionResult.changeLog.length})` : "Inline"}
+              {t === "converted" ? "Code" : t === "changes" ? `Changes (${conversionResult.changeLog.length})` : t === "comments" ? "Inline" : "Compare"}
             </button>
           ))}
         </div>
@@ -171,15 +172,56 @@ export default function ConversionResultView() {
           </div>
         )}
 
+        {/* Original source stays only in the popup session and is never
+            persisted in Chrome storage or included in conversion history. */}
+        {tab === "compare" && (
+          <div className="card" style={{ padding: "10px", display: "grid", gap: 8 }}>
+            <p style={{ fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.5 }}>
+              Review-only comparison. Verify behavior changes in NetSuite Sandbox.
+            </p>
+            {conversionResult.originalCode ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {[
+                  { label: "Original", code: conversionResult.originalCode },
+                  { label: "Migrated 2.1", code: conversionResult.convertedCode },
+                ].map(item => (
+                  <div key={item.label} style={{ minWidth: 0 }}>
+                    <div className="eyebrow" style={{ fontSize: 9, marginBottom: 4 }}>{item.label}</div>
+                    <pre style={{ margin: 0, padding: 7, fontSize: 9, whiteSpace: "pre-wrap", overflowWrap: "anywhere",
+                      maxHeight: 245, overflowY: "auto", background: "#f3f4f6", border: "1px solid var(--rule)", borderRadius: 4 }}>
+                      {item.code.slice(0, 7500)}{item.code.length > 7500 ? "\n// truncated preview" : ""}
+                    </pre>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ fontSize: 11, color: "var(--ink-soft)" }}>
+                Original source is not kept after the popup session ends for privacy.
+                Reconvert an authorized source to compare it.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Action buttons */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-          <button onClick={() => downloadScript(conversionResult.scriptName, conversionResult.convertedCode, conversionResult.changeLog)} className="btn-primary" style={{ justifyContent: "center", fontSize: 11 }}>
+          <button onClick={async () => {
+            try {
+              setDownloadStatus("")
+              await downloadScript(conversionResult.scriptName, conversionResult.convertedCode, conversionResult.changeLog)
+              setDownloadStatus("JavaScript download started. See Chrome Downloads.")
+            } catch (error) {
+              setDownloadStatus(error instanceof Error ? error.message : "Download failed.")
+            }
+          }} className="btn-primary" style={{ justifyContent: "center", fontSize: 11 }}>
             <Download size={12} /> Download
           </button>
           <button onClick={handleCopy} className="btn-outline" style={{ justifyContent: "center", fontSize: 11 }}>
             <Copy size={12} /> {copied ? "Copied!" : "Copy Code"}
           </button>
         </div>
+
+        {downloadStatus && <p role="status" style={{ fontSize: 10, lineHeight: 1.6, color: "var(--ink-soft)" }}>{downloadStatus}</p>}
 
         <button onClick={() => setView("script_list")} className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
           <ArrowLeft size={11} /> Convert Another Script

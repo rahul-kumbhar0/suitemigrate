@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Search, Download, LockKeyhole, HelpCircle, CheckCircle2, FileWarning, ShieldAlert, RefreshCw } from "lucide-react"
 import Header from "../components/Header"
 import { useStore } from "../../lib/store"
-import { downloadAuditReport } from "../../lib/export"
+import { downloadAuditReport, downloadInventoryCsv } from "../../lib/export"
 import { convertScript } from "../../lib/api"
 import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
@@ -602,6 +602,22 @@ export default function ScriptListView() {
             style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
           >
             <Download size={11} /> Migration Readiness Report
+          </button>
+        )}
+        {user?.unlimited && (
+          <button className="btn-outline"
+            style={{ width: "100%", justifyContent: "center", fontSize: 11 }}
+            onClick={async () => {
+              try {
+                setReportError("")
+                await downloadInventoryCsv(activeAccount)
+                setReportSuccess("CSV download started. Open Chrome Downloads (Ctrl+J).")
+              } catch (error) {
+                setReportSuccess("")
+                setReportError(error instanceof Error ? error.message : "CSV export failed.")
+              }
+            }}>
+            <Download size={11} /> Export inventory CSV (Pro)
           </button>
         )}
       </div>

@@ -32,7 +32,8 @@
     "storage",
     "scripting",
     "activeTab",
-    "downloads"
+    "downloads",
+    "alarms"
   ],
 
   "host_permissions": [
