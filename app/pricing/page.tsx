@@ -12,10 +12,10 @@ const plans = [
     dark: false,
     desc: "Start with the migration inventory and five complete conversions.",
     features: [
-      "Unlimited active-script scans",
-      "Version-based migration priority",
+      "Unlimited active-script scans and source checks",
+      "Version-based priority and source-access status",
       "5 AI-assisted conversions",
-      "Code, Changes & Inline review",
+      "Code comparison, Changes & Inline review",
       "Converted JavaScript downloads",
     ],
     cta: "Start free — no card",
@@ -31,9 +31,9 @@ const plans = [
     features: [
       "Everything in Free",
       "Unlimited script conversions",
-      "Migration Readiness Report",
+      "HTML/PDF Readiness Report + CSV export",
       "Conversion history",
-      "Manual-review flags",
+      "Review flags and side-by-side comparison",
     ],
     cta: "Get Pro",
     href: "/signup?plan=pro",
@@ -48,7 +48,7 @@ const plans = [
     features: [
       "Everything currently in Pro",
       "Unlimited script conversions",
-      "Migration Readiness Report",
+      "HTML/PDF Readiness Report + CSV export",
       "One annual payment",
     ],
     cta: "Get Annual",
@@ -58,11 +58,12 @@ const plans = [
 
 const compRows = [
   { f: "Active-script scan", free: "✓", pro: "✓", lt: "✓" },
-  { f: "Version-based migration priority", free: "✓", pro: "✓", lt: "✓" },
+  { f: "Version-based priority and source-access status", free: "✓", pro: "✓", lt: "✓" },
   { f: "Script conversions", free: "5", pro: "Unlimited", lt: "Unlimited" },
-  { f: "Code / Changes / Inline review", free: "✓", pro: "✓", lt: "✓" },
+  { f: "Code comparison / Changes / Inline review", free: "✓", pro: "✓", lt: "✓" },
+  { f: "Readable / Locked / Blockers filters", free: "✓", pro: "✓", lt: "✓" },
   { f: "Converted JavaScript download", free: "✓", pro: "✓", lt: "✓" },
-  { f: "Migration Readiness Report", free: "—", pro: "✓", lt: "✓" },
+  { f: "HTML/PDF Readiness Report + CSV export", free: "—", pro: "✓", lt: "✓" },
 ]
 
 export default function PricingPage() {
