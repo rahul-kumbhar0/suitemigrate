@@ -9,6 +9,13 @@ export const metadata: Metadata = {
   description:
     "Scan your NetSuite account, risk-score every script, and convert SuiteScript 1.0/2.0 to 2.1 automatically — with inline comments on every change.",
   keywords: ["NetSuite", "SuiteScript", "SuiteScript 2.1", "migration", "Chrome extension"],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any", type: "image/x-icon" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+  },
   openGraph: {
     title: "SuiteMigrate — SuiteScript 2.1 Migration Tool",
     description: "Automatically convert your NetSuite scripts to SuiteScript 2.1 before the 2028 deadline.",
