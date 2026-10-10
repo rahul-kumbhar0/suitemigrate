@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
-import { modelCandidates, modelFailure, canTryAnotherModel } from "../lib/conversion-engine/model-routing.ts"
+import { modelCandidates, modelFailure, canTryAnotherModel, selectGeminiCredential } from "../lib/conversion-engine/model-routing.ts"
 
 assert.deepEqual(modelCandidates({ NODE_ENV: "production" }), [
-  "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite",
+  "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite",
 ], "Supported stable model defaults should be used")
 assert.deepEqual(modelCandidates({
   GEMINI_MODEL: "gemini-3.5-flash",
@@ -30,3 +30,16 @@ assert.equal(canTryAnotherModel("capacity"), true)
 assert.equal(canTryAnotherModel("not_found"), true)
 assert.equal(canTryAnotherModel("transient"), true)
 console.log("✓ Stable fallback models, invalid-model fallback, safe retries and credential fail-fast")
+
+assert.deepEqual(selectGeminiCredential({ GEMINI_API_KEY: "older",
+  GEMINI_API_KEY2: "replacement" }), {
+  value: "replacement", variable: "GEMINI_API_KEY2",
+}, "The newly configured Production key2 should be selected")
+
+assert.deepEqual(selectGeminiCredential({ GEMINI_API_KEY: "older" }), {
+  value: "older", variable: "GEMINI_API_KEY",
+}, "Preview/rollback should keep using original key when key2 absent")
+
+assert.equal(selectGeminiCredential({ GEMINI_API_KEY: " ",
+  GEMINI_API_KEY2: "" }), null, "Empty credentials are not configured")
+console.log("✓ Key2 selection does not depend on rotating keys per request")

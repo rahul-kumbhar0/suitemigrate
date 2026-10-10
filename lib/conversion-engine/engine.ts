@@ -10,7 +10,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import { preprocess, type PreprocessResult } from "./preprocessor"
 import { postprocess } from "./postprocessor"
 import { SS1_TO_21_MAPPINGS } from "./api-mappings"
-import { modelCandidates, modelFailure, canTryAnotherModel } from "./model-routing"
+import { modelCandidates, modelFailure, canTryAnotherModel, selectGeminiCredential } from "./model-routing"
 
 export interface ConversionInput {
   code: string
@@ -147,9 +147,9 @@ Output ONLY the converted JavaScript code. No markdown code fences. No explanati
 }
 
 export async function convertScript(input: ConversionInput): Promise<ConversionResult> {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) {
-    console.error("[engine] AI_API_KEY not configured")
+  const credential = selectGeminiCredential(process.env)
+  if (!credential) {
+    console.error("[engine] No server-side Gemini API credential configured")
     throw new Error("AI service configuration error")
   }
 
@@ -174,7 +174,7 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
 
   // Provider/model details stay server-side; never returned to clients.
   // Keep the legacy SDK for this release; migrate SDK + lockfile together later.
-  const genAI = new GoogleGenerativeAI(apiKey)
+  const genAI = new GoogleGenerativeAI(credential.value)
 
   const generate = async (modelName: string) => {
     const model = genAI.getGenerativeModel({
@@ -190,6 +190,9 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     return model.generateContent(userPrompt)
   }
 
+  // Key2 takes precedence when provided. This is a deliberate key
+  // replacement, not a quota-bypass strategy: one key is used per conversion.
+  // Never log, expose or cycle API credentials in conversion responses.
   // No cross-provider routing: every model uses the same explicitly approved
   // Gemini project and the same privacy terms. No new API keys are sent to
   // Chrome. If all models hit a project-level quota, conversion fails safely.
