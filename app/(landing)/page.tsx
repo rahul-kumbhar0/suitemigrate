@@ -157,7 +157,7 @@ export default function LandingPage() {
         }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
             <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
-            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that selected source code is sent to the SuiteMigrate backend and Google Gemini API for the requested conversion. SuiteMigrate does not retain the original source in its conversion database; converted results may be stored in your account for re-download.
+            Scan & Verify checks legacy source access temporarily in your browser, discards the source after classification, and does not send it to the AI provider. {" "}When you explicitly convert a script, its source code is sent to the SuiteMigrate backend and the configured AI provider for that conversion. SuiteMigrate does not retain the original source in its conversion database; converted results may be stored in your account for re-download.
             {" "}·{" "}
             <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
           </p>
@@ -448,8 +448,8 @@ export default function LandingPage() {
             <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.7 }}>
               Complex search logic, custom libraries, dynamic record-type handling, and unusual coding patterns
               are <strong style={{ color: "var(--ink)" }}>flagged for manual review</strong>, not silently converted.
-              SuiteMigrate tells you what it cannot safely automate rather than producing code that
-              appears correct but may fail at runtime.
+              Not all business-logic risks can be detected automatically. Always review output, test critical
+              processes in NetSuite Sandbox and approve changes before deployment.
             </p>
           </div>
         </div>
