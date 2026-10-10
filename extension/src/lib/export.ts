@@ -46,12 +46,12 @@ async function downloadLocalFile(filename: string, contents: string, format: "js
 export async function downloadScript(scriptName: string, code: string, changeLog?: string[]): Promise<number> {
   const safeName = (scriptName.replace(/[^a-z0-9_-]/gi, "_").slice(0, 100) || "script").toLowerCase()
   const safeNotes = changeLog?.length
-    ? changeLog.map(item => " * - " + item.replace(/[\\r\\n]/g, " ")).join("\\n")
+    ? changeLog.map(item => " * - " + item.replace(/[\r\n]/g, " ")).join("\n")
     : " * - Review inline migration comments and manual review flags"
   const header = [
     "/**",
     " * SuiteMigrate - SuiteScript 2.1 Migration Draft",
-    " * Original Script: " + scriptName.replace(/[\\r\\n]/g, " "),
+    " * Original Script: " + scriptName.replace(/[\r\n]/g, " "),
     " * Converted: " + new Date().toLocaleString(),
     " *",
     " * WHAT CHANGED:",
@@ -65,13 +65,13 @@ export async function downloadScript(scriptName: string, code: string, changeLog
     " */",
     "",
     "",
-  ].join("\\n")
+  ].join("\n")
   return downloadLocalFile(safeName + "_2.1.js", header + code, "js")
 }
 
 /** Escape Excel formulas and CSV delimiters. This CSV contains metadata only. */
 function csvCell(value: unknown): string {
-  let cell = String(value ?? "").replace(/\\r?\\n/g, " ").trim()
+  let cell = String(value ?? "").replace(/\r?\n/g, " ").trim()
   if (/^[=+@-]/.test(cell)) cell = "'" + cell
   return '"' + cell.replace(/"/g, '""') + '"'
 }
@@ -89,7 +89,7 @@ export function buildInventoryCsv(account: NSAccount): string {
       recommendedAction(script),
     ]),
   ]
-  return "\\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\\r\\n") + "\\r\\n"
+  return "\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n"
 }
 
 export async function downloadInventoryCsv(account: NSAccount): Promise<number> {
