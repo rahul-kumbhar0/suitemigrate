@@ -461,6 +461,39 @@ export default function LandingPage() {
           — Step 4 sandbox warning added
           — Step 1 clarifies what is read and that nothing is modified
       ═══════════════════════════════════════════ */}
+      <section id="report-preview" style={{ padding: "96px 0", background: "#f6f5f2", borderTop: "1px solid var(--rule)" }}>
+        <div className="landing-section-padding landing-how-grid" style={{ gap: 55 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 19 }}>
+            <span className="eyebrow">Make migration inventory actionable</span>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(27px,4vw,48px)", letterSpacing: "-.035em", lineHeight: 1.1 }}>
+              One scan. <em style={{ color: "var(--clay)" }}>Clear source status.</em>
+            </h2>
+            <p style={{ maxWidth: 430, fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.8 }}>
+              Scan the active-script inventory, then verify legacy source access in small, read-only
+              batches. See what is readable, what is locked or restricted, and what still needs attention.
+            </p>
+            <div style={{ display: "grid", gap: 12, fontSize: 12.5, color: "var(--ink-soft)" }}>
+              {[
+                ["Readable", "Authorized source is accessible for conversion review."],
+                ["Locked or restricted", "Access requires permission or a vendor-supplied update."],
+                ["Missing source", "The record has no attached source file."],
+                ["Unverified", "A check has not finished or encountered a temporary error."],
+              ].map(([label, detail]) => (
+                <div key={label} style={{ paddingLeft: 13, borderLeft: "2px solid var(--clay)", lineHeight: 1.65 }}>
+                  <strong style={{ display: "block", color: "var(--ink)", fontSize: 13 }}>{label}</strong>
+                  {detail}
+                </div>
+              ))}
+            </div>
+            <p style={{ color: "var(--ink-mute)", fontSize: 11, lineHeight: 1.6 }}>
+              Pro and Annual include a categorized HTML readiness report and metadata-only CSV inventory.
+              Checks use your current NetSuite role, never bypass protected source and consume no AI conversion quota.
+            </p>
+          </div>
+          <ReadinessReportPreview />
+        </div>
+      </section>
+
       <section id="how-it-works" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)", background: "rgba(237,233,223,.4)" }}>
         <div className="landing-section-padding">
           <div className="landing-section-header">
@@ -544,6 +577,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <MigrationCodeDemo />
 
       {/* ═══════════════════════════════════════════
           SOCIAL PROOF  (§5 of brief)
