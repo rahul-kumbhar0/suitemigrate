@@ -11,11 +11,15 @@ import { preprocess, type PreprocessResult } from "./preprocessor"
 import { postprocess } from "./postprocessor"
 import { SS1_TO_21_MAPPINGS } from "./api-mappings"
 import { modelCandidates, modelFailure, canTryAnotherModel, selectGeminiCredential } from "./model-routing"
+import { conversionCache, generateConversionCacheKey, type CachedConversionResult } from "@/lib/cache"
+
 
 export interface ConversionInput {
   code: string
   scriptName?: string
+  userId?: string // Added for caching
 }
+
 
 export interface ConversionResult {
   convertedCode: string
@@ -29,6 +33,9 @@ export interface ConversionResult {
   requiredModules: string[]
   detectedApiCalls: string[]
 }
+
+// Cache configuration
+const CONVERSION_CACHE_TTL = 3600 // 1 hour in seconds
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -146,20 +153,23 @@ ${buildApiMappingReference()}
 Output ONLY the converted JavaScript code. No markdown code fences. No explanations before or after. Just the clean JS file.`
 }
 
-export async function convertScript(input: ConversionInput): Promise<ConversionResult> {
-  const credential = selectGeminiCredential(process.env)
-  if (!credential) {
-    console.error("[engine] No server-side Gemini API credential configured")
-    throw new Error("AI service configuration error")
-  }
-
+/**
+ * Perform the actual AI conversion
+ * This is separated from convertScript to enable caching
+ */
+async function performConversion(
+  code: string,
+  preprocessResult: PreprocessResult,
+  credential: { value: string; variable: string }
+): Promise<ConversionResult> {
   const candidates = modelCandidates(process.env)
   if (!candidates.length) {
     throw new Error("AI service configuration error: no approved model configured")
   }
+  
   const MAX_TOKENS = 900_000
   // Conservative character-based estimate used only as an early size guard.
-  const estimatedTokens = Math.ceil(input.code.length / 4)
+  const estimatedTokens = Math.ceil(code.length / 4)
 
   if (estimatedTokens > MAX_TOKENS) {
     throw new Error(
@@ -168,7 +178,6 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     )
   }
 
-  const preprocessResult = preprocess(input.code)
   const systemPrompt = buildSystemPrompt(preprocessResult)
   const userPrompt = `Convert this SuiteScript ${preprocessResult.detectedVersion} script to SuiteScript 2.1:\n\n${preprocessResult.code}`
 
@@ -232,4 +241,37 @@ export async function convertScript(input: ConversionInput): Promise<ConversionR
     requiredModules: preprocessResult.requiredModules,
     detectedApiCalls: preprocessResult.detectedApiCalls,
   }
+}
+
+export async function convertScript(input: ConversionInput): Promise<ConversionResult> {
+  const credential = selectGeminiCredential(process.env)
+  if (!credential) {
+    console.error("[engine] No server-side Gemini API credential configured")
+    throw new Error("AI service configuration error")
+  }
+
+  const preprocessResult = preprocess(input.code)
+  
+  // Check cache if userId is provided
+  if (input.userId) {
+    const cacheKey = generateConversionCacheKey(input.userId, input.code)
+    const cached: CachedConversionResult | null = conversionCache.get(cacheKey)
+    
+    if (cached) {
+      console.log(`[engine] Cache hit for user ${input.userId}`)
+      return cached
+    }
+    
+    // Perform the conversion
+    const result = await performConversion(input.code, preprocessResult, credential)
+    
+    // Cache the result
+    conversionCache.set(cacheKey, result, CONVERSION_CACHE_TTL)
+    console.log(`[engine] Cached conversion for user ${input.userId}`)
+    
+    return result
+  }
+  
+  // Fallback: no userId, no caching
+  return performConversion(input.code, preprocessResult, credential)
 }

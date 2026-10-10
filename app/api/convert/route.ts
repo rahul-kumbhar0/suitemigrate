@@ -199,7 +199,7 @@ export async function POST(request: Request) {
 
     reservedUserId = user.id
 
-    const result = await convertScript({ code, scriptName })
+    const result = await convertScript({ code, scriptName, userId: user.id })
 
     // A structurally invalid migration is not a completed conversion.
     // Human review and NetSuite Sandbox testing are still required even when valid.
