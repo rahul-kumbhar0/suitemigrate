@@ -31,9 +31,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const contents = typeof message.contents === "string" ? message.contents : ""
       const format = typeof message.format === "string" ? message.format : ""
       const validName = format === "js"
-        ? /^[A-Za-z0-9_-]{1,100}_2\\.1\\.js$/.test(filename)
+        ? /^[A-Za-z0-9_-]{1,100}_2\.1\.js$/.test(filename)
         : format === "csv"
-        ? /^SuiteMigrate_Inventory_[A-Za-z0-9_-]+_\\d{4}-\\d{2}-\\d{2}\\.csv$/.test(filename)
+        ? /^SuiteMigrate_Inventory_[A-Za-z0-9_-]+_\d{4}-\d{2}-\d{2}\.csv$/.test(filename)
         : false
       if (!trusted || !validName || !contents ||
           new TextEncoder().encode(contents).length > 2_500_000) {
