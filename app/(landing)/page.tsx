@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Navbar } from "@/components/landing/navbar"
 import { Footer } from "@/components/landing/footer"
+import { MigrationCodeDemo, ReadinessReportPreview } from "@/components/landing/migration-code-demo"
 import { Download, GitCompare, CheckCircle, Sparkles, BarChart3, Zap, Search, FileText, AlertTriangle } from "lucide-react"
 
 // ---------------------------------------------------------------------------
@@ -15,7 +16,7 @@ const faqs = [
   // ── Core product ──────────────────────────────────────────────
   {
     q: "Why not just paste my script into ChatGPT?",
-    a: "Pasting one script is straightforward. SuiteMigrate adds the migration workflow around it: scan active script records visible to your current NetSuite role, identify legacy API versions, convert a selected script, review the changes, and export a Migration Readiness Report on a paid plan.",
+    a: "Pasting one script is straightforward. SuiteMigrate combines version-based inventory, read-only source-access verification, locked-script filters, AI-assisted conversion drafts, code comparison, and HTML/CSV planning exports on paid plans.",
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
@@ -27,12 +28,12 @@ const faqs = [
   },
   {
     q: "What if a client or vendor script is locked or hidden?",
-    a: "SuiteMigrate does not bypass NetSuite or vendor source protection. A locked bundle file can still be readable, while vendor-hidden server source may be intentionally unavailable. SuiteMigrate marks missing, role-restricted, and protected source as migration blockers. If you already have an authorized source copy, you can paste it manually; otherwise request a SuiteScript 2.1-compatible release or source from the vendor/client.",
+    a: "SuiteMigrate does not bypass NetSuite or vendor source protection. A locked bundle file can still be readable, while vendor-hidden server source may be intentionally unavailable. SuiteMigrate automatically separates protected/restricted source, missing files, and unverified results so a temporary error is not mislabeled as locked. If you already have an authorized source copy, you can paste it manually; otherwise request a SuiteScript 2.1-compatible release or source from the vendor/client.",
   },
   {
     q: "Is my code safe?",
     // §9.2 — links to the security section
-    a: "See the Security & privacy section below. In short: the extension reads script records using your existing NetSuite session and never modifies your account. If you choose to convert a script, the code is sent to the AI provider for that conversion only. See the data-handling note near the top of the page for full details.",
+    a: "See the Security & privacy section below. The extension checks legacy source access under your current NetSuite role without uploading it during scanning. If you explicitly convert a script, that selected source is sent to the backend and AI provider. No NetSuite records are modified. See the data-handling note near the top of the page for full details.",
   },
   {
     q: "What happens to my scripts if I cancel?",
@@ -50,7 +51,7 @@ const faqs = [
   },
   {
     q: "How accurate is the AI conversion?",
-    a: "SuiteMigrate runs mapping rules first, then its AI engine handles structural changes. Every result includes a confidence score (0–100%) and explicit flags on any lines that need manual review. Complex patterns are flagged, not silently converted.",
+    a: "The conversion engine applies migration rules and AI-assisted transformation, then checks generated JavaScript structure. Its review score is a heuristic—not a guaranteed accuracy percentage—and flags cannot catch every business-logic issue. Always review and test the output in NetSuite Sandbox.",
   },
   {
     q: "Which script types are supported?",
@@ -62,7 +63,7 @@ const faqs = [
   },
   {
     q: "What does the free plan include?",
-    a: "Unlimited active-script scanning and version-risk inventory, plus 5 AI conversions with confidence scoring, change notes, manual-review flags, and JavaScript downloads. Pro Monthly and Annual Pro add unlimited conversions and the Migration Readiness Report.",
+    a: "The Free plan includes inventory scanning, source-access checks, Locked/Blockers filters and five conversion attempts that finish successfully, with review and JavaScript downloads. Pro and Annual include unlimited conversions subject to service capacity, HTML/PDF readiness reports and CSV exports.",
   },
 ]
 
@@ -156,42 +157,36 @@ export default function LandingPage() {
         }}>
           <p style={{ fontFamily: "var(--f-mono)", fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.7 }}>
             <strong style={{ color: "var(--ink-soft)" }}>Data handling:</strong>{" "}
-            The extension reads script metadata in your browser using your active NetSuite session.{" "}When you convert a script, that selected source code is sent to the SuiteMigrate backend and Google Gemini API for the requested conversion. SuiteMigrate does not retain the original source in its conversion database; converted results may be stored in your account for re-download.
+            Scan & Verify checks legacy source access temporarily in your browser, discards the source after classification, and does not send it to the AI provider. {" "}When you explicitly convert a script, its source code is sent to the SuiteMigrate backend and the configured AI provider for that conversion. SuiteMigrate does not retain the original source in its conversion database; converted results may be stored in your account for re-download.
             {" "}·{" "}
             <a href="#security" style={{ color: "var(--clay)", textDecoration: "none" }}>Security &amp; privacy details ↓</a>
           </p>
         </div>
 
-        {/* Hero mock card */}
-        <div className="landing-hero-card" style={{
-          position: "absolute", top: 200, right: 40, width: 370,
-          background: "var(--ink)", color: "var(--paper)",
-          padding: 26, borderRadius: 8, fontFamily: "var(--f-mono)",
-          boxShadow: "0 32px 64px -20px rgba(0,0,0,.3)",
-          transform: "rotate(1.5deg)", pointerEvents: "none",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em", color: "rgba(250,250,249,.4)", marginBottom: 14 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-            Active-script scan · 67 scripts found
+        {/* Sample UI, not a screenshot of real customer results. */}
+        <div className="landing-hero-card" aria-label="Illustrative NetSuite inventory"
+          style={{ position: "absolute", top: 205, right: 40, width: 365, padding: 23,
+            background: "var(--ink)", color: "white", borderRadius: 9, fontFamily: "var(--f-mono)",
+            boxShadow: "0 32px 64px -20px rgba(0,0,0,.3)", transform: "rotate(1.5deg)", pointerEvents: "none" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, letterSpacing: ".13em", color: "#91a1ba", marginBottom: 18 }}>
+            <span>SUITEMIGRATE · SCAN &amp; VERIFY</span><span>EXAMPLE</span>
           </div>
-          <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 50, lineHeight: 1, letterSpacing: "-0.04em", marginBottom: 4 }}>
-            43<span style={{ fontSize: 24, opacity: .4 }}> to migrate</span>
-          </div>
-          <div style={{ fontSize: 10, color: "rgba(250,250,249,.4)", letterSpacing: ".1em", marginBottom: 18 }}>
-            SuiteScript 1.0 / 2.0 · migration priority
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 3, marginBottom: 10 }}>
-            {[
-              {l:"UserEvt",a:true},{l:"Scheduled",a:true},{l:"MapReduce",w:true},{l:"Suitelet",a:false},
-              {l:"RESTlet",a:true},{l:"Client",a:false},{l:"Portlet",a:true},{l:"MassUpd",w:true},
-            ].map((m,i) => (
-              <div key={i} style={{ height: 28, borderRadius: 2, background: m.w ? "rgba(217,74,31,.3)" : m.a ? "rgba(217,74,31,.15)" : "rgba(250,250,249,.08)", display: "flex", alignItems: "flex-end", padding: 3 }}>
-                <span style={{ fontSize: 7, textTransform: "uppercase", color: "rgba(250,250,249,.5)" }}>{m.l}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "rgba(250,250,249,.3)", borderTop: "1px solid rgba(250,250,249,.08)", paddingTop: 9 }}>
-            <span>12 HIGH · 18 MED · 37 CURRENT</span><span>scan complete →</span>
+          <div style={{ fontFamily: "var(--f-head)", fontSize: 25, fontWeight: 400, letterSpacing: "-.035em", marginBottom: 7 }}>Migration inventory</div>
+          <p style={{ fontSize: 10, color: "#a2afc3", lineHeight: 1.5, marginBottom: 18 }}>Read-only source checks · blockers remain visible</p>
+          {[
+            { name: "Customer User Event", flag: "READABLE", fg: "#93dfb7", bg: "rgba(45,177,119,.14)" },
+            { name: "Vendor connector", flag: "PROTECTED", fg: "#f5a29d", bg: "rgba(223,91,91,.15)" },
+            { name: "Scheduled cleanup", flag: "UNVERIFIED", fg: "#efcf8f", bg: "rgba(238,176,61,.13)" },
+          ].map(row => (
+            <div key={row.name} style={{ padding: "11px 10px", border: "1px solid rgba(255,255,255,.09)", borderRadius: 5,
+              display: "flex", justifyContent: "space-between", alignItems: "center", gap: 9, marginBottom: 7 }}>
+              <span style={{ fontSize: 10, color: "#e2e9f5" }}>{row.name}</span>
+              <span style={{ color: row.fg, background: row.bg, borderRadius: 3, fontSize: 8, padding: "4px 6px" }}>{row.flag}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: 15, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.1)",
+            color: "#a0acc0", display: "flex", justifyContent: "space-between", fontSize: 9 }}>
+            <span>HTML report · CSV for Pro</span><span>read-only →</span>
           </div>
         </div>
       </header>
@@ -382,8 +377,8 @@ export default function LandingPage() {
               },
               {
                 icon: AlertTriangle,
-                title: "Migration blocker detection",
-                desc: "Classifies source access as ready, missing, role-restricted, or protected/inaccessible after access is checked. Protected items stay visible in the migration plan instead of disappearing behind a generic error.",
+                title: "Automatic source access checks",
+                desc: "After Scan & Verify, the extension checks legacy source access in paced background batches. Each script is marked readable, protected, restricted, missing-file, or unverified. Pause or resume without AI conversion charges.",
                 admin: "Know what your team can migrate directly — and what needs an authorized source copy, a different role, or a vendor 2.1 release.",
               },
               {
@@ -407,26 +402,26 @@ export default function LandingPage() {
             {[
               {
                 icon: GitCompare,
-                title: "Three review views",
-                desc: "Review the converted code, a structured change list, and highlighted inline migration comments from the same conversion result.",
+                title: "Side-by-side migration review",
+                desc: "Inspect generated 2.1 code, change notes and inline review flags alongside original source while your extension session is open. Original source is not retained in extension storage.",
                 admin: "Makes generated changes easier to inspect before sandbox testing.",
               },
               {
                 icon: Sparkles,
-                title: "// MIGRATED: comments in converted code",
-                desc: "Every modified line gets a // MIGRATED: comment explaining the specific change. The converted file is self-documenting — reviewers can understand each change without referring back to the original.",
-                admin: "Clients and project managers can see exactly what was changed without needing to diff files manually.",
+                title: "Structural checks and review notes",
+                desc: "The converter checks generated JavaScript structure before saving a successful result, returns migration notes, and highlights areas requiring developer review. This does not prove NetSuite runtime correctness.",
+                admin: "Compare behavior carefully with original source and test in a Sandbox before deployment.",
               },
               {
                 icon: FileText,
-                title: "Migration Readiness Report",
-                desc: "Paid plans can export a portable HTML report of the scanned active-script inventory, API versions, migration status, and version-risk labels.",
-                admin: "Useful for migration scoping and stakeholder handoff without requiring a proprietary report viewer.",
+                title: "Migration Readiness Report (HTML/PDF)",
+                desc: "Pro and Annual users can download a categorized HTML readiness report (printable to PDF) and a spreadsheet-safe CSV inventory. Outputs reflect the last verified scan.",
+                admin: "Share a source-access plan with stakeholders without including original source code.",
               },
               {
                 icon: Download,
                 title: "Download converted JavaScript",
-                desc: "Download each converted script as a standard JavaScript file with a conversion header, change summary, and reminders to review and test in Sandbox.",
+                desc: "Save converted JavaScript directly through Chrome Downloads, with filename, change summary, and testing reminders. Export errors are shown instead of silently ignored.",
                 admin: "Keeps output portable and easy to review in an editor or source-control workflow.",
               },
             ].map(f => (
@@ -453,8 +448,8 @@ export default function LandingPage() {
             <p style={{ fontSize: 13.5, color: "var(--ink-soft)", lineHeight: 1.7 }}>
               Complex search logic, custom libraries, dynamic record-type handling, and unusual coding patterns
               are <strong style={{ color: "var(--ink)" }}>flagged for manual review</strong>, not silently converted.
-              SuiteMigrate tells you what it cannot safely automate rather than producing code that
-              appears correct but may fail at runtime.
+              Not all business-logic risks can be detected automatically. Always review output, test critical
+              processes in NetSuite Sandbox and approve changes before deployment.
             </p>
           </div>
         </div>
@@ -466,6 +461,39 @@ export default function LandingPage() {
           — Step 4 sandbox warning added
           — Step 1 clarifies what is read and that nothing is modified
       ═══════════════════════════════════════════ */}
+      <section id="report-preview" style={{ padding: "96px 0", background: "#f6f5f2", borderTop: "1px solid var(--rule)" }}>
+        <div className="landing-section-padding landing-how-grid" style={{ gap: 55 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 19 }}>
+            <span className="eyebrow">Make migration inventory actionable</span>
+            <h2 style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: "clamp(27px,4vw,48px)", letterSpacing: "-.035em", lineHeight: 1.1 }}>
+              One scan. <em style={{ color: "var(--clay)" }}>Clear source status.</em>
+            </h2>
+            <p style={{ maxWidth: 430, fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.8 }}>
+              Scan the active-script inventory, then verify legacy source access in small, read-only
+              batches. See what is readable, what is locked or restricted, and what still needs attention.
+            </p>
+            <div style={{ display: "grid", gap: 12, fontSize: 12.5, color: "var(--ink-soft)" }}>
+              {[
+                ["Readable", "Authorized source is accessible for conversion review."],
+                ["Locked or restricted", "Access requires permission or a vendor-supplied update."],
+                ["Missing source", "The record has no attached source file."],
+                ["Unverified", "A check has not finished or encountered a temporary error."],
+              ].map(([label, detail]) => (
+                <div key={label} style={{ paddingLeft: 13, borderLeft: "2px solid var(--clay)", lineHeight: 1.65 }}>
+                  <strong style={{ display: "block", color: "var(--ink)", fontSize: 13 }}>{label}</strong>
+                  {detail}
+                </div>
+              ))}
+            </div>
+            <p style={{ color: "var(--ink-mute)", fontSize: 11, lineHeight: 1.6 }}>
+              Pro and Annual include a categorized HTML readiness report and metadata-only CSV inventory.
+              Checks use your current NetSuite role, never bypass protected source and consume no AI conversion quota.
+            </p>
+          </div>
+          <ReadinessReportPreview />
+        </div>
+      </section>
+
       <section id="how-it-works" style={{ padding: "100px 0", borderTop: "1px solid var(--rule)", background: "rgba(237,233,223,.4)" }}>
         <div className="landing-section-padding">
           <div className="landing-section-header">
@@ -487,13 +515,13 @@ export default function LandingPage() {
                 },
                 {
                   n: "02",
-                  title: "Review — version-based migration inventory",
-                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export a Migration Readiness Report.",
+                  title: "Verify — readable, locked, missing and unverified source",
+                  desc: "The extension checks legacy source access in background batches and classifies scripts under your current role. Filter Locked or Blockers, and export HTML or CSV reports on a paid plan.",
                 },
                 {
                   n: "03",
-                  title: "Convert — structural rewrite with full documentation",
-                  desc: "Click Convert on a legacy script with an attached source file. SuiteMigrate applies migration rules and AI-assisted structural conversion. Review Code, Changes, and Inline views before downloading.",
+                  title: "Convert — reviewable 2.1 migration draft",
+                  desc: "Select verified readable source for AI-assisted migration. Review converted code, change notes, inline flags, and the original-versus-migrated comparison before downloading.",
                 },
                 {
                   n: "04",
@@ -549,6 +577,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <MigrationCodeDemo />
 
       {/* ═══════════════════════════════════════════
           SOCIAL PROOF  (§5 of brief)
@@ -612,8 +642,10 @@ export default function LandingPage() {
                 {[
                   { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
                   { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
-                  { f: "Change review + JS download", free: "✓",       pro: "✓",          annual: "✓" },
-                  { f: "Migration Readiness Report", free: "—",       pro: "✓",          annual: "✓" },
+                  { f: "Code comparison + JS download", free: "✓",       pro: "✓",          annual: "✓" },
+                   { f: "Source access & Locked filters", free: "✓", pro: "✓", annual: "✓" },
+                  { f: "Migration Readiness Report (HTML/PDF)", free: "—", pro: "✓", annual: "✓" },
+                   { f: "Inventory CSV export", free: "—", pro: "✓", annual: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
@@ -665,8 +697,8 @@ export default function LandingPage() {
                   "Active-script scan & inventory",
                   "Version-risk label per script",
                   "5 AI conversions",
-                  "Code, Changes & Inline review tabs",
-                  "Inline // MIGRATED: comments",
+                  "Code comparison, Changes & Inline review",
+                  "Source access status & blockers filter",
                   "Confidence score",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
@@ -705,8 +737,8 @@ export default function LandingPage() {
                 {[
                   "Unlimited script conversions",
                   "Migration Readiness Report",
-                  "Code, Changes & Inline review tabs",
-                  "Manual-review flags",
+                  "Code comparison, Changes & Inline review",
+                  "Review flags and source comparison",
                   "Converted JavaScript downloads",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "rgba(250,250,249,.75)" }}>
@@ -730,7 +762,7 @@ export default function LandingPage() {
                 {[
                   "Unlimited script conversions",
                   "Migration Readiness Report",
-                  "Code review and JavaScript downloads",
+                  "Code comparison and .js downloads",
                   "One annual payment",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
@@ -775,9 +807,9 @@ export default function LandingPage() {
                 title: "What the extension reads",
                  items: [
                    "Script records via SuiteQL (/services/rest/query/v1/suiteql)",
-                   "Script file content via your active NetSuite session",
+                   "Legacy script source temporarily during user-initiated Scan & Verify access checks", 
                    "Current page URL to detect the active account and environment",
-                   "Requests run inside the active NetSuite session; the extension does not read the session token value",
+                   "Source status and script metadata are saved locally; the scan discards source bytes", 
                  ],
                  footer: null,
               },
@@ -787,7 +819,7 @@ export default function LandingPage() {
                   "Never creates, modifies or deletes any NetSuite data",
                   "Never reads or stores your NetSuite password",
                   "Never sends your NetSuite session token to our servers",
-                  "Never sends your session token to our servers",
+                  "Never bypasses protected or role-restricted vendor source", 
                 ],
                 footer: null,
               },
@@ -806,8 +838,8 @@ export default function LandingPage() {
                 title: "Your data",
                 items: [
                   "Converted scripts are stored in your account for re-download",
-                  "You can delete your account and all data at any time",
-                  "Payment details are processed by Razorpay — never stored by us",
+                  "You can manage local extension history and account settings; see Privacy Policy for data removal details", 
+                  "Payment processing is planned through Razorpay; avoid sharing payment credentials in the extension", 
                   "See Privacy Policy for full retention details",
                 ],
                 footer: null,

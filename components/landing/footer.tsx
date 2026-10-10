@@ -47,6 +47,8 @@ export function Footer() {
               {[
                 { label: "Features",       href: "/#features" },
                 { label: "How it works",   href: "/#how-it-works" },
+                { label: "1.0 → 2.1 example", href: "/#code-example" },
+                { label: "Report preview", href: "/#report-preview" },
                 { label: "Pricing",        href: "/#pricing" },
                 { label: "Security",       href: "/#security" },
                 { label: "FAQ",            href: "/#faq" },
@@ -105,7 +107,7 @@ export function Footer() {
         }}>
           <span>© {new Date().getFullYear()} SuiteMigrate</span>
           {/* §11.1 Oracle disclaimer */}
-          <span>Not affiliated with Oracle Corporation or NetSuite · v1.1.3</span>
+          <span>Not affiliated with Oracle Corporation or NetSuite</span>
         </div>
       </div>
 
