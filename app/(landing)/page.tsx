@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Navbar } from "@/components/landing/navbar"
 import { Footer } from "@/components/landing/footer"
+import { MigrationCodeDemo, ReadinessReportPreview } from "@/components/landing/migration-code-demo"
 import { Download, GitCompare, CheckCircle, Sparkles, BarChart3, Zap, Search, FileText, AlertTriangle } from "lucide-react"
 
 // ---------------------------------------------------------------------------
@@ -162,36 +163,30 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Hero mock card */}
-        <div className="landing-hero-card" style={{
-          position: "absolute", top: 200, right: 40, width: 370,
-          background: "var(--ink)", color: "var(--paper)",
-          padding: 26, borderRadius: 8, fontFamily: "var(--f-mono)",
-          boxShadow: "0 32px 64px -20px rgba(0,0,0,.3)",
-          transform: "rotate(1.5deg)", pointerEvents: "none",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 9, textTransform: "uppercase", letterSpacing: ".2em", color: "rgba(250,250,249,.4)", marginBottom: 14 }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-            Active-script scan · 67 scripts found
+        {/* Sample UI, not a screenshot of real customer results. */}
+        <div className="landing-hero-card" aria-label="Illustrative NetSuite inventory"
+          style={{ position: "absolute", top: 205, right: 40, width: 365, padding: 23,
+            background: "var(--ink)", color: "white", borderRadius: 9, fontFamily: "var(--f-mono)",
+            boxShadow: "0 32px 64px -20px rgba(0,0,0,.3)", transform: "rotate(1.5deg)", pointerEvents: "none" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, letterSpacing: ".13em", color: "#91a1ba", marginBottom: 18 }}>
+            <span>SUITEMIGRATE · SCAN &amp; VERIFY</span><span>EXAMPLE</span>
           </div>
-          <div style={{ fontFamily: "var(--f-head)", fontWeight: 300, fontSize: 50, lineHeight: 1, letterSpacing: "-0.04em", marginBottom: 4 }}>
-            43<span style={{ fontSize: 24, opacity: .4 }}> to migrate</span>
-          </div>
-          <div style={{ fontSize: 10, color: "rgba(250,250,249,.4)", letterSpacing: ".1em", marginBottom: 18 }}>
-            SuiteScript 1.0 / 2.0 · migration priority
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 3, marginBottom: 10 }}>
-            {[
-              {l:"UserEvt",a:true},{l:"Scheduled",a:true},{l:"MapReduce",w:true},{l:"Suitelet",a:false},
-              {l:"RESTlet",a:true},{l:"Client",a:false},{l:"Portlet",a:true},{l:"MassUpd",w:true},
-            ].map((m,i) => (
-              <div key={i} style={{ height: 28, borderRadius: 2, background: m.w ? "rgba(217,74,31,.3)" : m.a ? "rgba(217,74,31,.15)" : "rgba(250,250,249,.08)", display: "flex", alignItems: "flex-end", padding: 3 }}>
-                <span style={{ fontSize: 7, textTransform: "uppercase", color: "rgba(250,250,249,.5)" }}>{m.l}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "rgba(250,250,249,.3)", borderTop: "1px solid rgba(250,250,249,.08)", paddingTop: 9 }}>
-            <span>12 HIGH · 18 MED · 37 CURRENT</span><span>scan complete →</span>
+          <div style={{ fontFamily: "var(--f-head)", fontSize: 25, fontWeight: 400, letterSpacing: "-.035em", marginBottom: 7 }}>Migration inventory</div>
+          <p style={{ fontSize: 10, color: "#a2afc3", lineHeight: 1.5, marginBottom: 18 }}>Read-only source checks · blockers remain visible</p>
+          {[
+            { name: "Customer User Event", flag: "READABLE", fg: "#93dfb7", bg: "rgba(45,177,119,.14)" },
+            { name: "Vendor connector", flag: "PROTECTED", fg: "#f5a29d", bg: "rgba(223,91,91,.15)" },
+            { name: "Scheduled cleanup", flag: "UNVERIFIED", fg: "#efcf8f", bg: "rgba(238,176,61,.13)" },
+          ].map(row => (
+            <div key={row.name} style={{ padding: "11px 10px", border: "1px solid rgba(255,255,255,.09)", borderRadius: 5,
+              display: "flex", justifyContent: "space-between", alignItems: "center", gap: 9, marginBottom: 7 }}>
+              <span style={{ fontSize: 10, color: "#e2e9f5" }}>{row.name}</span>
+              <span style={{ color: row.fg, background: row.bg, borderRadius: 3, fontSize: 8, padding: "4px 6px" }}>{row.flag}</span>
+            </div>
+          ))}
+          <div style={{ marginTop: 15, paddingTop: 13, borderTop: "1px solid rgba(255,255,255,.1)",
+            color: "#a0acc0", display: "flex", justifyContent: "space-between", fontSize: 9 }}>
+            <span>HTML report · CSV for Pro</span><span>read-only →</span>
           </div>
         </div>
       </header>
