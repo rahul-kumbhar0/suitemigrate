@@ -1,4 +1,4 @@
-import { startSourceAudit, pauseSourceAudit, resumeRunningAudits, AUDIT_ALARM } from "./access-scanner"
+import { startSourceAudit, pauseSourceAudit, resumeRunningAudits, resumeSourceAudit, AUDIT_ALARM } from "./access-scanner"
 /**
  * Background service worker (Manifest V3)
  */
@@ -14,7 +14,9 @@ chrome.runtime.onInstalled.addListener((details) => {
 // Chrome alarms wake the MV3 worker between batches, without requiring
 // the popup to stay open during a large NetSuite inventory check.
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === AUDIT_ALARM) void resumeRunningAudits().catch(console.error)
+  if (alarm.name.startsWith(AUDIT_ALARM + ":")) {
+    void resumeSourceAudit(alarm.name.slice(AUDIT_ALARM.length + 1)).catch(console.error)
+  }
 })
 chrome.runtime.onStartup.addListener(() => {
   void resumeRunningAudits().catch(console.error)
