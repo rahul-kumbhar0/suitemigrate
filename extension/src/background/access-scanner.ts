@@ -15,6 +15,7 @@ const stopping = new Set<string>()
 const WAIT_MS = 350
 const BATCH_SIZE = 15
 export const AUDIT_ALARM = "suitemigrate:source-audit"
+const alarmName = (accountId: string) => `${AUDIT_ALARM}:${accountId}`
 
 function wait(ms: number) {
   return new Promise<void>(resolve => setTimeout(resolve, ms))
@@ -69,7 +70,7 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
   stopping.delete(accountId)
   // A repeating Chrome alarm wakes the MV3 service worker if Chrome
   // suspends a long scan. Completed/paused scans clear the alarm.
-  await chrome.alarms.create(AUDIT_ALARM, { periodInMinutes: 1 })
+  await chrome.alarms.create(alarmName(accountId), { periodInMinutes: 1 })
 
   try {
     const tab = await chrome.tabs.get(tabId)
@@ -188,8 +189,16 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
     stopping.delete(accountId)
     const latest = await readAudit(accountId)
     if (latest?.state !== "running") {
-      await chrome.alarms.clear(AUDIT_ALARM)
+      await chrome.alarms.clear(alarmName(accountId))
     }
+  }
+}
+
+/** Run one account when its own Chrome alarm fires. */
+export async function resumeSourceAudit(accountId: string): Promise<void> {
+  const state = await readAudit(accountId)
+  if (state?.state === "running" && Number.isInteger(state.tabId)) {
+    await startSourceAudit(accountId, state.tabId)
   }
 }
 
