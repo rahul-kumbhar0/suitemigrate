@@ -16,7 +16,7 @@ const faqs = [
   // ── Core product ──────────────────────────────────────────────
   {
     q: "Why not just paste my script into ChatGPT?",
-    a: "Pasting one script is straightforward. SuiteMigrate combines version-based inventory, read-only source-access verification, locked-script filters, AI-assisted conversion drafts, code comparison, and HTML/CSV planning exports on paid plans.",
+    a: "Pasting one script is straightforward. SuiteMigrate combines version-based inventory, read-only source-access verification, Locked/Unlocked filters, AI-assisted conversion drafts, code comparison, and HTML/CSV planning exports on paid plans.",
   },
   {
     q: "Do I need to migrate my 2.0 scripts?",
@@ -470,12 +470,12 @@ export default function LandingPage() {
             </h2>
             <p style={{ maxWidth: 430, fontSize: 14, color: "var(--ink-soft)", lineHeight: 1.8 }}>
               Scan the active-script inventory, then verify legacy source access in small, read-only
-              batches. See what is readable, what is locked or restricted, and what still needs attention.
+              batches. See what is readable, what is Locked or Unlocked, and what still needs checking.
             </p>
             <div style={{ display: "grid", gap: 12, fontSize: 12.5, color: "var(--ink-soft)" }}>
               {[
                 ["Readable", "Authorized source is accessible for conversion review."],
-                ["Locked or restricted", "Access requires permission or a vendor-supplied update."],
+                ["Locked / unavailable", "Includes protected, role-restricted, missing and manual-source scripts."],
                 ["Missing source", "The record has no attached source file."],
                 ["Unverified", "A check has not finished or encountered a temporary error."],
               ].map(([label, detail]) => (
@@ -643,7 +643,7 @@ export default function LandingPage() {
                   { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
                   { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
                   { f: "Code comparison + JS download", free: "✓",       pro: "✓",          annual: "✓" },
-                   { f: "Source access & Locked filters", free: "✓", pro: "✓", annual: "✓" },
+                   { f: "Source access & Locked/Unlocked filters", free: "✓", pro: "✓", annual: "✓" },
                   { f: "Migration Readiness Report (HTML/PDF)", free: "—", pro: "✓", annual: "✓" },
                    { f: "Inventory CSV export", free: "—", pro: "✓", annual: "✓" },
                 ].map((row, i) => (
@@ -698,7 +698,7 @@ export default function LandingPage() {
                   "Version-risk label per script",
                   "5 AI conversions",
                   "Code comparison, Changes & Inline review",
-                  "Source access status & blockers filter",
+                  "Unlocked / Locked source filters",
                   "Confidence score",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
