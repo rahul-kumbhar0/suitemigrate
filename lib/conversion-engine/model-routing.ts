@@ -8,10 +8,27 @@
  */
 
 const DEFAULT_PRIMARY = "gemini-3.6-flash"
-const DEFAULT_FALLBACK = "gemini-3.5-flash"
-const DEFAULT_LAST_RESORT = "gemini-3.5-flash-lite"
+const DEFAULT_FALLBACK = "gemini-3.5-flash-lite"
+const DEFAULT_LAST_RESORT = "gemini-3.1-flash-lite"
 
 export type ModelFailure = "capacity" | "transient" | "not_found" | "credential" | "other"
+
+/**
+ * Prefer the newly rotated key in Production when provided, preserving the
+ * original name for Preview and rollback. Key selection is deterministic:
+ * never alternate keys on a 429 or quota error; quotas apply per project.
+ * Only the env variable name may appear in server logs, never key material.
+ */
+export function selectGeminiCredential(
+  env: Record<string, string | undefined>
+): { value: string; variable: "GEMINI_API_KEY2" | "GEMINI_API_KEY" } | null {
+  const replacement = env.GEMINI_API_KEY2?.trim()
+  if (replacement) return { value: replacement, variable: "GEMINI_API_KEY2" }
+
+  const legacy = env.GEMINI_API_KEY?.trim()
+  if (legacy) return { value: legacy, variable: "GEMINI_API_KEY" }
+  return null
+}
 
 export function modelCandidates(env: Record<string, string | undefined>): string[] {
   const requested = [
