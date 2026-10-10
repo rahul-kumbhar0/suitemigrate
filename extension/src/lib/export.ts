@@ -229,7 +229,7 @@ export function buildReadinessReportHtml(account: NSAccount): string {
   <div class="topline"></div>
   <header>
     <div class="brand"><span class="brand-dot"></span>SuiteMigrate</div>
-    <h1>Migration readiness.<br>Know what is blocked.</h1>
+    <h1>Migration readiness.<br>Know what is locked.</h1>
     <p class="lede">Read-only SuiteScript inventory, verified source-access checks, and recommended next actions for the NetSuite migration team.</p>
     <div class="header-actions">
       <div class="identity"><strong>${safeAccountName}</strong> · Account ${safeAccountId}<br>Generated ${escapeHtml(date)}</div>
@@ -240,9 +240,9 @@ export function buildReadinessReportHtml(account: NSAccount): string {
   <section class="metrics" aria-label="Migration overview">
     <div class="metric"><div class="num">${scripts.length}</div><span class="label">Active scripts</span></div>
     <div class="metric"><div class="num">${legacy.length}</div><span class="label">Need migration</span></div>
-    <div class="metric good"><div class="num">${ready.length}</div><span class="label">Verified readable</span></div>
-    <div class="metric bad"><div class="num">${blockers.length}</div><span class="label">Blocked source</span></div>
-    <div class="metric warn"><div class="num">${unknown.length}</div><span class="label">Unverified</span></div>
+    <div class="metric good"><div class="num">${ready.length}</div><span class="label">Unlocked</span></div>
+    <div class="metric bad"><div class="num">${blockers.length}</div><span class="label">Locked / unavailable</span></div>
+    <div class="metric warn"><div class="num">${unknown.length}</div><span class="label">Checking / unverified</span></div>
   </section>
 
   <div class="progress"><span>Legacy-script source checks</span><strong>${checked} of ${legacy.length} classified</strong></div>
@@ -254,15 +254,15 @@ export function buildReadinessReportHtml(account: NSAccount): string {
   </div>
 
   <nav aria-label="Report sections">
-    <a href="#ready">Verified readable (${ready.length})</a>
-    <a href="#blocked">Locked / blocked (${blockers.length})</a>
-    <a href="#unverified">Unverified (${unknown.length})</a>
+    <a href="#ready">Unlocked (${ready.length})</a>
+    <a href="#blocked">Locked (${blockers.length})</a>
+    <a href="#unverified">Checking (${unknown.length})</a>
     <a href="#current">Already on 2.1 (${current.length})</a>
   </nav>
 
-  ${section("Verified readable", "Source was confirmed readable under the scanning role. Review and test conversions before deployment.", ready, "ready", "No readable legacy source verified yet.")}
-  ${section("Locked, restricted & missing source", "Requires an authorized source copy, permissions change, missing file, or vendor update.", blockers, "blocked", "No confirmed source blockers.")}
-  ${section("Not yet verified", "Checks not completed or a transient error prevented a reliable classification.", unknown, "unverified", "Every legacy script with a file is classified.")}
+  ${section("Unlocked — verified readable", "Source was confirmed readable under the scanning role. Review and test conversions before deployment.", ready, "ready", "No readable legacy source verified yet.")}
+  ${section("Locked or unavailable source", "Requires an authorized source copy, permissions change, missing file, or vendor update.", blockers, "blocked", "No confirmed source blockers.")}
+  ${section("Checking / not yet verified", "Checks not completed or a transient error prevented a reliable classification.", unknown, "unverified", "Every legacy script with a file is classified.")}
   ${section("Already on SuiteScript 2.1", "Version status from your active script inventory; include these scripts in regression testing.", current, "current", "No scripts already on 2.1.")}
 
   <section class="report-section"><p class="eyebrow">RECOMMENDED NEXT STEPS</p><h2>From inventory to validated migration</h2>

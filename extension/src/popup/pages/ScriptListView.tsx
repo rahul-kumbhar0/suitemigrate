@@ -7,6 +7,7 @@ import { convertScript } from "../../lib/api"
 import { saveConversion, getStorage, setStorage, saveAccount } from "../../lib/storage"
 import { fetchScriptCode } from "../../lib/suiteql"
 import { getActiveNetSuiteTab } from "../../lib/netsuite-tab"
+import { getSourceGroup } from "../../lib/source-status"
 import type { AccessAuditState } from "../../lib/storage"
 import { fetchCurrentUser } from "../../lib/auth"
 import type { NSScript, NSAccount } from "../../lib/types"
@@ -49,7 +50,7 @@ export default function ScriptListView() {
   } = useStore()
 
   const [search, setSearch] = useState("")
-  const [filter, setFilter] = useState<"all" | "needs_update" | "locked" | "blockers" | "done">("needs_update")
+  const [filter, setFilter] = useState<"needs_update" | "unlocked" | "locked" | "done">("needs_update")
   const [pendingScript, setPendingScript] = useState<NSScript | null>(null)
   const [sourceIssue, setSourceIssue] = useState<{ script: NSScript; message: string; access: NonNullable<NSScript["sourceAccess"]> } | null>(null)
   const [manualCode, setManualCode] = useState("")
@@ -135,8 +136,8 @@ export default function ScriptListView() {
     const m = s.name.toLowerCase().includes(search.toLowerCase()) ||
               s.scriptType.toLowerCase().includes(search.toLowerCase())
     if (filter === "needs_update") return m && s.needsMigration
-    if (filter === "locked") return m && s.needsMigration && ["restricted", "protected"].includes(s.sourceAccess || "")
-    if (filter === "blockers") return m && s.needsMigration && ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
+    if (filter === "unlocked") return m && getSourceGroup(s) === "unlocked"
+    if (filter === "locked") return m && getSourceGroup(s) === "locked"
     if (filter === "done") return m && !s.needsMigration
     return m
   })
@@ -409,10 +410,8 @@ export default function ScriptListView() {
   const unchecked = activeAccount.scripts.filter(s => s.needsMigration && (!s.sourceAccess || s.sourceAccess === "unknown")).length
   const needs = activeAccount.scripts.filter(s => s.needsMigration).length
   const done  = activeAccount.scripts.filter(s => !s.needsMigration).length
-  const locked = activeAccount.scripts.filter(s => s.needsMigration && ["restricted", "protected"].includes(s.sourceAccess || "")).length
-  const blockers = activeAccount.scripts.filter(s =>
-    ["no_file", "restricted", "protected", "manual"].includes(s.sourceAccess || "")
-  ).length
+  const unlocked = activeAccount.scripts.filter(s => getSourceGroup(s) === "unlocked").length
+  const locked = activeAccount.scripts.filter(s => getSourceGroup(s) === "locked").length
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -437,7 +436,7 @@ export default function ScriptListView() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.58)", zIndex: 110, display: "flex", alignItems: "flex-end" }}>
           <div style={{ background: "var(--paper)", width: "100%", maxHeight: "88vh", overflowY: "auto", padding: "18px 16px 20px", borderTop: "2px solid var(--clay)" }}>
             <p style={{ fontFamily: "var(--f-mono)", fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".12em", color: "var(--clay)", marginBottom: 7 }}>
-              Migration blocker
+              Source access information
             </p>
             <h3 style={{ fontFamily: "var(--f-head)", fontSize: 17, fontWeight: 500, color: "var(--ink)", marginBottom: 8 }}>
               {sourceIssue.access === "protected" ? "Protected or hidden source" :
@@ -493,7 +492,7 @@ export default function ScriptListView() {
                   </button>
                 )}
                 <button onClick={() => setSourceIssue(null)} className="btn-outline" style={{ width: "100%", justifyContent: "center", fontSize: 11 }}>
-                  Keep as blocker
+                  Keep in Locked
                 </button>
               </div>
             )}
@@ -516,16 +515,24 @@ export default function ScriptListView() {
           />
         </div>
 
-        {/* Filter tabs */}
+        <div aria-live="polite" style={{
+          display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center", padding: "7px 9px",
+          background: "rgba(15,23,42,.035)", borderRadius: 4, fontSize: 10.5, color: "var(--ink-soft)",
+        }}>
+          <span style={{ color: "#15803d", fontWeight: 600 }}>✓ {unlocked} Unlocked</span>
+          <span style={{ color: "#b91c1c", fontWeight: 600 }}>🔒 {locked} Locked</span>
+          {unchecked > 0 && <span style={{ color: "#946200" }}>◷ {unchecked} Checking</span>}
+        </div>
+                {/* Filter tabs */}
         <div style={{ display: "flex", gap: 4 }}>
-          {(["needs_update", "locked", "blockers", "all", "done"] as const).map(f => (
+          {(["needs_update", "unlocked", "locked", "done"] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={filter === f ? "tab-active" : "tab-inactive"}
               style={{ flex: 1, padding: "5px 4px", borderRadius: 3, fontSize: 10, fontFamily: "var(--f-mono)", textTransform: "uppercase", letterSpacing: ".08em", cursor: "pointer", fontWeight: 500 }}
             >
-              {f === "needs_update" ? `Update (${needs})` : f === "locked" ? `Locked (${locked})` : f === "blockers" ? `Blockers (${blockers})` : f === "done" ? `Done (${done})` : `All (${activeAccount.scripts.length})`}
+              {f === "needs_update" ? `Migrate (${needs})` : f === "unlocked" ? `Unlocked (${unlocked})` : f === "locked" ? `Locked (${locked})` : `2.1 (${done})` }
             </button>
           ))}
         </div>
@@ -573,7 +580,7 @@ export default function ScriptListView() {
         {accessError && <p role="alert" style={{ fontSize: 10.5, color: "var(--clay)", lineHeight: 1.5 }}>{accessError}</p>}
         <p style={{ fontSize: 10, color: "var(--ink-mute)", lineHeight: 1.5 }}>
           Verification uses the current NetSuite role and does not consume AI conversion quota.
-          Unverified does not mean unlocked; protected source is never bypassed.
+          Locked means the source cannot be converted automatically under your current role (protected, restricted, missing or manual-only). Only verified readable scripts show as Unlocked. Unverified scripts stay in Migrate while checking finishes.
         </p>
         {/* Migration Readiness Report is generated locally from scanned account metadata.
             Paid-plan status is checked from the signed-in SuiteMigrate account. */}
@@ -629,7 +636,7 @@ export default function ScriptListView() {
       <div style={{ overflowY: "auto", maxHeight: 300, padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 4 }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "24px 0", color: "var(--ink-mute)", fontSize: 11.5 }}>
-            No scripts match your filter
+            No scripts in this group yet. Unverified scripts appear in Migrate until checked.
           </div>
         ) : filtered.map(script => (
           <div key={script.id} className="card" style={{ padding: "8px 10px", display: "flex", alignItems: "center", gap: 8 }}>
@@ -642,9 +649,9 @@ export default function ScriptListView() {
                 {script.sourceAccess === "no_file" && <span style={{ color: "var(--clay)", marginLeft: 4 }}>· no file</span>}
                 {script.sourceAccess === "restricted" && <span style={{ color: "#b45309", marginLeft: 4 }}>· role restricted</span>}
                 {script.sourceAccess === "protected" && <span style={{ color: "#b91c1c", marginLeft: 4 }}>· protected source</span>}
-                {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· source ready</span>}
+                {script.sourceAccess === "readable" && <span style={{ color: "#15803d", marginLeft: 4 }}>· unlocked</span>}
                 {script.sourceAccess === "manual" && <span style={{ color: "#2563eb", marginLeft: 4 }}>· manual source needed</span>}
-                {(!script.sourceAccess || script.sourceAccess === "unknown") && <span style={{ marginLeft: 4 }}>· not checked</span>}
+                {(!script.sourceAccess || script.sourceAccess === "unknown") && <span style={{ marginLeft: 4 }}>· checking / unverified</span>}
               </p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
