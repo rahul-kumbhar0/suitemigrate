@@ -33,30 +33,69 @@ function downloadBlob(blob: Blob, filename: string) {
   }
 }
 
-export function downloadScript(scriptName: string, code: string, changeLog?: string[]): void {
-  const safeName = scriptName.replace(/[^a-z0-9_-]/gi, "_").toLowerCase()
-  const changed = changeLog?.length
-    ? changeLog.map(item => " * - " + item).join("\n")
-    : " * - Review inline migration comments and manual-review flags"
+async function downloadLocalFile(filename: string, contents: string, format: "js" | "csv"): Promise<number> {
+  const reply = await chrome.runtime.sendMessage({
+    type: "DOWNLOAD_LOCAL_FILE", filename, contents, format,
+  }) as { ok?: boolean; downloadId?: number; error?: string } | undefined
+  if (!reply?.ok || typeof reply.downloadId !== "number") {
+    throw new Error(reply?.error || "Chrome could not save this file.")
+  }
+  return reply.downloadId
+}
+
+export async function downloadScript(scriptName: string, code: string, changeLog?: string[]): Promise<number> {
+  const safeName = (scriptName.replace(/[^a-z0-9_-]/gi, "_").slice(0, 100) || "script").toLowerCase()
+  const safeNotes = changeLog?.length
+    ? changeLog.map(item => " * - " + item.replace(/[\\r\\n]/g, " ")).join("\\n")
+    : " * - Review inline migration comments and manual review flags"
   const header = [
     "/**",
-    " * SuiteMigrate — SuiteScript 2.1 Migration Draft",
-    " * Original Script: " + scriptName,
+    " * SuiteMigrate - SuiteScript 2.1 Migration Draft",
+    " * Original Script: " + scriptName.replace(/[\\r\\n]/g, " "),
     " * Converted: " + new Date().toLocaleString(),
     " *",
     " * WHAT CHANGED:",
-    changed,
+    safeNotes,
     " *",
     " * NEXT STEPS:",
-    " * 1. Review migrated APIs and manual-review flags",
+    " * 1. Review migrated APIs and manual review flags",
     " * 2. Test in NetSuite Sandbox",
     " * 3. Validate permissions, integrations, deployments and business logic",
     " * 4. Deploy only after your own approval",
     " */",
     "",
     "",
-  ].join("\n")
-  downloadBlob(new Blob([header, code], { type: "text/javascript;charset=utf-8" }), safeName + "_2.1.js")
+  ].join("\\n")
+  return downloadLocalFile(safeName + "_2.1.js", header + code, "js")
+}
+
+/** Escape Excel formulas and CSV delimiters. This CSV contains metadata only. */
+function csvCell(value: unknown): string {
+  let cell = String(value ?? "").replace(/\\r?\\n/g, " ").trim()
+  if (/^[=+@-]/.test(cell)) cell = "'" + cell
+  return '"' + cell.replace(/"/g, '""') + '"'
+}
+
+export function buildInventoryCsv(account: NSAccount): string {
+  const rows = [
+    ["Script", "Type", "Version", "Risk", "Source access", "Needs migration", "Recommended action"],
+    ...account.scripts.map(script => [
+      script.name,
+      script.scriptType,
+      script.apiVersion,
+      script.riskLevel,
+      accessText(script),
+      script.needsMigration ? "Yes" : "No",
+      recommendedAction(script),
+    ]),
+  ]
+  return "\\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\\r\\n") + "\\r\\n"
+}
+
+export async function downloadInventoryCsv(account: NSAccount): Promise<number> {
+  const safeId = account.accountId.replace(/[^a-z0-9_-]/gi, "_")
+  const name = `SuiteMigrate_Inventory_${safeId}_${new Date().toISOString().slice(0, 10)}.csv`
+  return downloadLocalFile(name, buildInventoryCsv(account), "csv")
 }
 
 function sourceStatus(script: NSScript): "ready" | "blocked" | "unknown" | "current" {
@@ -260,8 +299,8 @@ export async function downloadAuditReport(account: NSAccount): Promise<number> {
   return response.downloadId
 }
 
-export function downloadAllConversions(conversions: ConversionResult[]): void {
-  for (const [index, conversion] of conversions.entries()) {
-    setTimeout(() => downloadScript(conversion.scriptName, conversion.convertedCode), index * 350)
+export async function downloadAllConversions(conversions: ConversionResult[]): Promise<void> {
+  for (const conversion of conversions) {
+    await downloadScript(conversion.scriptName, conversion.convertedCode)
   }
 }
