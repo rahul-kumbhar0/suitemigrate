@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { selectGeminiCredential } from "@/lib/conversion-engine/model-routing"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +25,7 @@ export async function GET() {
     quotaRpcError = "rpc_error"
   }
 
-  const aiConfigured = Boolean(process.env.GEMINI_API_KEY)
+  const aiConfigured = Boolean(selectGeminiCredential(process.env))
   const rateLimitConfigured = Boolean(
     process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
   )
