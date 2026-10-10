@@ -377,8 +377,8 @@ export default function LandingPage() {
               },
               {
                 icon: AlertTriangle,
-                title: "Migration blocker detection",
-                desc: "Classifies source access as ready, missing, role-restricted, or protected/inaccessible after access is checked. Protected items stay visible in the migration plan instead of disappearing behind a generic error.",
+                title: "Automatic source access checks",
+                desc: "After Scan & Verify, the extension checks legacy source access in paced background batches. Each script is marked readable, protected, restricted, missing-file, or unverified. Pause or resume without AI conversion charges.",
                 admin: "Know what your team can migrate directly — and what needs an authorized source copy, a different role, or a vendor 2.1 release.",
               },
               {
@@ -402,26 +402,26 @@ export default function LandingPage() {
             {[
               {
                 icon: GitCompare,
-                title: "Three review views",
-                desc: "Review the converted code, a structured change list, and highlighted inline migration comments from the same conversion result.",
+                title: "Side-by-side migration review",
+                desc: "Inspect generated 2.1 code, change notes and inline review flags alongside original source while your extension session is open. Original source is not retained in extension storage.",
                 admin: "Makes generated changes easier to inspect before sandbox testing.",
               },
               {
                 icon: Sparkles,
-                title: "// MIGRATED: comments in converted code",
-                desc: "Every modified line gets a // MIGRATED: comment explaining the specific change. The converted file is self-documenting — reviewers can understand each change without referring back to the original.",
-                admin: "Clients and project managers can see exactly what was changed without needing to diff files manually.",
+                title: "Structural checks and review notes",
+                desc: "The converter checks generated JavaScript structure before saving a successful result, returns migration notes, and highlights areas requiring developer review. This does not prove NetSuite runtime correctness.",
+                admin: "Compare behavior carefully with original source and test in a Sandbox before deployment.",
               },
               {
                 icon: FileText,
-                title: "Migration Readiness Report",
-                desc: "Paid plans can export a portable HTML report of the scanned active-script inventory, API versions, migration status, and version-risk labels.",
-                admin: "Useful for migration scoping and stakeholder handoff without requiring a proprietary report viewer.",
+                title: "Migration Readiness Report (HTML/PDF)",
+                desc: "Pro and Annual users can download a categorized HTML readiness report (printable to PDF) and a spreadsheet-safe CSV inventory. Outputs reflect the last verified scan.",
+                admin: "Share a source-access plan with stakeholders without including original source code.",
               },
               {
                 icon: Download,
                 title: "Download converted JavaScript",
-                desc: "Download each converted script as a standard JavaScript file with a conversion header, change summary, and reminders to review and test in Sandbox.",
+                desc: "Save converted JavaScript directly through Chrome Downloads, with filename, change summary, and testing reminders. Export errors are shown instead of silently ignored.",
                 admin: "Keeps output portable and easy to review in an editor or source-control workflow.",
               },
             ].map(f => (
@@ -515,13 +515,13 @@ export default function LandingPage() {
                 },
                 {
                   n: "02",
-                  title: "Review — version-based migration inventory",
-                  desc: "Legacy scripts are prioritised primarily from their SuiteScript API version. Filter by migration status, type, or API version. Paid plans can export a Migration Readiness Report.",
+                  title: "Verify — readable, locked, missing and unverified source",
+                  desc: "The extension checks legacy source access in background batches and classifies scripts under your current role. Filter Locked or Blockers, and export HTML or CSV reports on a paid plan.",
                 },
                 {
                   n: "03",
-                  title: "Convert — structural rewrite with full documentation",
-                  desc: "Click Convert on a legacy script with an attached source file. SuiteMigrate applies migration rules and AI-assisted structural conversion. Review Code, Changes, and Inline views before downloading.",
+                  title: "Convert — reviewable 2.1 migration draft",
+                  desc: "Select verified readable source for AI-assisted migration. Review converted code, change notes, inline flags, and the original-versus-migrated comparison before downloading.",
                 },
                 {
                   n: "04",
@@ -642,8 +642,10 @@ export default function LandingPage() {
                 {[
                   { f: "AI conversions",          free: "5",          pro: "Unlimited",  annual: "Unlimited" },
                   { f: "Active-script scan",       free: "✓",          pro: "✓",          annual: "✓" },
-                  { f: "Change review + JS download", free: "✓",       pro: "✓",          annual: "✓" },
-                  { f: "Migration Readiness Report", free: "—",       pro: "✓",          annual: "✓" },
+                  { f: "Code comparison + JS download", free: "✓",       pro: "✓",          annual: "✓" },
+                   { f: "Source access & Locked filters", free: "✓", pro: "✓", annual: "✓" },
+                  { f: "Migration Readiness Report (HTML/PDF)", free: "—", pro: "✓", annual: "✓" },
+                   { f: "Inventory CSV export", free: "—", pro: "✓", annual: "✓" },
                 ].map((row, i) => (
                   <tr key={row.f} style={{ borderBottom: "1px solid var(--rule)", background: i % 2 === 0 ? "var(--paper)" : "rgba(15,23,42,.015)" }}>
                     <td style={{ padding: "11px 20px", fontSize: 13.5, color: "var(--ink-soft)" }}>{row.f}</td>
@@ -695,8 +697,8 @@ export default function LandingPage() {
                   "Active-script scan & inventory",
                   "Version-risk label per script",
                   "5 AI conversions",
-                  "Code, Changes & Inline review tabs",
-                  "Inline // MIGRATED: comments",
+                  "Code comparison, Changes & Inline review",
+                  "Source access status & blockers filter",
                   "Confidence score",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
@@ -735,8 +737,8 @@ export default function LandingPage() {
                 {[
                   "Unlimited script conversions",
                   "Migration Readiness Report",
-                  "Code, Changes & Inline review tabs",
-                  "Manual-review flags",
+                  "Code comparison, Changes & Inline review",
+                  "Review flags and source comparison",
                   "Converted JavaScript downloads",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "rgba(250,250,249,.75)" }}>
@@ -760,7 +762,7 @@ export default function LandingPage() {
                 {[
                   "Unlimited script conversions",
                   "Migration Readiness Report",
-                  "Code review and JavaScript downloads",
+                  "Code comparison and .js downloads",
                   "One annual payment",
                 ].map(f => (
                   <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13.5, color: "var(--ink-soft)" }}>
