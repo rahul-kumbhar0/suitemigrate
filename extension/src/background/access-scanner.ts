@@ -12,7 +12,9 @@ import type { AccessAuditState } from "../lib/storage"
 
 const running = new Set<string>()
 const stopping = new Set<string>()
-const WAIT_MS = 300
+const WAIT_MS = 350
+const BATCH_SIZE = 15
+export const AUDIT_ALARM = "suitemigrate:source-audit"
 
 function wait(ms: number) {
   return new Promise<void>(resolve => setTimeout(resolve, ms))
@@ -65,6 +67,9 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
   if (running.has(accountId)) return
   running.add(accountId)
   stopping.delete(accountId)
+  // A repeating Chrome alarm wakes the MV3 service worker if Chrome
+  // suspends a long scan. Completed/paused scans clear the alarm.
+  await chrome.alarms.create(AUDIT_ALARM, { periodInMinutes: 1 })
 
   try {
     const tab = await chrome.tabs.get(tabId)
@@ -98,7 +103,7 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
 
     let classified = checked
     let consecutiveTransientFailures = 0
-    for (const script of candidates) {
+    for (const script of candidates.slice(0, BATCH_SIZE)) {
       if (stopping.has(accountId)) {
         await saveAudit(accountId, { state: "paused", lastError: "Audit paused. Resume when ready." })
         return
@@ -152,6 +157,12 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
       }
     }
 
+    // Continue the next batch on the next alarm. No popup has to remain open.
+    if (candidates.length > BATCH_SIZE) {
+      await saveAudit(accountId, { state: "running", checked: classified, total })
+      return
+    }
+
     const finishedAccount = await resolveAccount(accountId)
     const stillUnknown = finishedAccount?.scripts.filter(script =>
       script.needsMigration && (!script.sourceAccess || script.sourceAccess === "unknown")
@@ -175,9 +186,29 @@ export async function startSourceAudit(accountId: string, tabId: number): Promis
   } finally {
     running.delete(accountId)
     stopping.delete(accountId)
+    const latest = await readAudit(accountId)
+    if (latest?.state !== "running") {
+      await chrome.alarms.clear(AUDIT_ALARM)
+    }
   }
 }
 
-export function pauseSourceAudit(accountId: string): void {
+/** Wake pending work after an MV3 service worker restart. */
+export async function resumeRunningAudits(): Promise<void> {
+  const saved = await chrome.storage.local.get("accessAudits")
+  const audits = (saved.accessAudits || {}) as Record<string, AccessAuditState>
+  for (const [accountId, state] of Object.entries(audits)) {
+    if (state.state === "running" && Number.isInteger(state.tabId)) {
+      await startSourceAudit(accountId, state.tabId)
+    }
+  }
+}
+
+export async function pauseSourceAudit(accountId: string): Promise<void> {
   stopping.add(accountId)
+  await saveAudit(accountId, {
+    state: "paused",
+    lastError: "Source check paused. Resume when you are ready.",
+  })
+  await chrome.alarms.clear(AUDIT_ALARM)
 }
