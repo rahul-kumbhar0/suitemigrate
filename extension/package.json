@@ -9,6 +9,7 @@
     "build:store": "vite build",
     "test:netSuite-host": "node --experimental-strip-types scripts/test-netsuite-host.mjs",
     "test:readiness-report": "node --experimental-strip-types scripts/test-readiness-report.mjs",
+    "test:source-status": "node --experimental-strip-types scripts/test-source-status.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
   },
